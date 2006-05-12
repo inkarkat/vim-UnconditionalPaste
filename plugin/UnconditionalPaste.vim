@@ -2,6 +2,8 @@
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"	0.02	10-Apr-2006	Added flattening (replacing newlines with
+"				spaces) for characterwise paste. 
 "	0.01	10-Apr-2006	file creation from VimTip #1199
 
 " Avoid installing twice or when in compatible mode
@@ -18,12 +20,16 @@ let loaded_UnconditionalPaste = 1
 function! s:Paste(regname, pasteType, pastecmd)
     let reg_type = getregtype(a:regname)
     call setreg(a:regname, getreg(a:regname), a:pasteType)
-    exe 'normal "'.a:regname . a:pastecmd
+    execute 'normal "' . a:regname . a:pastecmd
     call setreg(a:regname, getreg(a:regname), reg_type)
+endfunction
+
+function! s:FlattenRegister(regname)
+    execute 'let @' . a:regname . '=substitute(@' . a:regname . ',"\n"," ","g")'
 endfunction
 
 nmap <leader>lP :call <SID>Paste(v:register, "l", "P")<CR>
 nmap <leader>lp :call <SID>Paste(v:register, "l", "p")<CR>
-nmap <leader>cP :call <SID>Paste(v:register, "v", "P")<CR>
-nmap <leader>cp :call <SID>Paste(v:register, "v", "p")<CR>  
+nmap <leader>cP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "P")<CR>
+nmap <leader>cp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "p")<CR>
 

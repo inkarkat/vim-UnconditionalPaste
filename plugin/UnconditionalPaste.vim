@@ -2,9 +2,12 @@
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"	0.03	13-May-2006	Changed mappings from <leader>.. to g.., as
+"				this is easier to type (and 'g' often introduces
+"				alternative actions (like 'j' and 'gj')). 
 "	0.02	10-Apr-2006	Added flattening (replacing newlines with
 "				spaces) for characterwise paste. 
-"	0.01	10-Apr-2006	file creation from VimTip #1199
+"	0.01	10-Apr-2006	file creation from vimtip #1199
 
 " Avoid installing twice or when in compatible mode
 if exists("loaded_UnconditionalPaste")
@@ -28,8 +31,8 @@ function! s:FlattenRegister(regname)
     execute 'let @' . a:regname . '=substitute(@' . a:regname . ',"\n"," ","g")'
 endfunction
 
-nmap <leader>lP :call <SID>Paste(v:register, "l", "P")<CR>
-nmap <leader>lp :call <SID>Paste(v:register, "l", "p")<CR>
-nmap <leader>cP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "P")<CR>
-nmap <leader>cp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "p")<CR>
+nmap glP :call <SID>Paste(v:register, "l", "P")<CR>
+nmap glp :call <SID>Paste(v:register, "l", "p")<CR>
+nmap gcP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "P")<CR>
+nmap gcp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "p")<CR>
 

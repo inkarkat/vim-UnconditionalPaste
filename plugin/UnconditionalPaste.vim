@@ -2,6 +2,8 @@
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"	004	30-May-2007	Added <silent> to the mapping to avoid echoing
+"				of the function invocation. 
 "	0.03	13-May-2006	Changed mappings from <leader>.. to g.., as
 "				this is easier to type (and 'g' often introduces
 "				alternative actions (like 'j' and 'gj')). 
@@ -31,8 +33,8 @@ function! s:FlattenRegister(regname)
     execute 'let @' . a:regname . '=substitute(@' . a:regname . ',"\n"," ","g")'
 endfunction
 
-nmap glP :call <SID>Paste(v:register, "l", "P")<CR>
-nmap glp :call <SID>Paste(v:register, "l", "p")<CR>
-nmap gcP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "P")<CR>
-nmap gcp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "p")<CR>
+nmap <silent> glP :call <SID>Paste(v:register, "l", "P")<CR>
+nmap <silent> glp :call <SID>Paste(v:register, "l", "p")<CR>
+nmap <silent> gcP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "P")<CR>
+nmap <silent> gcp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "p")<CR>
 

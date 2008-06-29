@@ -2,6 +2,7 @@
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"	005	16-Jun-2008	Using :normal with <bang>. 
 "	004	30-May-2007	Added <silent> to the mapping to avoid echoing
 "				of the function invocation. 
 "	0.03	13-May-2006	Changed mappings from <leader>.. to g.., as
@@ -12,7 +13,7 @@
 "	0.01	10-Apr-2006	file creation from vimtip #1199
 
 " Avoid installing twice or when in compatible mode
-if exists("loaded_UnconditionalPaste")
+if exists('loaded_UnconditionalPaste')
     finish
 endif
 let loaded_UnconditionalPaste = 1
@@ -25,7 +26,7 @@ let loaded_UnconditionalPaste = 1
 function! s:Paste(regname, pasteType, pastecmd)
     let reg_type = getregtype(a:regname)
     call setreg(a:regname, getreg(a:regname), a:pasteType)
-    execute 'normal "' . a:regname . a:pastecmd
+    execute 'normal! "' . a:regname . a:pastecmd
     call setreg(a:regname, getreg(a:regname), reg_type)
 endfunction
 
@@ -33,8 +34,8 @@ function! s:FlattenRegister(regname)
     execute 'let @' . a:regname . '=substitute(@' . a:regname . ',"\n"," ","g")'
 endfunction
 
-nmap <silent> glP :call <SID>Paste(v:register, "l", "P")<CR>
-nmap <silent> glp :call <SID>Paste(v:register, "l", "p")<CR>
-nmap <silent> gcP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "P")<CR>
-nmap <silent> gcp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, "v", "p")<CR>
+nmap <silent> glP :call <SID>Paste(v:register, 'l', 'P')<CR>
+nmap <silent> glp :call <SID>Paste(v:register, 'l', 'p')<CR>
+nmap <silent> gcP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, 'v', 'P')<CR>
+nmap <silent> gcp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, 'v', 'p')<CR>
 

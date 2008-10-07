@@ -13,10 +13,10 @@
 "	0.01	10-Apr-2006	file creation from vimtip #1199
 
 " Avoid installing twice or when in compatible mode
-if exists('loaded_UnconditionalPaste')
+if exists('g:loaded_UnconditionalPaste')
     finish
 endif
-let loaded_UnconditionalPaste = 1
+let g:loaded_UnconditionalPaste = 1
 
 " If you're like me, you occassionally do a linewise yank, and then want to
 " insert that yanked text in the middle of some other line, (or vice versa).
@@ -34,8 +34,8 @@ function! s:FlattenRegister(regname)
     execute 'let @' . a:regname . '=substitute(@' . a:regname . ',"\n"," ","g")'
 endfunction
 
-nmap <silent> glP :call <SID>Paste(v:register, 'l', 'P')<CR>
-nmap <silent> glp :call <SID>Paste(v:register, 'l', 'p')<CR>
-nmap <silent> gcP :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, 'v', 'P')<CR>
-nmap <silent> gcp :call <SID>FlattenRegister(v:register)<bar>call <SID>Paste(v:register, 'v', 'p')<CR>
+nnoremap <silent> glP :call <SID>Paste(v:register, 'l', 'P')<CR>
+nnoremap <silent> glp :call <SID>Paste(v:register, 'l', 'p')<CR>
+nnoremap <silent> gcP :call <SID>FlattenRegister(v:register)<Bar>call <SID>Paste(v:register, 'v', 'P')<CR>
+nnoremap <silent> gcp :call <SID>FlattenRegister(v:register)<Bar>call <SID>Paste(v:register, 'v', 'p')<CR>
 

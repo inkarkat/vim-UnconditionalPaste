@@ -12,6 +12,8 @@
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " REVISION	DATE		REMARKS 
+"	007	15-May-2009	Now catching and reporting any errors caused by
+"				the paste. 
 "	006	08-Oct-2008	Now removing newline characters at the end of
 "				the text. 
 "				Now, the register type is not modified by an
@@ -42,15 +44,24 @@ function! s:Flatten(text)
 endfunction
 
 function! s:Paste(regName, pasteType, pasteCmd)
-    let l:regType = getregtype(a:regName)
-    let l:regContent = getreg(a:regName)
-    call setreg(a:regName, (a:pasteType ==# 'c' ? s:Flatten(l:regContent) : l:regContent), a:pasteType)
-    execute 'normal! "' . a:regName . a:pasteCmd
-    call setreg(a:regName, l:regContent, l:regType)
+    try
+	let l:regType = getregtype(a:regName)
+	let l:regContent = getreg(a:regName)
+	call setreg(a:regName, (a:pasteType ==# 'c' ? s:Flatten(l:regContent) : l:regContent), a:pasteType)
+	execute 'normal! "' . a:regName . a:pasteCmd
+	call setreg(a:regName, l:regContent, l:regType)
+    catch /^Vim\%((\a\+)\)\=:E/
+	echohl ErrorMsg
+	" v:exception contains what is normally in v:errmsg, but with extra
+	" exception source info prepended, which we cut away. 
+	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echomsg v:errmsg
+	echohl None
+    endtry
 endfunction
 
-"[register]glp, glP	Paste linewise (even if yanked text is not a complete line). 
-"[register]gcp, gcP	Paste characterwise (newlines are flattened to spaces). 
+"["x]glp, ["x] glP	Paste linewise (even if yanked text is not a complete line). 
+"["x]gcp, ["x] gcP	Paste characterwise (newlines are flattened to spaces). 
 nnoremap <silent> glP :call <SID>Paste(v:register, 'l', 'P')<CR>
 nnoremap <silent> glp :call <SID>Paste(v:register, 'l', 'p')<CR>
 nnoremap <silent> gcP :call <SID>Paste(v:register, 'c', 'P')<CR>

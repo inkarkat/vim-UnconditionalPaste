@@ -7,13 +7,18 @@
 "   This function and mapping will allow you to do a linewise or characterwise
 "   paste no matter how you yanked the text.
 
-" Copyright: (C) 2006-2008 by Ingo Karkat
+" Copyright: (C) 2006-2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
+" Source: Based on vimtip #1199: Unconditional linewise or characterwise paste
+"	  by "cory". 
+"
 " REVISION	DATE		REMARKS 
 "	007	15-May-2009	Now catching and reporting any errors caused by
 "				the paste. 
+"				Now supporting [count], like the built-in paste
+"				command. 
 "	006	08-Oct-2008	Now removing newline characters at the end of
 "				the text. 
 "				Now, the register type is not modified by an
@@ -48,7 +53,7 @@ function! s:Paste(regName, pasteType, pasteCmd)
 	let l:regType = getregtype(a:regName)
 	let l:regContent = getreg(a:regName)
 	call setreg(a:regName, (a:pasteType ==# 'c' ? s:Flatten(l:regContent) : l:regContent), a:pasteType)
-	execute 'normal! "' . a:regName . a:pasteCmd
+	execute 'normal! "' . a:regName . (v:count ? v:count : '') . a:pasteCmd
 	call setreg(a:regName, l:regContent, l:regType)
     catch /^Vim\%((\a\+)\)\=:E/
 	echohl ErrorMsg
@@ -60,11 +65,13 @@ function! s:Paste(regName, pasteType, pasteCmd)
     endtry
 endfunction
 
-"["x]glp, ["x] glP	Paste linewise (even if yanked text is not a complete line). 
-"["x]gcp, ["x] gcP	Paste characterwise (newlines are flattened to spaces). 
-nnoremap <silent> glP :call <SID>Paste(v:register, 'l', 'P')<CR>
-nnoremap <silent> glp :call <SID>Paste(v:register, 'l', 'p')<CR>
-nnoremap <silent> gcP :call <SID>Paste(v:register, 'c', 'P')<CR>
-nnoremap <silent> gcp :call <SID>Paste(v:register, 'c', 'p')<CR>
+"["x]glp	    	Paste linewise (even if yanked text is not a complete
+"["x]glP		line) [count] times. 
+"["x]gcp		Paste characterwise (newline characters are flattened to
+"["x]gcP		spaces) [count] times. 
+nnoremap <silent> glP :<C-u>call <SID>Paste(v:register, 'l', 'P')<CR>
+nnoremap <silent> glp :<C-u>call <SID>Paste(v:register, 'l', 'p')<CR>
+nnoremap <silent> gcP :<C-u>call <SID>Paste(v:register, 'c', 'P')<CR>
+nnoremap <silent> gcp :<C-u>call <SID>Paste(v:register, 'c', 'p')<CR>
 
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

@@ -1,0 +1,79 @@
+*UnconditionalPaste.txt* Force linewise or characterwise paste. 
+
+		    UNCONDITIONAL PASTE    by Ingo Karkat
+						      *UnconditionalPaste.vim*
+description			|UnconditionalPaste-description|
+usage				|UnconditionalPaste-usage|
+installation			|UnconditionalPaste-installation|
+configuration			|UnconditionalPaste-configuration|
+limitations			|UnconditionalPaste-limitations|
+known problems			|UnconditionalPaste-known-problems|
+todo				|UnconditionalPaste-todo|
+history				|UnconditionalPaste-history|
+
+==============================================================================
+DESCRIPTION				      *UnconditionalPaste-description*
+
+If you're like me, you occasionally do a linewise yank, and then want to
+insert that yanked text in the middle of some other line (or vice versa).
+The mappings defined by this plugin will allow you to do a linewise or
+characterwise paste no matter how you yanked the text.
+
+SOURCE									     *
+
+Based on vimtip #1199 by cory, 
+    http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
+
+==============================================================================
+USAGE						    *UnconditionalPaste-usage*
+
+["x]glp		   Paste linewise (even if yanked text is not a complete
+["x]glP		   line) [count] times. 
+["x]gcp		   Paste characterwise (newline characters are flattened to
+["x]gcP		   spaces) [count] times. 
+
+==============================================================================
+INSTALLATION				     *UnconditionalPaste-installation*
+
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
+vimball or via the |:UseVimball| command. >
+    vim UnconditionalPaste.vba.gz
+    :so %
+To uninstall, use the |:RmVimball| command. 
+
+DEPENDENCIES				     *UnconditionalPaste-dependencies*
+
+- Requires Vim 6.2 or higher. 
+
+==============================================================================
+CONFIGURATION				    *UnconditionalPaste-configuration*
+
+Currently, the mappings are fixed and cannot be changed. 
+
+==============================================================================
+LIMITATIONS				      *UnconditionalPaste-limitations*
+
+KNOWN PROBLEMS				   *UnconditionalPaste-known-problems*
+
+TODO						     *UnconditionalPaste-todo*
+
+IDEAS						    *UnconditionalPaste-ideas*
+
+==============================================================================
+HISTORY						  *UnconditionalPaste-history*
+
+1.00	10-Dec-2010
+Published, prompted by a related question on reddit. 
+
+0.01	10-Apr-2006
+Started development, based on vimtip #1199 by cory. 
+
+==============================================================================
+Copyright: (C) 2006-2010 Ingo Karkat
+The VIM LICENSE applies to this script; see |copyright|. 
+
+Maintainer:	Ingo Karkat <ingo@karkat.de>
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:

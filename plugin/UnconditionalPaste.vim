@@ -1,20 +1,19 @@
 " UnconditionalPaste.vim: Force linewise or characterwise paste, regardless of
 " how it was yanked. 
 "
-" DESCRIPTION:
-"   If you're like me, you occassionally do a linewise yank, and then want to
-"   insert that yanked text in the middle of some other line, (or vice versa).
-"   This function and mapping will allow you to do a linewise or characterwise
-"   paste no matter how you yanked the text.
+" DEPENDENCIES:
+"   - Requires Vim 6.2 or higher. 
 
-" Copyright: (C) 2006-2009 by Ingo Karkat
+" Copyright: (C) 2006-2010 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-" Source: Based on vimtip #1199: Unconditional linewise or characterwise paste
-"	  by "cory". 
+" Source: Based on vimtip #1199 by cory, 
+"	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS 
+"   1.00.008	10-Dec-2010	Prepared for publishing; find out lowest
+"				supported Vim version. 
 "	007	15-May-2009	Now catching and reporting any errors caused by
 "				the paste. 
 "				Now supporting [count], like the built-in paste
@@ -36,8 +35,8 @@
 "				spaces) for characterwise paste. 
 "	0.01	10-Apr-2006	file creation from vimtip #1199
 
-" Avoid installing twice. 
-if exists('g:loaded_UnconditionalPaste')
+" Avoid installing twice or when in unsupported Vim version. 
+if exists('g:loaded_UnconditionalPaste') || (v:version < 602)
     finish
 endif
 let g:loaded_UnconditionalPaste = 1
@@ -65,10 +64,6 @@ function! s:Paste(regName, pasteType, pasteCmd)
     endtry
 endfunction
 
-"["x]glp	    	Paste linewise (even if yanked text is not a complete
-"["x]glP		line) [count] times. 
-"["x]gcp		Paste characterwise (newline characters are flattened to
-"["x]gcP		spaces) [count] times. 
 nnoremap <silent> glP :<C-u>call <SID>Paste(v:register, 'l', 'P')<CR>
 nnoremap <silent> glp :<C-u>call <SID>Paste(v:register, 'l', 'p')<CR>
 nnoremap <silent> gcP :<C-u>call <SID>Paste(v:register, 'c', 'P')<CR>

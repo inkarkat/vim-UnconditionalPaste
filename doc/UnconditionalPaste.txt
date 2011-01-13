@@ -26,11 +26,15 @@ Based on vimtip #1199 by cory,
 
 ==============================================================================
 USAGE						    *UnconditionalPaste-usage*
+					   *gcp* *gcP* *glp* *glP* *gbp* *gbP*
+["x]gcp			Paste characterwise (newline characters are flattened
+["x]gcP			to spaces) [count] times. 
+["x]glp			Paste linewise (even if yanked text is not a complete
+["x]glP			line) [count] times. 
+["x]gbp			Paste blockwise (inserting multiple lines in-place,
+["x]gbP			pushing existing text further to the right) [count]
+			times. 
 
-["x]glp		   Paste linewise (even if yanked text is not a complete
-["x]glP		   line) [count] times. 
-["x]gcp		   Paste characterwise (newline characters are flattened to
-["x]gcP		   spaces) [count] times. 
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*
@@ -45,13 +49,21 @@ To uninstall, use the |:RmVimball| command.
 
 DEPENDENCIES				     *UnconditionalPaste-dependencies*
 
-- Requires Vim 6.2 or higher. 
+- Requires Vim 7.0 or higher. 
 
 ==============================================================================
 CONFIGURATION				    *UnconditionalPaste-configuration*
 
-Currently, the mappings are fixed and cannot be changed. 
-
+If you want to use different mappings (e.g. starting with <Leader>), map your
+keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
+script (e.g. in your |vimrc|): >
+    nmap <silent> <Leader>Pc <Plug>UnconditionalPasteCharBefore
+    nmap <silent> <Leader>pc <Plug>UnconditionalPasteCharAfter
+    nmap <silent> <Leader>Pl <Plug>UnconditionalPasteLineBefore
+    nmap <silent> <Leader>pl <Plug>UnconditionalPasteLineAfter
+    nmap <silent> <Leader>Pb <Plug>UnconditionalPasteBlockBefore
+    nmap <silent> <Leader>pb <Plug>UnconditionalPasteBlockAfter
+<
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*
 
@@ -64,6 +76,12 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+1.10	12-Jan-2011
+Incorporated suggestions by Peter Rincker (thanks for the patch!): 
+- Made mappings configurable via the customary <Plug> mappings. 
+- Added mappings gbp, gbP for blockwise pasting. 
+- Now requires Vim version 7.0 or higher. 
+
 1.00	10-Dec-2010
 Published, prompted by a related question on reddit. 
 
@@ -71,7 +89,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory. 
 
 ==============================================================================
-Copyright: (C) 2006-2010 Ingo Karkat
+Copyright: (C) 2006-2011 Ingo Karkat
 The VIM LICENSE applies to this script; see |copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

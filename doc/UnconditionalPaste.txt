@@ -1,4 +1,4 @@
-*UnconditionalPaste.txt* Force linewise or characterwise paste. 
+*UnconditionalPaste.txt* Force character-/line-/block-wise paste, regardless of how it was yanked. 
 
 		    UNCONDITIONAL PASTE    by Ingo Karkat
 						      *UnconditionalPaste.vim*
@@ -16,8 +16,8 @@ DESCRIPTION				      *UnconditionalPaste-description*
 
 If you're like me, you occasionally do a linewise yank, and then want to
 insert that yanked text in the middle of some other line (or vice versa).
-The mappings defined by this plugin will allow you to do a linewise or
-characterwise paste no matter how you yanked the text.
+The mappings defined by this plugin will allow you to do a character-, line-,
+or block-wise paste no matter how you yanked the text.
 
 SOURCE									     *
 

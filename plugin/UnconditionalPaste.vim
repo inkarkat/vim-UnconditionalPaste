@@ -1,10 +1,10 @@
-" UnconditionalPaste.vim: Force linewise or characterwise paste, regardless of
+" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of
 " how it was yanked. 
 "
 " DEPENDENCIES:
-"   - Requires Vim 6.2 or higher. 
+"   - Requires Vim 7.0 or higher. 
 
-" Copyright: (C) 2006-2010 Ingo Karkat
+" Copyright: (C) 2006-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -12,6 +12,12 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS 
+"   1.10.009	12-Jan-2011	Incorporated suggestions by Peter Rincker
+"				(thanks for the patch!): 
+"				Made mappings configurable via the customary
+"				<Plug> mappings. 
+"				Added mappings gbp, gbP for blockwise pasting. 
+"				Now requires Vim version 7.0 or higher. 
 "   1.00.008	10-Dec-2010	Prepared for publishing; find out lowest
 "				supported Vim version. 
 "	007	15-May-2009	Now catching and reporting any errors caused by
@@ -36,18 +42,21 @@
 "	0.01	10-Apr-2006	file creation from vimtip #1199
 
 " Avoid installing twice or when in unsupported Vim version. 
-if exists('g:loaded_UnconditionalPaste') || (v:version < 602)
+if exists('g:loaded_UnconditionalPaste') || (v:version < 700)
     finish
 endif
 let g:loaded_UnconditionalPaste = 1
 
-function! s:Flatten(text)
+let s:save_cpo = &cpo
+set cpo&vim
+
+function! s:Flatten( text )
     " Remove newline characters at the end of the text, convert all other
     " newlines to a single space. 
     return substitute(substitute(a:text, "\n\\+$", '', 'g'), "\n\\+", ' ', 'g')
 endfunction
 
-function! s:Paste(regName, pasteType, pasteCmd)
+function! s:Paste( regName, pasteType, pasteCmd )
     try
 	let l:regType = getregtype(a:regName)
 	let l:regContent = getreg(a:regName)
@@ -55,18 +64,37 @@ function! s:Paste(regName, pasteType, pasteCmd)
 	execute 'normal! "' . a:regName . (v:count ? v:count : '') . a:pasteCmd
 	call setreg(a:regName, l:regContent, l:regType)
     catch /^Vim\%((\a\+)\)\=:E/
-	echohl ErrorMsg
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away. 
 	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echohl ErrorMsg
 	echomsg v:errmsg
 	echohl None
     endtry
 endfunction
 
-nnoremap <silent> glP :<C-u>call <SID>Paste(v:register, 'l', 'P')<CR>
-nnoremap <silent> glp :<C-u>call <SID>Paste(v:register, 'l', 'p')<CR>
-nnoremap <silent> gcP :<C-u>call <SID>Paste(v:register, 'c', 'P')<CR>
-nnoremap <silent> gcp :<C-u>call <SID>Paste(v:register, 'c', 'p')<CR>
+function! s:CreateMappings()
+    for [l:pasteName, pasteType] in [['Char', 'c'], ['Line', 'l'], ['Block', 'b']]
+	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
+	    let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName . l:direction
+	    execute printf('nnoremap %s :<C-u>call <SID>Paste(v:register, %s, %s)<CR>',
+	    \	l:plugMappingName,
+	    \	string(l:pasteType),
+	    \	string(l:pasteCmd)
+	    \)
+	    if ! hasmapto(l:plugMappingName, 'n')
+		execute printf('nmap <silent> g%s%s %s',
+		\   l:pasteType,
+		\   l:pasteCmd,
+		\   l:plugMappingName
+		\)
+	    endif
+	endfor
+    endfor
+endfunction
+call s:CreateMappings()
+delfunction s:CreateMappings
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

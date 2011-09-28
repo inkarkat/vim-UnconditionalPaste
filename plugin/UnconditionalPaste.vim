@@ -3,6 +3,7 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher. 
+"   - repeat.vim (vimscript #2136) autoload script (optional). 
 
 " Copyright: (C) 2006-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -12,6 +13,11 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS 
+"   1.12.011	29-Sep-2011	BUG: Repeat always used the unnamed register. 
+"				Add register registration to enhanced repeat.vim
+"				plugin. 
+"   1.11.010	06-Jun-2011	ENH: Support repetition of mappings through
+"				repeat.vim. 
 "   1.10.009	12-Jan-2011	Incorporated suggestions by Peter Rincker
 "				(thanks for the patch!): 
 "				Made mappings configurable via the customary
@@ -76,11 +82,18 @@ endfunction
 function! s:CreateMappings()
     for [l:pasteName, pasteType] in [['Char', 'c'], ['Line', 'l'], ['Block', 'b']]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
-	    let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName . l:direction
-	    execute printf('nnoremap %s :<C-u>call <SID>Paste(v:register, %s, %s)<CR>',
+	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
+	    let l:plugMappingName = '<Plug>' . l:mappingName
+	    execute printf('nnoremap %s :<C-u>' .
+	    \	'silent! call repeat#setreg("\<lt>Plug>%s", v:register)<Bar>' .
+	    \	'call <SID>Paste(v:register, %s, %s)<Bar>' .
+	    \	'silent! call repeat#set("\<lt>Plug>%s")<CR>',
+	    \
 	    \	l:plugMappingName,
+	    \	l:mappingName,
 	    \	string(l:pasteType),
-	    \	string(l:pasteCmd)
+	    \	string(l:pasteCmd),
+	    \	l:mappingName
 	    \)
 	    if ! hasmapto(l:plugMappingName, 'n')
 		execute printf('nmap <silent> g%s%s %s',

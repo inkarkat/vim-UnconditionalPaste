@@ -50,6 +50,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				     *UnconditionalPaste-dependencies*
 
 - Requires Vim 7.0 or higher. 
+- vimscript #2136 repeat.vim autoload script (optional). 
 
 ==============================================================================
 CONFIGURATION				    *UnconditionalPaste-configuration*
@@ -75,6 +76,13 @@ IDEAS						    *UnconditionalPaste-ideas*
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+1.12	29-Sep-2011
+BUG: Repeat always used the unnamed register. Add register registration to
+enhanced repeat.vim plugin. Requires update to repeat.vim version 1.0. 
+
+1.11	06-Jun-2011
+ENH: Support repetition of mappings through repeat.vim. 
 
 1.10	12-Jan-2011
 Incorporated suggestions by Peter Rincker (thanks for the patch!): 

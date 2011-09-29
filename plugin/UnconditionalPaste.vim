@@ -13,6 +13,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS 
+"   1.20.011	29-Sep-2011	BUG: Repeat always used the unnamed register. 
+"				ENH: Handling use of expression register "=. 
 "   1.11.010	06-Jun-2011	ENH: Support repetition of mappings through
 "				repeat.vim. 
 "   1.10.009	12-Jan-2011	Incorporated suggestions by Peter Rincker
@@ -53,6 +55,10 @@ let g:loaded_UnconditionalPaste = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! s:HandleExprReg( exprResult )
+    let s:exprResult = a:exprResult
+endfunction
+
 function! s:Flatten( text )
     " Remove newline characters at the end of the text, convert all other
     " newlines to a single space. 
@@ -60,12 +66,31 @@ function! s:Flatten( text )
 endfunction
 
 function! s:Paste( regName, pasteType, pasteCmd )
+    let s:register = a:regName
+    let l:regType = getregtype(a:regName)
+    let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='. 
+
+    if a:regName ==# '='
+	" Cannot evaluate the expression register within a function; unscoped
+	" variables do not refer to the global scope. Therefore, evaluation
+	" happened earlier in the mappings, and stored this in s:exprResult. 
+	" To get the expression result into the buffer, use the unnamed
+	" register, and restore it later. 
+	let l:regName = '"'
+	let l:regContent = s:exprResult
+
+	let l:save_clipboard = &clipboard
+	set clipboard= " Avoid clobbering the selection and clipboard registers. 
+	let l:save_reg = getreg(l:regName)
+	let l:save_regmode = getregtype(l:regName)
+    else
+	let l:regName = a:regName
+    endif
+
     try
-	let l:regType = getregtype(a:regName)
-	let l:regContent = getreg(a:regName)
-	call setreg(a:regName, (a:pasteType ==# 'c' ? s:Flatten(l:regContent) : l:regContent), a:pasteType)
-	execute 'normal! "' . a:regName . (v:count ? v:count : '') . a:pasteCmd
-	call setreg(a:regName, l:regContent, l:regType)
+	call setreg(l:regName, (a:pasteType ==# 'c' ? s:Flatten(l:regContent) : l:regContent), a:pasteType)
+	execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:pasteCmd
+	call setreg(l:regName, l:regContent, l:regType)
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away. 
@@ -73,7 +98,15 @@ function! s:Paste( regName, pasteType, pasteCmd )
 	echohl ErrorMsg
 	echomsg v:errmsg
 	echohl None
+    finally
+	if a:regName ==# '='
+	    call setreg('"', l:save_reg, l:save_regmode)
+	    let &clipboard = l:save_clipboard
+	endif
     endtry
+endfunction
+function! s:PasteRepeat( pasteType, pasteCmd )
+    call s:Paste(s:register, a:pasteType, a:pasteCmd)
 endfunction
 
 function! s:CreateMappings()
@@ -81,12 +114,30 @@ function! s:CreateMappings()
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
 	    let l:plugMappingName = '<Plug>' . l:mappingName
-	    execute printf('nnoremap %s :<C-u>call <SID>Paste(v:register, %s, %s)<Bar>silent! call repeat#set("\<lt>Plug>%s")<CR>',
+	    let l:repeatMappingName = 'UnconditionalPasteRepeat' . l:pasteName . l:direction
+
+	    execute printf('nnoremap <Plug>%s :<C-u>' .
+	    \	'call <SID>PasteRepeat(%s, %s)<Bar>' .
+	    \	'silent! call repeat#set("\<lt>Plug>%s")<CR>',
+	    \
+	    \	l:repeatMappingName,
+	    \	string(l:pasteType),
+	    \	string(l:pasteCmd),
+	    \	l:repeatMappingName
+	    \)
+	    execute printf('nnoremap %s :<C-u>' .
+	    \	'if v:register ==# "="<Bar>' .
+	    \	'    call <SID>HandleExprReg(getreg("="))<Bar>' .
+	    \	'endif<Bar>' .
+	    \	'call <SID>Paste(v:register, %s, %s)<Bar>' .
+	    \	'silent! call repeat#set("\<lt>Plug>%s")<CR>',
+	    \
 	    \	l:plugMappingName,
 	    \	string(l:pasteType),
 	    \	string(l:pasteCmd),
-	    \	l:mappingName
+	    \	l:repeatMappingName
 	    \)
+
 	    if ! hasmapto(l:plugMappingName, 'n')
 		execute printf('nmap <silent> g%s%s %s',
 		\   l:pasteType,

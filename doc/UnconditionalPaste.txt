@@ -77,13 +77,6 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-1.21	02-Dec-2011
-- ENH: When pasting a blockwise register as lines, strip all trailing
-  whitespace. This is useful when cutting a block of text from a column-like
-  text and pasting as new lines.  
-- ENH: When pasting a blockwise register as characters, flatten and shrink all
-  trailing whitespace to a single space. 
-
 1.20	30-Sep-2011
 BUG: Repeat always used the unnamed register. Add register registration to
 enhanced repeat.vim plugin. This also handles repetition when used together

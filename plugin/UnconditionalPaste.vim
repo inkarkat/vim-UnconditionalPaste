@@ -13,6 +13,13 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS 
+"   1.21.013	02-Dec-2011	ENH: When pasting a blockwise register as lines,
+"				strip all trailing whitespace. This is useful
+"				when cutting a block of text from a column-like
+"				text and pasting as new lines.  
+"				ENH: When pasting a blockwise register as
+"				characters, flatten and shrink all trailing
+"				whitespace to a single space. 
 "   1.20.012	29-Sep-2011	BUG: Repeat always used the unnamed register. 
 "				Add register registration to enhanced repeat.vim
 "				plugin, which also handles repetition when used
@@ -66,7 +73,10 @@ endfunction
 function! s:Flatten( text )
     " Remove newline characters at the end of the text, convert all other
     " newlines to a single space. 
-    return substitute(substitute(a:text, "\n\\+$", '', 'g'), "\n\\+", ' ', 'g')
+    return substitute(substitute(a:text, '\n\+$', '', 'g'), '\n\+', ' ', 'g')
+endfunction
+function! s:StripTrailingWhitespace( text )
+    return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction
 
 function! s:Paste( regName, pasteType, pasteCmd )
@@ -91,7 +101,18 @@ function! s:Paste( regName, pasteType, pasteCmd )
     endif
 
     try
-	call setreg(l:regName, (a:pasteType ==# 'c' ? s:Flatten(l:regContent) : l:regContent), a:pasteType)
+	let l:pasteContent = l:regContent
+	if a:pasteType ==# 'c'
+	    if l:regType[0] ==# "\<C-v>"
+		let l:pasteContent = s:Flatten(s:StripTrailingWhitespace(l:regContent))
+	    else
+		let l:pasteContent = s:Flatten(l:regContent)
+	    endif
+	elseif a:pasteType ==# 'l' && l:regType[0] ==# "\<C-v>"
+	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	endif
+
+	call setreg(l:regName, l:pasteContent, a:pasteType)
 	execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:pasteCmd
 	call setreg(l:regName, l:regContent, l:regType)
     catch /^Vim\%((\a\+)\)\=:E/

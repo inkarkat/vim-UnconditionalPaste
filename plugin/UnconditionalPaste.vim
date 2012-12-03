@@ -3,10 +3,9 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - UnconditionalPaste.vim autoload script
-"   - repeat.vim (vimscript #2136) autoload script (optional)
+"   - repeat.vim (vimscript #2136) autoload script (optional).
 
-" Copyright: (C) 2006-2012 Ingo Karkat
+" Copyright: (C) 2006-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -14,7 +13,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   1.22.015	04-Dec-2012	Split off functions into autoload script.
 "   1.22.014	28-Nov-2012	BUG: When repeat.vim is not installed, the
 "				mappings do nothing. Need to :execute the
 "				:silent! call of repeat.vim to avoid that the
@@ -73,6 +71,70 @@ let g:loaded_UnconditionalPaste = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! s:HandleExprReg( exprResult )
+    let s:exprResult = a:exprResult
+endfunction
+
+function! s:Flatten( text )
+    " Remove newline characters at the end of the text, convert all other
+    " newlines to a single space.
+    return substitute(substitute(a:text, '\n\+$', '', 'g'), '\n\+', ' ', 'g')
+endfunction
+function! s:StripTrailingWhitespace( text )
+    return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
+endfunction
+
+function! s:Paste( regName, pasteType, pasteCmd )
+    let l:regType = getregtype(a:regName)
+    let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
+
+    if a:regName ==# '='
+	" Cannot evaluate the expression register within a function; unscoped
+	" variables do not refer to the global scope. Therefore, evaluation
+	" happened earlier in the mappings, and stored this in s:exprResult.
+	" To get the expression result into the buffer, use the unnamed
+	" register, and restore it later.
+	let l:regName = '"'
+	let l:regContent = s:exprResult
+
+	let l:save_clipboard = &clipboard
+	set clipboard= " Avoid clobbering the selection and clipboard registers.
+	let l:save_reg = getreg(l:regName)
+	let l:save_regmode = getregtype(l:regName)
+    else
+	let l:regName = a:regName
+    endif
+
+    try
+	let l:pasteContent = l:regContent
+	if a:pasteType ==# 'c'
+	    if l:regType[0] ==# "\<C-v>"
+		let l:pasteContent = s:Flatten(s:StripTrailingWhitespace(l:regContent))
+	    else
+		let l:pasteContent = s:Flatten(l:regContent)
+	    endif
+	elseif a:pasteType ==# 'l' && l:regType[0] ==# "\<C-v>"
+	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	endif
+
+	call setreg(l:regName, l:pasteContent, a:pasteType)
+	execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:pasteCmd
+	call setreg(l:regName, l:regContent, l:regType)
+    catch /^Vim\%((\a\+)\)\=:E/
+	" v:exception contains what is normally in v:errmsg, but with extra
+	" exception source info prepended, which we cut away.
+	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echohl ErrorMsg
+	echomsg v:errmsg
+	echohl None
+    finally
+	if a:regName ==# '='
+	    call setreg('"', l:save_reg, l:save_regmode)
+	    let &clipboard = l:save_clipboard
+	endif
+    endtry
+endfunction
+
 function! s:CreateMappings()
     for [l:pasteName, pasteType] in [['Char', 'c'], ['Line', 'l'], ['Block', 'b']]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
@@ -81,9 +143,9 @@ function! s:CreateMappings()
 	    execute printf('nnoremap <silent> %s :<C-u>' .
 	    \	'execute ''silent! call repeat#setreg("\<lt>Plug>%s", v:register)''<Bar>' .
 	    \	'if v:register ==# "="<Bar>' .
-	    \	'    call UnconditionalPaste#HandleExprReg(getreg("="))<Bar>' .
+	    \	'    call <SID>HandleExprReg(getreg("="))<Bar>' .
 	    \	'endif<Bar>' .
-	    \	'call UnconditionalPaste#Paste(v:register, %s, %s)<Bar>' .
+	    \	'call <SID>Paste(v:register, %s, %s)<Bar>' .
 	    \	'silent! call repeat#set("\<lt>Plug>%s")<CR>',
 	    \
 	    \	l:plugMappingName,

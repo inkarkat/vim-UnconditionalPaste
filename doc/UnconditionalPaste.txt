@@ -77,6 +77,11 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+1.22	29-Nov-2012
+BUG: When repeat.vim is not installed, the mappings do nothing. Need to
+:execute the :silent! call of repeat.vim to avoid that the remainder of the
+command line is aborted together with the call.
+
 1.21	02-Dec-2011
 - ENH: When pasting a blockwise register as lines, strip all trailing
   whitespace. This is useful when cutting a block of text from a column-like

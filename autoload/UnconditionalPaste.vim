@@ -11,6 +11,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.00.016	05-Dec-2012	ENH: Add mappings to insert register contents
+"				from insert mode.
+"				ENH: Add mappings to paste lines flattened with
+"				comma, queried, or recalled last used delimiter.
 "   1.22.015	04-Dec-2012	Split off functions into autoload script.
 "   1.22.014	28-Nov-2012	BUG: When repeat.vim is not installed, the
 "				mappings do nothing. Need to :execute the
@@ -65,10 +69,10 @@ function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
 endfunction
 
-function! s:Flatten( text )
-    " Remove newline characters at the end of the text, convert all other
-    " newlines to a single space.
-    return substitute(substitute(a:text, '\n\+$', '', 'g'), '\n\+', ' ', 'g')
+function! s:Flatten( text, separator )
+    " Remove newline characters at the begin and end of the text, convert all
+    " other newlines to a single space.
+    return substitute(substitute(a:text, '^\n\+\|\n\+$', '', 'g'), '\n\+', a:separator, 'g')
 endfunction
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
@@ -97,12 +101,30 @@ function! UnconditionalPaste#Paste( regName, pasteType, ... )
 
     try
 	let l:pasteContent = l:regContent
-	if a:pasteType ==# 'c'
+	if a:pasteType !~# '^[lb]$'
 	    if l:regType[0] ==# "\<C-v>"
-		let l:pasteContent = s:Flatten(s:StripTrailingWhitespace(l:regContent))
+		let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
 	    else
-		let l:pasteContent = s:Flatten(l:regContent)
+		let l:pasteContent = l:regContent
 	    endif
+
+	    if a:pasteType ==# 'c'
+		let l:separator = ' '
+	    elseif a:pasteType ==# ','
+		let l:separator = ', '
+	    elseif a:pasteType ==# '/'
+		let l:separator = input('Enter separator string: ')
+		if empty(l:separator)
+		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		    return ''
+		endif
+		let g:UnconditionalPaste_Separator = l:separator
+	    elseif a:pasteType ==# '?'
+		let l:separator = g:UnconditionalPaste_Separator
+	    else
+		throw 'ASSERT: Invalid pasteType: ' . string(a:pasteType)
+	    endif
+	    let l:pasteContent = s:Flatten(l:pasteContent, l:separator)
 	elseif a:pasteType ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
 	endif
@@ -130,6 +152,17 @@ function! UnconditionalPaste#Paste( regName, pasteType, ... )
 	    let &clipboard = l:save_clipboard
 	endif
     endtry
+endfunction
+function! UnconditionalPaste#Insert( regName, pasteType )
+    if a:regName !~? '[0-9a-z"%#*+:.-]'
+	" Note the lack of "="; we don't support the expression register here,
+	" because we would need to do the querying and evaluation all by
+	" ourselves.
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	return ''
+    endif
+
+    return UnconditionalPaste#Paste(a:regName, a:pasteType)
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

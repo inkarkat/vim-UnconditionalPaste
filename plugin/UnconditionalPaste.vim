@@ -16,8 +16,6 @@
 " REVISION	DATE		REMARKS
 "   2.00.016	05-Dec-2012	ENH: Add mappings to insert register contents
 "				from insert mode.
-"				ENH: Add mappings to paste lines flattened with
-"				comma, queried, or recalled last used delimiter.
 "   1.22.015	04-Dec-2012	Split off functions into autoload script.
 "   1.22.014	28-Nov-2012	BUG: When repeat.vim is not installed, the
 "				mappings do nothing. Need to :execute the
@@ -77,26 +75,11 @@ let g:loaded_UnconditionalPaste = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-"- configuration ---------------------------------------------------------------
-
-if ! exists('g:UnconditionalPaste_Separator')
-    let g:UnconditionalPaste_Separator = "\t"
-endif
-
-
-"- mappings --------------------------------------------------------------------
-
 function! s:CreateMappings()
-    for [l:pasteName, pasteType] in [['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','], ['Queried', '/'], ['Recalled', '?']]
+    for [l:pasteName, pasteType] in [['Char', 'c'], ['Line', 'l'], ['Block', 'b']]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
 	    let l:plugMappingName = '<Plug>' . l:mappingName
-
-	    if l:pasteType ==# '/'
-		" On repeat of the UnconditionalPasteQueried mapping, we want to
-		" skip the query and recall the last queried separator instead.
-		let l:mappingName = 'UnconditionalPasteRecalled' . l:direction
-	    endif
 	    execute printf('nnoremap <silent> %s :<C-u>' .
 	    \   'execute ''silent! call repeat#setreg("\<lt>Plug>%s", v:register)''<Bar>' .
 	    \   'if v:register ==# "="<Bar>' .
@@ -121,7 +104,7 @@ function! s:CreateMappings()
 	endfor
     endfor
 
-    for [l:pasteName, pasteType, pasteKey] in [['Char', 'c', '<C-c>'], ['Line', 'l', '<C-l>'], ['Comma', ',', ','], ['Queried', '/', '<C-q>'], ['Recalled', '?', '<C-q><C-q>']]
+    for [l:pasteName, pasteType, pasteKey] in [['Char', 'c', '<C-c>'], ['Line', 'l', '<C-l>']]
 	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName
 	" XXX: Can only use i_CTRL-R here (though I want literal insertion, not
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert

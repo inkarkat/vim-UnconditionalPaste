@@ -74,7 +74,7 @@ function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction
 
-function! UnconditionalPaste#Paste( regName, pasteType, pasteCmd )
+function! UnconditionalPaste#Paste( regName, pasteType, ... )
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
@@ -107,9 +107,16 @@ function! UnconditionalPaste#Paste( regName, pasteType, pasteCmd )
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
 	endif
 
-	call setreg(l:regName, l:pasteContent, a:pasteType)
-	    execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:pasteCmd
-	call setreg(l:regName, l:regContent, l:regType)
+	if a:0
+	    call setreg(l:regName, l:pasteContent, a:pasteType)
+		execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:1
+	    call setreg(l:regName, l:regContent, l:regType)
+	else
+	    if a:pasteType ==# 'l'
+		let l:pasteContent = "\n" . l:pasteContent
+	    endif
+	    return l:pasteContent
+	endif
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away.

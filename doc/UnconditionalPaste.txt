@@ -26,15 +26,60 @@ Based on vimtip #1199 by cory,
 
 ==============================================================================
 USAGE						    *UnconditionalPaste-usage*
-					   *gcp* *gcP* *glp* *glP* *gbp* *gbP*
-["x]gcp			Paste characterwise (newline characters are flattened
-["x]gcP			to spaces) [count] times.
-["x]glp			Paste linewise (even if yanked text is not a complete
-["x]glP			line) [count] times.
-["x]gbp			Paste blockwise (inserting multiple lines in-place,
-["x]gbP			pushing existing text further to the right) [count]
+								   *gcp* *gcP*
+["x]gcp, ["x]gcP	Paste characterwise (newline characters are flattened
+			to spaces) [count] times.
+								   *glp* *glP*
+["x]glp, ["x]glP	Paste linewise (even if yanked text is not a complete
+			line) [count] times.
+								   *gbp* *gbP*
+["x]gbp, ["x]gbP	Paste blockwise (inserting multiple lines in-place,
+			pushing existing text further to the right) [count]
 			times.
 
+								   *g,p* *g,P*
+["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
+			instead of the newline.
+								   *gqp* *gqP*
+["x]gqp, ["x]gqP	Query for a separator string, then paste
+			characterwise, with each line delimited by it.
+								   *gQp* *gQP*
+["x]gQp, ["x]gQP	Paste characterwise, with each line delimited by the
+			previously queried (|gqp|) separator string.
+
+								   *gup* *guP*
+["x]gup, ["x]guP	Query for a separator pattern, un-join the register
+			contents, then paste linewise.
+								   *gUp* *gUP*
+["x]gUp, ["x]gUP	Un-join the register contents on the previously
+			queried (|gup|) separator pattern, then paste
+			linewise.
+
+
+CTRL-R CTRL-C {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-C*
+			Insert the contents of a register characterwise
+			(newline characters are flattened to spaces).
+			If you have options like 'textwidth', 'formatoptions',
+			or 'autoindent' set, this will influence what will be
+			inserted.
+CTRL-R , {0-9a-z"%#*+/:.-}				     *i_CTRL-R_,*
+			Insert the contents of a register characterwise, with
+			each line delimited by ", " instead of the newline.
+CTRL-R CTRL-Q {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-Q*
+			Query for a separator string, then insert the contents
+			of a register characterwise, with each line delimited
+			by it.
+CTRL-R CTRL-Q CTRL-Q {0-9a-z"%#*+/:.-}		      *i_CTRL-R_CTRL-Q_CTRL-Q*
+			Insert the contents of a register characterwise, with
+			each line delimited by the previously queried (|gqp|,
+			|i_CTRL-R_CTRL-Q|) separator string.
+CTRL-R CTRL-U {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-U*
+			Query for a separator pattern, un-join the contents of
+			a register, then insert it linewise.
+CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}		      *i_CTRL-R_CTRL-U_CTRL-U*
+			Un-join the contents of
+			a register on the previously queried (|gup|,
+			|i_CTRL_R_CTRL-U|) pattern, then insert it linewise.
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*
@@ -55,6 +100,20 @@ DEPENDENCIES				     *UnconditionalPaste-dependencies*
 ==============================================================================
 CONFIGURATION				    *UnconditionalPaste-configuration*
 
+For a permanent configuration, put the following commands into your |vimrc|:
+					  *g:UnconditionalPaste_JoinSeparator*
+The default separator string for the |gQp| and |i_CTRL-R_CTRL-Q_CTRL-Q|
+mappings is a <Tab> character; to preset another one (it will be overridden by
+|gqp| and |i_CTRL-R_CTRL-Q|), use: >
+    let g:UnconditionalPaste_JoinSeparator = 'text'
+<
+				 *g:UnconditionalPaste_UnjoinSeparatorPattern*
+The default separator pattern for the |gUp| and |i_CTRL-R_CTRL-U_CTRL-U|
+mappings matches any whitespace; to preset another one (it will be overridden
+by |gup| and |i_CTRL-R_CTRL-U|), use: >
+    let g:UnconditionalPaste_UnjoinSeparatorPattern = '-'
+<
+						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
 keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your |vimrc|): >
@@ -64,6 +123,23 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pl <Plug>UnconditionalPasteLineAfter
     nmap <Leader>Pb <Plug>UnconditionalPasteBlockBefore
     nmap <Leader>pb <Plug>UnconditionalPasteBlockAfter
+    nmap <Leader>P, <Plug>UnconditionalPasteCommaBefore
+    nmap <Leader>p, <Plug>UnconditionalPasteCommaAfter
+    nmap <Leader>Pq <Plug>UnconditionalPasteQueriedBefore
+    nmap <Leader>pq <Plug>UnconditionalPasteQueriedAfter
+    nmap <Leader>PQ <Plug>UnconditionalPasteRecallQueriedBefore
+    nmap <Leader>pQ <Plug>UnconditionalPasteRecallQueriedAfter
+    nmap <Leader>Pu <Plug>UnconditionalPasteUnjoinBefore
+    nmap <Leader>pu <Plug>UnconditionalPasteUnjoinAfter
+    nmap <Leader>PU <Plug>UnconditionalPasteRecallUnjoinBefore
+    nmap <Leader>pU <Plug>UnconditionalPasteRecallUnjoinAfter
+
+    imap <C-G>c <Plug>UnconditionalPasteChar
+    imap <C-G>, <Plug>UnconditionalPasteComma
+    imap <C-G>q <Plug>UnconditionalPasteQueried
+    imap <C-G>Q <Plug>UnconditionalPasteRecallQueried
+    imap <C-G>u <Plug>UnconditionalPasteUnjoin
+    imap <C-G>U <Plug>UnconditionalPasteRecallUnjoin
 <
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*

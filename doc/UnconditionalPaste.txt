@@ -27,8 +27,8 @@ Based on vimtip #1199 by cory,
 ==============================================================================
 USAGE						    *UnconditionalPaste-usage*
 								   *gcp* *gcP*
-["x]gcp, ["x]gcP	Paste characterwise (newline characters are flattened
-			to spaces) [count] times.
+["x]gcp, ["x]gcP	Paste characterwise (newline characters and indent are
+			flattened to spaces) [count] times.
 								   *glp* *glP*
 ["x]glp, ["x]glP	Paste linewise (even if yanked text is not a complete
 			line) [count] times.
@@ -39,7 +39,7 @@ USAGE						    *UnconditionalPaste-usage*
 
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
-			instead of the newline.
+			instead of the newline (and indent).
 								   *gqp* *gqP*
 ["x]gqp, ["x]gqP	Query for a separator string, then paste
 			characterwise, with each line delimited by it.
@@ -58,13 +58,15 @@ USAGE						    *UnconditionalPaste-usage*
 
 CTRL-R CTRL-C {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-C*
 			Insert the contents of a register characterwise
-			(newline characters are flattened to spaces).
+			(newline characters and indent are flattened to
+			spaces).
 			If you have options like 'textwidth', 'formatoptions',
 			or 'autoindent' set, this will influence what will be
 			inserted.
 CTRL-R , {0-9a-z"%#*+/:.-}				     *i_CTRL-R_,*
 			Insert the contents of a register characterwise, with
-			each line delimited by ", " instead of the newline.
+			each line delimited by ", " instead of the newline
+			(and indent).
 CTRL-R CTRL-Q {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-Q*
 			Query for a separator string, then insert the contents
 			of a register characterwise, with each line delimited

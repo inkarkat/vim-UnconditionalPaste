@@ -11,6 +11,9 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.00.017	06-Dec-2012	CHG: Flatten all whitespace and newlines before,
+"				after, and around lines when pasting
+"				characterwise or joined.
 "   2.00.016	05-Dec-2012	ENH: Add mappings to insert register contents
 "				characterwise (flattened) from insert mode.
 "				ENH: Add mappings to paste lines flattened with
@@ -73,9 +76,10 @@ function! UnconditionalPaste#HandleExprReg( exprResult )
 endfunction
 
 function! s:Flatten( text, separator )
-    " Remove newline characters at the begin and end of the text, convert all
-    " other newlines to a single space.
-    return substitute(substitute(a:text, '^\n\+\|\n\+$', '', 'g'), '\n\+', a:separator, 'g')
+    " Remove newlines and whitespace at the begin and end of the text, convert
+    " all other newlines (plus leading and trailing whitespace) to the passed
+    " separator.
+    return substitute(substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g'), '\s*\%(\n\s*\)\+', a:separator, 'g')
 endfunction
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')

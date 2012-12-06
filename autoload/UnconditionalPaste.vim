@@ -11,6 +11,9 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.00.018	07-Dec-2012	FIX: Differentiate between pasteType and a:how
+"				argument, as setregtype() only understands the
+"				former.
 "   2.00.017	06-Dec-2012	CHG: Flatten all whitespace and newlines before,
 "				after, and around lines when pasting
 "				characterwise or joined.
@@ -88,7 +91,7 @@ function! s:Unjoin( text, separatorPattern )
     return substitute(a:text, a:separatorPattern, '\n', 'g')
 endfunction
 
-function! UnconditionalPaste#Paste( regName, pasteType, ... )
+function! UnconditionalPaste#Paste( regName, how, ... )
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
@@ -111,32 +114,38 @@ function! UnconditionalPaste#Paste( regName, pasteType, ... )
 
     try
 	let l:pasteContent = l:regContent
-	if a:pasteType =~# '^[c,qQ]$'
+	let l:pasteType = 'l'
+
+	if a:how ==# 'b'
+	    let l:pasteType = 'b'
+	elseif a:how =~# '^[c,qQ]$'
+	    let l:pasteType = 'c'
+
 	    if l:regType[0] ==# "\<C-v>"
 		let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
 	    else
 		let l:pasteContent = l:regContent
 	    endif
 
-	    if a:pasteType ==# 'c'
+	    if a:how ==# 'c'
 		let l:separator = ' '
-	    elseif a:pasteType ==# ','
+	    elseif a:how ==# ','
 		let l:separator = ', '
-	    elseif a:pasteType ==# 'q'
+	    elseif a:how ==# 'q'
 		let l:separator = input('Enter separator string: ')
 		if empty(l:separator)
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		    return ''
 		endif
 		let g:UnconditionalPaste_JoinSeparator = l:separator
-	    elseif a:pasteType ==# 'Q'
+	    elseif a:how ==# 'Q'
 		let l:separator = g:UnconditionalPaste_JoinSeparator
 	    else
-		throw 'ASSERT: Invalid pasteType: ' . string(a:pasteType)
+		throw 'ASSERT: Invalid how: ' . string(a:how)
 	    endif
 	    let l:pasteContent = s:Flatten(l:pasteContent, l:separator)
-	elseif a:pasteType ==? 'u'
-	    if a:pasteType ==# 'u'
+	elseif a:how ==? 'u'
+	    if a:how ==# 'u'
 		let l:separatorPattern = input('Enter separator pattern: ')
 		if empty(l:separatorPattern)
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
@@ -153,12 +162,12 @@ function! UnconditionalPaste#Paste( regName, pasteType, ... )
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		return ''
 	    endif
-	elseif a:pasteType ==# 'l' && l:regType[0] ==# "\<C-v>"
+	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
 	endif
 
 	if a:0
-	    call setreg(l:regName, l:pasteContent, a:pasteType)
+	    call setreg(l:regName, l:pasteContent, l:pasteType)
 		execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:1
 	    call setreg(l:regName, l:regContent, l:regType)
 	else
@@ -178,7 +187,7 @@ function! UnconditionalPaste#Paste( regName, pasteType, ... )
 	endif
     endtry
 endfunction
-function! UnconditionalPaste#Insert( regName, pasteType )
+function! UnconditionalPaste#Insert( regName, how )
     if a:regName !~? '[0-9a-z"%#*+:.-]'
 	" Note the lack of "="; we don't support the expression register here,
 	" because we would need to do the querying and evaluation all by
@@ -187,7 +196,7 @@ function! UnconditionalPaste#Insert( regName, pasteType )
 	return ''
     endif
 
-    return UnconditionalPaste#Paste(a:regName, a:pasteType)
+    return UnconditionalPaste#Paste(a:regName, a:how)
 endfunction
 
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

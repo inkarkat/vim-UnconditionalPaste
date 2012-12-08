@@ -111,8 +111,9 @@ mappings is a <Tab> character; to preset another one (it will be overridden by
 <
 				 *g:UnconditionalPaste_UnjoinSeparatorPattern*
 The default separator pattern for the |gUp| and |i_CTRL-R_CTRL-U_CTRL-U|
-mappings matches any whitespace; to preset another one (it will be overridden
-by |gup| and |i_CTRL-R_CTRL-U|), use: >
+mappings matches any whitespace and newlines (i.e. it will get rid of empty
+lines); to preset another one (it will be overridden by |gup| and
+|i_CTRL-R_CTRL-U|), use: >
     let g:UnconditionalPaste_UnjoinSeparatorPattern = '-'
 <
 						    *UnconditionalPaste-remap*

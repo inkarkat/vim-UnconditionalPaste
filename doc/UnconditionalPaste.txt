@@ -24,6 +24,12 @@ SOURCE									     *
 Based on vimtip #1199 by cory,
     http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 
+RELATED WORKS								     *
+
+- whitespaste.vim (vimscript #4351) automatically removes blank lines around
+  linewise contents, and condenses inner lines to a single one. By default, it
+  remaps p / P, but this can be changed.
+
 ==============================================================================
 USAGE						    *UnconditionalPaste-usage*
 								   *gcp* *gcP*

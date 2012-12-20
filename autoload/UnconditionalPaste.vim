@@ -11,6 +11,13 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.10.019	21-Dec-2012	FIX: For characterwise pastes with a [count],
+"				the multiplied pastes must be joined with the
+"				desired separator, not just plainly
+"				concatenated.
+"				ENH: Add mappings to paste with one number
+"				(which depending on the current cursor position)
+"				incremented / decremented.
 "   2.00.018	07-Dec-2012	FIX: Differentiate between pasteType and a:how
 "				argument, as setregtype() only understands the
 "				former.
@@ -94,8 +101,27 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
+function! s:Increment( text, vcol, offset )
+    let l:replacement = '\=submatch(0) + ' . a:offset
+
+    if a:vcol == -1 || a:vcol == 0 && col('.') + 1 == col('$')
+	return [-1, substitute(a:text, '\d\+\ze\D*$', l:replacement, '')]
+    endif
+
+    let l:text = a:text
+    let l:vcol = (a:vcol == 0 ? virtcol('.') : a:vcol)
+    if l:vcol > 1
+	let l:text = substitute(a:text, '\d*\%>' . (l:vcol - 1) . 'v\d\+', l:replacement, '')
+    endif
+    if l:text ==# a:text
+	return [1, substitute(a:text, '\d\+', l:replacement, '')]
+    else
+	return [l:vcol, l:text]
+    endif
+endfunction
 
 function! UnconditionalPaste#Paste( regName, how, ... )
+    let l:count = v:count
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
@@ -147,6 +173,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		throw 'ASSERT: Invalid how: ' . string(a:how)
 	    endif
+
+	    if l:count > 1
+		" To join the multiplied pastes with the desired separator, we
+		" need to process the multiplication on our own.
+		let l:pasteContent = repeat(l:pasteContent . "\n", l:count)
+		let l:count = 0
+	    endif
+
 	    let l:pasteContent = s:Flatten(l:pasteContent, l:separator)
 	elseif a:how ==? 'u'
 	    if a:how ==# 'u'
@@ -168,11 +202,45 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	elseif a:how ==# 'p' || a:how ==# '.p'
+	    let l:pasteType = l:regType " Keep the original paste type.
+	    let l:offset = (a:1 ==# 'p' ? 1 : -1)
+	    if a:how ==# 'p'
+		let l:baseCount = 1
+		let l:vcol = 0
+	    elseif a:how ==# '.p'
+		" Continue increasing with the last used (saved) offset, and at
+		" the same number position (after the first paste, the cursor
+		" will have jumped to the beginning of the pasted text).
+		let l:baseCount = s:lastCount + 1
+		let l:vcol = s:lastVcol
+	    else
+		throw 'ASSERT: Invalid how: ' . string(a:how)
+	    endif
+	    let s:lastCount = l:baseCount
+
+	    let [s:lastVcol, l:pasteContent] = s:Increment(l:regContent, l:vcol, l:offset * l:baseCount)
+	    if l:pasteContent ==# l:regContent
+		" No number was found in the register; this is probably not what
+		" the user intended (maybe wrong register?), so don't just
+		" insert the contents unchanged, but rather alert the user.
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		return ''
+	    endif
+
+	    if l:count > 1
+		" To increment each multiplied paste one more, we need to
+		" process the multiplication on our own.
+		let l:numbers = (l:offset > 0 ? range(l:baseCount, l:baseCount + l:count - 1) : range(-1 * (l:baseCount + l:count - 1), -1 * l:baseCount))
+		let l:pasteContent = join(map(l:numbers, 's:Increment(l:regContent, l:vcol, v:val)[1]'), (l:regType[0] ==# "\<C-v>" ? "\n" : ''))
+		let s:lastCount = l:baseCount + l:count - 1
+		let l:count = 0
+	    endif
 	endif
 
 	if a:0
 	    call setreg(l:regName, l:pasteContent, l:pasteType)
-		execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:1
+		execute 'normal! "' . l:regName . (l:count ? l:count : '') . a:1
 	    call setreg(l:regName, l:regContent, l:regType)
 	else
 	    return l:pasteContent

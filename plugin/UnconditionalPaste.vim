@@ -14,9 +14,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.10.017	21-Dec-2012	ENH: Add mappings to paste with one number
-"				(which depending on the current cursor position)
-"				incremented / decremented.
 "   2.00.016	05-Dec-2012	ENH: Add mappings to insert register contents
 "				characterwise (flattened) from insert mode.
 "				ENH: Add mappings to paste lines flattened with
@@ -101,8 +98,7 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
-    \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
-    \       ['Plus', 'p'], ['PlusRepeat', '.p']
+    \       ['Unjoin', 'u'], ['RecallUnjoin', 'U']
     \   ]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
@@ -112,12 +108,6 @@ function! s:CreateMappings()
 		" On repeat of the UnconditionalPasteQueried mapping, we want to
 		" skip the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecalled' . l:direction
-	    elseif l:pasteType ==# 'p'
-		" On repeat of the UnconditionalPastePlus mapping, we want to
-		" continue increasing with the last used (saved) offset, and at
-		" the same number position (after the first paste, the cursor
-		" will have jumped to the beginning of the pasted text).
-		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
 	    execute printf('nnoremap <silent> %s :<C-u>' .
 	    \   'execute ''silent! call repeat#setreg("\<lt>Plug>%s", v:register)''<Bar>' .
@@ -133,7 +123,7 @@ function! s:CreateMappings()
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
-	    if ! hasmapto(l:plugMappingName, 'n') && len(l:pasteType) == 1
+	    if ! hasmapto(l:plugMappingName, 'n')
 		execute printf('nmap g%s%s %s',
 		\   l:pasteType,
 		\   l:pasteCmd,

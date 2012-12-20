@@ -15,6 +15,9 @@
 "				the multiplied pastes must be joined with the
 "				desired separator, not just plainly
 "				concatenated.
+"				ENH: Add mappings to paste with one number
+"				(which depending on the current cursor position)
+"				incremented / decremented.
 "   2.00.018	07-Dec-2012	FIX: Differentiate between pasteType and a:how
 "				argument, as setregtype() only understands the
 "				former.
@@ -97,6 +100,20 @@ function! s:Unjoin( text, separatorPattern )
     " A (single!) trailing separator is automatically swallowed by the linewise
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
+endfunction
+function! s:Increment( text, offset )
+    let l:replacement = '\=submatch(0) + ' . a:offset
+
+    if col('.') + 1 == col('$')
+	return substitute(a:text, '\d\+\ze\D*$', l:replacement, '')
+    endif
+
+    let l:text = substitute(a:text, '\d*\%>' . (virtcol('.') - 1) . 'v\d\+', l:replacement, '')
+    if l:text ==# a:text
+	let l:text = substitute(a:text, '\d\+', l:replacement, '')
+    endif
+
+    return l:text
 endfunction
 
 function! UnconditionalPaste#Paste( regName, how, ... )
@@ -181,6 +198,26 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	elseif a:how ==# 'p'
+	    let l:pasteType = l:regType " Keep the original paste type.
+	    let l:offset = (a:1 ==# 'p' ? 1 : -1)
+
+	    let l:pasteContent = s:Increment(l:regContent, l:offset)
+	    if l:pasteContent ==# l:regContent
+		" No number was found in the register; this is probably not what
+		" the user intended (maybe wrong register?), so don't just
+		" insert the contents unchanged, but rather alert the user.
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		return ''
+	    endif
+
+	    if l:count > 1
+		" To increment each multiplied paste one more, we need to
+		" process the multiplication on our own.
+		let l:numbers = (l:offset > 0 ? range(1, l:count) : range(-1 * l:count, -1))
+		let l:pasteContent = join(map(l:numbers, 's:Increment(l:regContent, v:val)'), (l:regType[0] ==# "\<C-v>" ? "\n" : ''))
+		let l:count = 0
+	    endif
 	endif
 
 	if a:0

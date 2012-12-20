@@ -17,7 +17,15 @@ DESCRIPTION				      *UnconditionalPaste-description*
 If you're like me, you occasionally do a linewise yank, and then want to
 insert that yanked text in the middle of some other line (or vice versa).
 The mappings defined by this plugin will allow you to do a character-, line-,
-or block-wise paste no matter how you yanked the text.
+or block-wise paste no matter how you yanked the text, both from normal and
+insert mode.
+
+Often, the register contents aren't quite in the form you need them. Maybe you
+need to convert yanked lines to comma-separated arguments, maybe join the
+lines with another separator, maybe the reverse: un-joining a single line on
+some pattern to yield multiple lines. Though you can do the manipulation after
+pasting, this plugin offers shortcut mappings for these actions, which are
+especially helpful when you need to repeat the paste multiple times.
 
 SOURCE									     *
 
@@ -161,6 +169,17 @@ IDEAS						    *UnconditionalPaste-ideas*
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+2.00	05-Dec-2012
+- ENH: Add g,p / gqp / gQp mappings to paste lines flattened with comma,
+  queried, or recalled last used delimiter.
+- ENH: Add gup / gUp mappings to paste unjoined register with queried or
+  recalled last used delimiter pattern.
+- ENH: Add CTRL-R CTRL-C mapping to insert register contents characterwise
+  (flattened) from insert mode, and similar insert mode mappings for the other
+  new mappings.
+- CHG: Flatten all whitespace and newlines before, after, and around lines
+  when pasting characterwise or joined.
 
 1.22	04-Dec-2012
 - BUG: When repeat.vim is not installed, the mappings do nothing. Need to

@@ -102,7 +102,7 @@ function! s:CreateMappings()
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
-    \       ['Plus', 'p']
+    \       ['Plus', 'p'], ['PlusRepeat', '.p']
     \   ]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
@@ -112,6 +112,12 @@ function! s:CreateMappings()
 		" On repeat of the UnconditionalPasteQueried mapping, we want to
 		" skip the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecalled' . l:direction
+	    elseif l:pasteType ==# 'p'
+		" On repeat of the UnconditionalPastePlus mapping, we want to
+		" continue increasing with the last used (saved) offset, and at
+		" the same number position (after the first paste, the cursor
+		" will have jumped to the beginning of the pasted text).
+		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
 	    execute printf('nnoremap <silent> %s :<C-u>' .
 	    \   'execute ''silent! call repeat#setreg("\<lt>Plug>%s", v:register)''<Bar>' .
@@ -127,7 +133,7 @@ function! s:CreateMappings()
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
-	    if ! hasmapto(l:plugMappingName, 'n')
+	    if ! hasmapto(l:plugMappingName, 'n') && len(l:pasteType) == 1
 		execute printf('nmap g%s%s %s',
 		\   l:pasteType,
 		\   l:pasteCmd,

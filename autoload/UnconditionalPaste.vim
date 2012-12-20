@@ -11,6 +11,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.10.019	21-Dec-2012	FIX: For characterwise pastes with a [count],
+"				the multiplied pastes must be joined with the
+"				desired separator, not just plainly
+"				concatenated.
 "   2.00.018	07-Dec-2012	FIX: Differentiate between pasteType and a:how
 "				argument, as setregtype() only understands the
 "				former.
@@ -88,10 +92,15 @@ function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction
 function! s:Unjoin( text, separatorPattern )
-    return substitute(a:text, a:separatorPattern, '\n', 'g')
+    let l:text = substitute(a:text, a:separatorPattern, '\n', 'g')
+
+    " A (single!) trailing separator is automatically swallowed by the linewise
+    " pasting. For consistency, do the same for a single leading separator.
+    return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
 
 function! UnconditionalPaste#Paste( regName, how, ... )
+    let l:count = v:count
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
@@ -143,6 +152,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		throw 'ASSERT: Invalid how: ' . string(a:how)
 	    endif
+
+	    if l:count > 1
+		" To join the multiplied pastes with the desired separator, we
+		" need to process the multiplication on our own.
+		let l:pasteContent = repeat(l:pasteContent . "\n", l:count)
+		let l:count = 0
+	    endif
+
 	    let l:pasteContent = s:Flatten(l:pasteContent, l:separator)
 	elseif a:how ==? 'u'
 	    if a:how ==# 'u'
@@ -168,7 +185,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 
 	if a:0
 	    call setreg(l:regName, l:pasteContent, l:pasteType)
-		execute 'normal! "' . l:regName . (v:count ? v:count : '') . a:1
+		execute 'normal! "' . l:regName . (l:count ? l:count : '') . a:1
 	    call setreg(l:regName, l:regContent, l:regType)
 	else
 	    return l:pasteContent

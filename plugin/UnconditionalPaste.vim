@@ -14,6 +14,18 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.10.017	21-Dec-2012	ENH: Add mappings to paste with one number
+"				(which depending on the current cursor position)
+"				incremented / decremented.
+"				Handle repeat of gpp with the last used offset
+"				and the same number position by introducing a
+"				special ".p" paste type.
+"				FIX: Don't lose the original [count] given when
+"				repeating the mapping. As
+"				UnconditionalPaste#Paste() executes a normal
+"				mode command, we need to store v:count and make
+"				it available to the <Plug>-mapping via the new
+"				UnconditionalPaste#GetCount() getter.
 "   2.00.016	05-Dec-2012	ENH: Add mappings to insert register contents
 "				characterwise (flattened) from insert mode.
 "				ENH: Add mappings to paste lines flattened with
@@ -98,7 +110,8 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
-    \       ['Unjoin', 'u'], ['RecallUnjoin', 'U']
+    \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
+    \       ['Plus', 'p'], ['PlusRepeat', '.p']
     \   ]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
@@ -108,6 +121,12 @@ function! s:CreateMappings()
 		" On repeat of the UnconditionalPasteQueried mapping, we want to
 		" skip the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecalled' . l:direction
+	    elseif l:pasteType ==# 'p'
+		" On repeat of the UnconditionalPastePlus mapping, we want to
+		" continue increasing with the last used (saved) offset, and at
+		" the same number position (after the first paste, the cursor
+		" will have jumped to the beginning of the pasted text).
+		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
 	    execute printf('nnoremap <silent> %s :<C-u>' .
 	    \   'execute ''silent! call repeat#setreg("\<lt>Plug>%s", v:register)''<Bar>' .
@@ -115,7 +134,7 @@ function! s:CreateMappings()
 	    \   '    call UnconditionalPaste#HandleExprReg(getreg("="))<Bar>' .
 	    \   'endif<Bar>' .
 	    \   'call UnconditionalPaste#Paste(v:register, %s, %s)<Bar>' .
-	    \   'silent! call repeat#set("\<lt>Plug>%s")<CR>',
+	    \   'silent! call repeat#set("\<lt>Plug>%s", UnconditionalPaste#GetCount())<CR>',
 	    \
 	    \   l:plugMappingName,
 	    \   l:mappingName,
@@ -123,7 +142,7 @@ function! s:CreateMappings()
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
-	    if ! hasmapto(l:plugMappingName, 'n')
+	    if ! hasmapto(l:plugMappingName, 'n') && len(l:pasteType) == 1
 		execute printf('nmap g%s%s %s',
 		\   l:pasteType,
 		\   l:pasteCmd,

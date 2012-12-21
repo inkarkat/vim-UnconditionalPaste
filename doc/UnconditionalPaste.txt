@@ -69,6 +69,14 @@ USAGE						    *UnconditionalPaste-usage*
 			queried (|gup|) separator pattern, then paste
 			linewise.
 
+								   *gpp* *gpP*
+["x]gpp, ["x]gpP	Paste with the first number found on or after the
+			current cursor column (or the overall first number, if
+			no such match, or the last number, if the cursor is at
+			the end of the line) incremented / decremented by 1.
+			Do this [count] times, with each paste further
+			incremented / decremented.
+
 
 CTRL-R CTRL-C {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-C*
 			Insert the contents of a register characterwise
@@ -150,6 +158,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pu <Plug>UnconditionalPasteUnjoinAfter
     nmap <Leader>PU <Plug>UnconditionalPasteRecallUnjoinBefore
     nmap <Leader>pU <Plug>UnconditionalPasteRecallUnjoinAfter
+    nmap <Leader>Pp <Plug>UnconditionalPastePlusBefore
+    nmap <Leader>pp <Plug>UnconditionalPastePlusAfter
 
     imap <C-G>c <Plug>UnconditionalPasteChar
     imap <C-G>, <Plug>UnconditionalPasteComma
@@ -169,6 +179,13 @@ IDEAS						    *UnconditionalPaste-ideas*
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+2.10	21-Dec-2012
+- FIX: For characterwise pastes with a [count], the multiplied pastes must be
+  joined with the desired separator, not just plainly concatenated.
+- ENH: Add gpp / gpP mappings to paste with one number (which depending on the
+  current cursor position) incremented / decremented.
+- FIX: Don't lose the original [count] given when repeating the mapping.
 
 2.00	05-Dec-2012
 - ENH: Add g,p / gqp / gQp mappings to paste lines flattened with comma,

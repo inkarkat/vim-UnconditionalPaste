@@ -180,12 +180,13 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-2.10	21-Dec-2012
-- FIX: For characterwise pastes with a [count], the multiplied pastes must be
-  joined with the desired separator, not just plainly concatenated.
+2.10	22-Dec-2012
 - ENH: Add gpp / gpP mappings to paste with one number (which depending on the
   current cursor position) incremented / decremented.
+- FIX: For characterwise pastes with a [count], the multiplied pastes must be
+  joined with the desired separator, not just plainly concatenated.
 - FIX: Don't lose the original [count] given when repeating the mapping.
+- FIX: Do not re-query on repeat of the mapping.
 
 2.00	05-Dec-2012
 - ENH: Add g,p / gqp / gQp mappings to paste lines flattened with comma,

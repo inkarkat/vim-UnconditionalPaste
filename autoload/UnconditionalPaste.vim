@@ -110,39 +110,23 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
-function! s:IncrementLine( line, vcol, replacement )
-    if a:vcol == -1 || a:vcol == 0 && col('.') + 1 == col('$')
-	" Increment the last number.
-	return [-1, substitute(a:line, '\d\+\ze\D*$', a:replacement, '')]
-    endif
-
-    let l:text = a:line
-    let l:vcol = (a:vcol == 0 ? virtcol('.') : a:vcol)
-    if l:vcol > 1
-	let l:text = substitute(a:line, '\d*\%>' . (l:vcol - 1) . 'v\d\+', a:replacement, '')
-    endif
-    if l:text ==# a:line
-	" Fall back to first number.
-	return [1, substitute(a:line, '\d\+', a:replacement, '')]
-    else
-	return [l:vcol, l:text]
-    endif
-endfunction
 function! s:Increment( text, vcol, offset )
     let l:replacement = '\=submatch(0) + ' . a:offset
 
-    let l:resultVcol = -9999
-    let l:result = []
-    for l:line in split(a:text, "\n", 1)
-	let [l:vcol, l:incrementedLine] = s:IncrementLine(l:line, a:vcol, l:replacement)
-	if l:incrementedLine !=# l:line && l:resultVcol == 9999
-	    " Return first reported vcol of an actually incremented line.
-	    let l:resultVcol = l:vcol
-	endif
-	call add(l:result, l:incrementedLine)
-    endfor
+    if a:vcol == -1 || a:vcol == 0 && col('.') + 1 == col('$')
+	return [-1, substitute(a:text, '\d\+\ze\D*$', l:replacement, '')]
+    endif
 
-    return [l:resultVcol, join(l:result, "\n")]
+    let l:text = a:text
+    let l:vcol = (a:vcol == 0 ? virtcol('.') : a:vcol)
+    if l:vcol > 1
+	let l:text = substitute(a:text, '\d*\%>' . (l:vcol - 1) . 'v\d\+', l:replacement, '')
+    endif
+    if l:text ==# a:text
+	return [1, substitute(a:text, '\d\+', l:replacement, '')]
+    else
+	return [l:vcol, l:text]
+    endif
 endfunction
 
 function! UnconditionalPaste#GetCount()

@@ -18,6 +18,15 @@
 "				ENH: Add mappings to paste with one number
 "				(which depending on the current cursor position)
 "				incremented / decremented.
+"				Handle repeat of gpp with the last used offset
+"				and the same number position by introducing a
+"				special ".p" paste type.
+"				FIX: Don't lose the original [count] given when
+"				repeating the mapping. As
+"				UnconditionalPaste#Paste() executes a normal
+"				mode command, we need to store v:count and make
+"				it available to the <Plug>-mapping via the new
+"				UnconditionalPaste#GetCount() getter.
 "   2.00.018	07-Dec-2012	FIX: Differentiate between pasteType and a:how
 "				argument, as setregtype() only understands the
 "				former.
@@ -101,27 +110,47 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
-function! s:Increment( text, vcol, offset )
-    let l:replacement = '\=submatch(0) + ' . a:offset
-
+function! s:IncrementLine( line, vcol, replacement )
     if a:vcol == -1 || a:vcol == 0 && col('.') + 1 == col('$')
-	return [-1, substitute(a:text, '\d\+\ze\D*$', l:replacement, '')]
+	" Increment the last number.
+	return [-1, substitute(a:line, '\d\+\ze\D*$', a:replacement, '')]
     endif
 
-    let l:text = a:text
+    let l:text = a:line
     let l:vcol = (a:vcol == 0 ? virtcol('.') : a:vcol)
     if l:vcol > 1
-	let l:text = substitute(a:text, '\d*\%>' . (l:vcol - 1) . 'v\d\+', l:replacement, '')
+	let l:text = substitute(a:line, '\d*\%>' . (l:vcol - 1) . 'v\d\+', a:replacement, '')
     endif
-    if l:text ==# a:text
-	return [1, substitute(a:text, '\d\+', l:replacement, '')]
+    if l:text ==# a:line
+	" Fall back to first number.
+	return [1, substitute(a:line, '\d\+', a:replacement, '')]
     else
 	return [l:vcol, l:text]
     endif
 endfunction
+function! s:Increment( text, vcol, offset )
+    let l:replacement = '\=submatch(0) + ' . a:offset
 
+    let l:resultVcol = -9999
+    let l:result = []
+    for l:line in split(a:text, "\n", 1)
+	let [l:vcol, l:incrementedLine] = s:IncrementLine(l:line, a:vcol, l:replacement)
+	if l:incrementedLine !=# l:line && l:resultVcol == 9999
+	    " Return first reported vcol of an actually incremented line.
+	    let l:resultVcol = l:vcol
+	endif
+	call add(l:result, l:incrementedLine)
+    endfor
+
+    return [l:resultVcol, join(l:result, "\n")]
+endfunction
+
+function! UnconditionalPaste#GetCount()
+    return s:count
+endfunction
 function! UnconditionalPaste#Paste( regName, how, ... )
     let l:count = v:count
+    let s:count = v:count
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 

@@ -76,6 +76,11 @@ USAGE						    *UnconditionalPaste-usage*
 			the end of the line) incremented / decremented by 1.
 			Do this [count] times, with each paste further
 			incremented / decremented.
+								   *gPp* *gPP*
+["x]gPp, ["x]gPP	Paste with the all numbers incremented / decremented
+			by 1.
+			Do this [count] times, with each paste further
+			incremented / decremented.
 
 
 CTRL-R CTRL-C {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-C*
@@ -180,6 +185,13 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+2.20	18-Mar-2013
+- ENH: gpp also handles multi-line pastes. A number (after the corresponding
+  column) is incremented in every line. If there are no increments this way,
+  fall back to replacement of the first occurrence.
+- ENH: Add gPp / gPP mappings to paste with all numbers incremented /
+  decremented.
+
 2.10	22-Dec-2012
 - ENH: Add gpp / gpP mappings to paste with one number (which depending on the
   current cursor position) incremented / decremented.
@@ -236,7 +248,7 @@ Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
 Copyright: (C) 2006-2012 Ingo Karkat
-The VIM LICENSE applies to this script; see |copyright|.
+The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
 ==============================================================================

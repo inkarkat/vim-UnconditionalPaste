@@ -14,6 +14,9 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.10.018	22-Dec-2012	FIX: Do not re-query on repeat of the mapping.
+"				This wasn't updated for the Query mapping and
+"				not implemented at all for the Unjoin mapping.
 "   2.10.017	21-Dec-2012	ENH: Add mappings to paste with one number
 "				(which depending on the current cursor position)
 "				incremented / decremented.
@@ -117,10 +120,10 @@ function! s:CreateMappings()
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
 	    let l:plugMappingName = '<Plug>' . l:mappingName
 
-	    if l:pasteType ==# '/'
-		" On repeat of the UnconditionalPasteQueried mapping, we want to
-		" skip the query and recall the last queried separator instead.
-		let l:mappingName = 'UnconditionalPasteRecalled' . l:direction
+	    if l:pasteType ==# 'q' || l:pasteType ==# 'u'
+		" On repeat of one of the mappings that query, we want to skip
+		" the query and recall the last queried separator instead.
+		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
 	    elseif l:pasteType ==# 'p'
 		" On repeat of the UnconditionalPastePlus mapping, we want to
 		" continue increasing with the last used (saved) offset, and at

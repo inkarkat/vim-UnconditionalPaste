@@ -14,6 +14,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.20.019	18-Mar-2013	ENH: Add gPp / gPP mappings to paste with all
+"				numbers incremented / decremented.
 "   2.10.018	22-Dec-2012	FIX: Do not re-query on repeat of the mapping.
 "				This wasn't updated for the Query mapping and
 "				not implemented at all for the Unjoin mapping.
@@ -114,7 +116,8 @@ function! s:CreateMappings()
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
-    \       ['Plus', 'p'], ['PlusRepeat', '.p']
+    \       ['Plus', 'p'], ['PlusRepeat', '.p'],
+    \       ['GPlus', 'P'], ['GPlusRepeat', '.P']
     \   ]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
@@ -124,11 +127,12 @@ function! s:CreateMappings()
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
-	    elseif l:pasteType ==# 'p'
-		" On repeat of the UnconditionalPastePlus mapping, we want to
-		" continue increasing with the last used (saved) offset, and at
-		" the same number position (after the first paste, the cursor
-		" will have jumped to the beginning of the pasted text).
+	    elseif l:pasteType ==? 'p'
+		" On repeat of the UnconditionalPastePlus /
+		" UnconditionalPasteGPlus mappings, we want to continue
+		" increasing with the last used (saved) offset, and at the same
+		" number position (after the first paste, the cursor will have
+		" jumped to the beginning of the pasted text).
 		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
 	    execute printf('nnoremap <silent> %s :<C-u>' .

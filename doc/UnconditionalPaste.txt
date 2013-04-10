@@ -51,6 +51,11 @@ USAGE						    *UnconditionalPaste-usage*
 			pushing existing text further to the right) [count]
 			times.
 
+						       *g]p* *g[P* *g]P* *g[p*
+["x]g]p, ["x]g[P  or	Paste linewise (even if yanked text is not a complete
+	 ["x]g]P  or	line) [count] times like |glp|, but adjust the indent
+	 ["x]g[p	to the current line (like |]p|) .
+
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
 			instead of the newline (and indent).
@@ -153,6 +158,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pl <Plug>UnconditionalPasteLineAfter
     nmap <Leader>Pb <Plug>UnconditionalPasteBlockBefore
     nmap <Leader>pb <Plug>UnconditionalPasteBlockAfter
+    nmap <Leader>Pi <Plug>UnconditionalPasteIndentedBefore
+    nmap <Leader>pi <Plug>UnconditionalPasteIndentedAfter
     nmap <Leader>P, <Plug>UnconditionalPasteCommaBefore
     nmap <Leader>p, <Plug>UnconditionalPasteCommaAfter
     nmap <Leader>Pq <Plug>UnconditionalPasteQueriedBefore
@@ -165,6 +172,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pU <Plug>UnconditionalPasteRecallUnjoinAfter
     nmap <Leader>Pp <Plug>UnconditionalPastePlusBefore
     nmap <Leader>pp <Plug>UnconditionalPastePlusAfter
+    nmap <Leader>PP <Plug>UnconditionalPasteGPlusBefore
+    nmap <Leader>pP <Plug>UnconditionalPasteGPlusAfter
 
     imap <C-G>c <Plug>UnconditionalPasteChar
     imap <C-G>, <Plug>UnconditionalPasteComma
@@ -191,6 +200,8 @@ HISTORY						  *UnconditionalPaste-history*
   fall back to replacement of the first occurrence.
 - ENH: Add gPp / gPP mappings to paste with all numbers incremented /
   decremented.
+- ENH: Add g]p / g]P mappings to paste linewise with adjusted indent. Thanks
+  to Gary Fixler for the suggestion.
 
 2.10	22-Dec-2012
 - ENH: Add gpp / gpP mappings to paste with one number (which depending on the
@@ -247,7 +258,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2012 Ingo Karkat
+Copyright: (C) 2006-2013 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

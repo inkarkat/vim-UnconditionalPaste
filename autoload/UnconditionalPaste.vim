@@ -3,7 +3,7 @@
 "
 " DEPENDENCIES:
 
-" Copyright: (C) 2006-2012 Ingo Karkat
+" Copyright: (C) 2006-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -11,6 +11,13 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.20.021	18-Mar-2013	ENH: Add gPp / gPP mappings to paste with all
+"				numbers incremented / decremented.
+"   2.20.020	15-Mar-2013	ENH: gpp also handles multi-line pastes. A
+"				number (after the corresponding column) is
+"				incremented in every line. If there are no
+"				increments this way, fall back to replacement of
+"				the first occurrence.
 "   2.10.019	21-Dec-2012	FIX: For characterwise pastes with a [count],
 "				the multiplied pastes must be joined with the
 "				desired separator, not just plainly
@@ -110,23 +117,43 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
-function! s:Increment( text, vcol, offset )
-    let l:replacement = '\=submatch(0) + ' . a:offset
-
+function! s:IncrementLine( line, vcol, replacement )
     if a:vcol == -1 || a:vcol == 0 && col('.') + 1 == col('$')
-	return [-1, substitute(a:text, '\d\+\ze\D*$', l:replacement, '')]
+	" Increment the last number.
+	return [-1, substitute(a:line, '\d\+\ze\D*$', a:replacement, '')]
     endif
 
-    let l:text = a:text
+    let l:text = a:line
     let l:vcol = (a:vcol == 0 ? virtcol('.') : a:vcol)
     if l:vcol > 1
-	let l:text = substitute(a:text, '\d*\%>' . (l:vcol - 1) . 'v\d\+', l:replacement, '')
-    endif
-    if l:text ==# a:text
-	return [1, substitute(a:text, '\d\+', l:replacement, '')]
+	return [l:vcol, substitute(a:line, '\d*\%>' . (l:vcol - 1) . 'v\d\+', a:replacement, '')]
     else
-	return [l:vcol, l:text]
+	return [1, substitute(a:line, '\d\+', a:replacement, '')]
     endif
+endfunction
+function! s:SingleIncrement( text, vcol, offset )
+    let l:replacement = '\=submatch(0) + ' . a:offset
+
+    let l:didIncrement = 0
+    let l:vcol = 0
+    let l:result = []
+    for l:line in split(a:text, "\n", 1)
+	let [l:vcol, l:incrementedLine] = s:IncrementLine(l:line, a:vcol, l:replacement)
+	let l:didIncrement = l:didIncrement || (l:line !=# l:incrementedLine)
+	call add(l:result, l:incrementedLine)
+    endfor
+
+    if ! l:didIncrement
+	" Fall back to incrementing the first number.
+	let l:vcol = 0
+	let l:result = map(split(a:text, "\n", 1), 'substitute(v:val, "\\d\\+", l:replacement, "")')
+    endif
+
+    return [l:vcol, join(l:result, "\n")]
+endfunction
+function! s:GlobalIncrement( text, vcol, offset )
+    let l:replacement = '\=submatch(0) + ' . a:offset
+    return [0, substitute(a:text, '\d\+', l:replacement, 'g')]
 endfunction
 
 function! UnconditionalPaste#GetCount()
@@ -215,16 +242,17 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	elseif a:how ==# 'p' || a:how ==# '.p'
+	elseif a:how ==? 'p' || a:how ==? '.p'
 	    let l:pasteType = l:regType " Keep the original paste type.
 	    let l:offset = (a:1 ==# 'p' ? 1 : -1)
-	    if a:how ==# 'p'
+	    if a:how ==? 'p'
 		let l:baseCount = 1
 		let l:vcol = 0
-	    elseif a:how ==# '.p'
-		" Continue increasing with the last used (saved) offset, and at
-		" the same number position (after the first paste, the cursor
-		" will have jumped to the beginning of the pasted text).
+	    elseif a:how ==? '.p'
+		" Continue increasing with the last used (saved) offset, and
+		" (for 'p') at the same number position (after the first paste,
+		" the cursor will have jumped to the beginning of the pasted
+		" text).
 		let l:baseCount = s:lastCount + 1
 		let l:vcol = s:lastVcol
 	    else
@@ -232,7 +260,8 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	    let s:lastCount = l:baseCount
 
-	    let [s:lastVcol, l:pasteContent] = s:Increment(l:regContent, l:vcol, l:offset * l:baseCount)
+	    let l:IncrementFunc = (a:how ==# 'p' || a:how ==# '.p' ? 's:SingleIncrement' : 's:GlobalIncrement')
+	    let [s:lastVcol, l:pasteContent] = call(l:IncrementFunc, [l:regContent, l:vcol, l:offset * l:baseCount])
 	    if l:pasteContent ==# l:regContent
 		" No number was found in the register; this is probably not what
 		" the user intended (maybe wrong register?), so don't just
@@ -245,7 +274,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		" To increment each multiplied paste one more, we need to
 		" process the multiplication on our own.
 		let l:numbers = (l:offset > 0 ? range(l:baseCount, l:baseCount + l:count - 1) : range(-1 * (l:baseCount + l:count - 1), -1 * l:baseCount))
-		let l:pasteContent = join(map(l:numbers, 's:Increment(l:regContent, l:vcol, v:val)[1]'), (l:regType[0] ==# "\<C-v>" ? "\n" : ''))
+		let l:pasteContent = join(map(l:numbers, l:IncrementFunc . '(l:regContent, l:vcol, v:val)[1]'), (l:regType[0] ==# "\<C-v>" ? "\n" : ''))
 		let s:lastCount = l:baseCount + l:count - 1
 		let l:count = 0
 	    endif

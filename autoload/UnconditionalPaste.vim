@@ -11,6 +11,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.21.022	11-Apr-2013	FIX: In gpp and gPp, keep leading zeros when
+"				incrementing the number.
+"				FIX: In gpp and gPp, do not interpret leading
+"				zeros as octal numbers when incrementing.
 "   2.20.021	18-Mar-2013	ENH: Add gPp / gPP mappings to paste with all
 "				numbers incremented / decremented.
 "   2.20.020	15-Mar-2013	ENH: gpp also handles multi-line pastes. A
@@ -117,6 +121,11 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
+function! s:NumberStringIncrement( number, offset )
+    " Note: Need to use str2nr() to avoid interpreting leading zeros as octal
+    " number.
+    return printf('%0' . strlen(a:number) . 'd', str2nr(a:number) + a:offset)
+endfunction
 function! s:IncrementLine( line, vcol, replacement )
     if a:vcol == -1 || a:vcol == 0 && col('.') + 1 == col('$')
 	" Increment the last number.
@@ -132,7 +141,7 @@ function! s:IncrementLine( line, vcol, replacement )
     endif
 endfunction
 function! s:SingleIncrement( text, vcol, offset )
-    let l:replacement = '\=submatch(0) + ' . a:offset
+    let l:replacement = '\=s:NumberStringIncrement(submatch(0),' . a:offset . ')'
 
     let l:didIncrement = 0
     let l:vcol = 0
@@ -152,7 +161,7 @@ function! s:SingleIncrement( text, vcol, offset )
     return [l:vcol, join(l:result, "\n")]
 endfunction
 function! s:GlobalIncrement( text, vcol, offset )
-    let l:replacement = '\=submatch(0) + ' . a:offset
+    let l:replacement = '\=s:NumberStringIncrement(submatch(0),' . a:offset . ')'
     return [0, substitute(a:text, '\d\+', l:replacement, 'g')]
 endfunction
 

@@ -121,7 +121,9 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
-function! s:NumberStringIncrement( number, offset )
+" Note: Could use ingo#number#DecimalStringIncrement(), but avoid dependency to
+" ingo-library for now.
+function! s:DecimalNumberStringIncrement( number, offset )
     " Note: Need to use str2nr() to avoid interpreting leading zeros as octal
     " number.
     return printf('%0' . strlen(a:number) . 'd', str2nr(a:number) + a:offset)
@@ -141,7 +143,7 @@ function! s:IncrementLine( line, vcol, replacement )
     endif
 endfunction
 function! s:SingleIncrement( text, vcol, offset )
-    let l:replacement = '\=s:NumberStringIncrement(submatch(0),' . a:offset . ')'
+    let l:replacement = '\=s:DecimalNumberStringIncrement(submatch(0),' . a:offset . ')'
 
     let l:didIncrement = 0
     let l:vcol = 0
@@ -161,7 +163,7 @@ function! s:SingleIncrement( text, vcol, offset )
     return [l:vcol, join(l:result, "\n")]
 endfunction
 function! s:GlobalIncrement( text, vcol, offset )
-    let l:replacement = '\=s:NumberStringIncrement(submatch(0),' . a:offset . ')'
+    let l:replacement = '\=s:DecimalNumberStringIncrement(submatch(0),' . a:offset . ')'
     return [0, substitute(a:text, '\d\+', l:replacement, 'g')]
 endfunction
 

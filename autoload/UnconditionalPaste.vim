@@ -11,6 +11,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.22.023	14-Jun-2013	Minor: Make substitute() robust against
+"				'ignorecase'.
 "   2.21.022	11-Apr-2013	FIX: In gpp and gPp, keep leading zeros when
 "				incrementing the number.
 "				FIX: In gpp and gPp, do not interpret leading
@@ -301,7 +303,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	let v:errmsg = substitute(v:exception, '^\CVim\%((\a\+)\)\=:', '', '')
 	echohl ErrorMsg
 	echomsg v:errmsg
 	echohl None

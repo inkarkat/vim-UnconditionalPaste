@@ -6,7 +6,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2012 Ingo Karkat
+" Copyright: (C) 2006-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -14,6 +14,9 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.20.020	18-Mar-2013	ENH: Add g]p / g]P mappings to paste linewise
+"				with adjusted indent. Thanks to Gary Fixler for
+"				the suggestion.
 "   2.20.019	18-Mar-2013	ENH: Add gPp / gPP mappings to paste with all
 "				numbers incremented / decremented.
 "   2.10.018	22-Dec-2012	FIX: Do not re-query on repeat of the mapping.
@@ -114,6 +117,7 @@ function! s:CreateMappings()
     for [l:pasteName, pasteType] in
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
+    \       ['Indented', 'l'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
@@ -123,6 +127,23 @@ function! s:CreateMappings()
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
 	    let l:plugMappingName = '<Plug>' . l:mappingName
 
+	    " Do not create default mappings for the special paste repeats.
+	    let l:pasteMappingDefaultKeys = (len(l:pasteType) == 1 ? l:pasteType . l:pasteCmd : '')
+
+
+	    if l:pasteName ==# 'Indented'
+		" This is a variant of forced linewise paste (glp) that uses ]p
+		" instead of p for pasting.
+		let l:pasteMappingDefaultKeys = ']' . l:pasteCmd
+		let l:pasteCmd = ']' . l:pasteCmd
+
+		" Define additional variations like with the built-in ]P.
+		if ! hasmapto('<Plug>UnconditionalPasteIndentBefore', 'n')
+		    nmap g]P <Plug>UnconditionalPasteIndentedBefore
+		    nmap g[P <Plug>UnconditionalPasteIndentedBefore
+		    nmap g[p <Plug>UnconditionalPasteIndentedBefore
+		endif
+	    endif
 	    if l:pasteType ==# 'q' || l:pasteType ==# 'u'
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
@@ -135,6 +156,8 @@ function! s:CreateMappings()
 		" jumped to the beginning of the pasted text).
 		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
+
+
 	    execute printf('nnoremap <silent> %s :<C-u>' .
 	    \   'execute ''silent! call repeat#setreg("\<lt>Plug>%s", v:register)''<Bar>' .
 	    \   'if v:register ==# "="<Bar>' .
@@ -149,10 +172,9 @@ function! s:CreateMappings()
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
-	    if ! hasmapto(l:plugMappingName, 'n') && len(l:pasteType) == 1
-		execute printf('nmap g%s%s %s',
-		\   l:pasteType,
-		\   l:pasteCmd,
+	    if ! hasmapto(l:plugMappingName, 'n') && ! empty(l:pasteMappingDefaultKeys)
+		execute printf('nmap g%s %s',
+		\   l:pasteMappingDefaultKeys,
 		\   l:plugMappingName
 		\)
 	    endif
@@ -170,16 +192,28 @@ function! s:CreateMappings()
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert
 	" newlines (^@ are inserted), and i_CTRL-R_CTRL-O inserts above the
 	" current line when the register ends with a newline.
-	execute printf('inoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s)<CR>',
-	\   l:plugMappingName,
-	\   string(l:pasteType)
-	\)
-	if ! hasmapto(l:plugMappingName, 'i')
-	    execute printf('imap <C-r>%s %s',
-	    \   l:pasteKey,
-	    \   l:plugMappingName
+	for l:mode in ['i', 'c']
+	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %d)<CR>',
+	    \   l:mode,
+	    \   l:plugMappingName,
+	    \   string(l:pasteType),
+	    \   (l:mode ==# 'i')
 	    \)
-	endif
+	    if l:mode ==# 'c' && l:pasteKey ==# '<C-c>'
+		" XXX: Command-line mappings cannot contain <C-c> (unless that
+		" key combination is neutralized with its own remapping); it
+		" aborts the command-line. Use <CR> instead, as it doesn't
+		" represent a register.
+		let l:pasteKey = '<CR>'
+	    endif
+	    if ! hasmapto(l:plugMappingName, l:mode)
+		execute printf('%smap <C-r>%s %s',
+		\   l:mode,
+		\   l:pasteKey,
+		\   l:plugMappingName
+		\)
+	    endif
+	endfor
     endfor
 endfunction
 call s:CreateMappings()

@@ -6,7 +6,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2014 Ingo Karkat
+" Copyright: (C) 2006-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -192,28 +192,16 @@ function! s:CreateMappings()
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert
 	" newlines (^@ are inserted), and i_CTRL-R_CTRL-O inserts above the
 	" current line when the register ends with a newline.
-	for l:mode in ['i', 'c']
-	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %d)<CR>',
-	    \   l:mode,
-	    \   l:plugMappingName,
-	    \   string(l:pasteType),
-	    \   (l:mode ==# 'i')
+	execute printf('inoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s)<CR>',
+	\   l:plugMappingName,
+	\   string(l:pasteType)
+	\)
+	if ! hasmapto(l:plugMappingName, 'i')
+	    execute printf('imap <C-r>%s %s',
+	    \   l:pasteKey,
+	    \   l:plugMappingName
 	    \)
-	    if l:mode ==# 'c' && l:pasteKey ==# '<C-c>'
-		" XXX: Command-line mappings cannot contain <C-c> (unless that
-		" key combination is neutralized with its own remapping); it
-		" aborts the command-line. Use <CR> instead, as it doesn't
-		" represent a register.
-		let l:pasteKey = '<CR>'
-	    endif
-	    if ! hasmapto(l:plugMappingName, l:mode)
-		execute printf('%smap <C-r>%s %s',
-		\   l:mode,
-		\   l:pasteKey,
-		\   l:plugMappingName
-		\)
-	    endif
-	endfor
+	endif
     endfor
 endfunction
 call s:CreateMappings()

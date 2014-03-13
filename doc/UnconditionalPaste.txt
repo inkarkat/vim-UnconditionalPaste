@@ -195,7 +195,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-2.21	RELEASEME
+2.21	23-Apr-2013
 - FIX: In gpp and gPp, keep leading zeros when incrementing the number.
 - FIX: In gpp and gPp, do not interpret leading zeros as octal numbers when
   incrementing.

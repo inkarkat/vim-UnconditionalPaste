@@ -187,6 +187,8 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	let l:regName = '"'
 	let l:regContent = s:exprResult
 
+	" Note: Because of the conditional and because there is no yank
+	" involved, do not use ingo#register#KeepRegisterExecuteOrFunc() here.
 	let l:save_clipboard = &clipboard
 	set clipboard= " Avoid clobbering the selection and clipboard registers.
 	let l:save_reg = getreg(l:regName)

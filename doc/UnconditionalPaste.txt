@@ -89,29 +89,35 @@ USAGE						    *UnconditionalPaste-usage*
 			incremented / decremented.
 
 
-CTRL-R CTRL-C {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-C*
+CTRL-R CTRL-C {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-C* *c_CTRL-R_CTRL-C*
 			Insert the contents of a register characterwise
 			(newline characters and indent are flattened to
 			spaces).
 			If you have options like 'textwidth', 'formatoptions',
 			or 'autoindent' set, this will influence what will be
 			inserted.
-CTRL-R , {0-9a-z"%#*+/:.-}				     *i_CTRL-R_,*
+			Note: If the command-line mapping aborts
+			the command line, try defining >
+			    :cnoremap <C-c> <C-c>
+<			or redefine the mapping.
+CTRL-R , {0-9a-z"%#*+/:.-}			     *i_CTRL-R_,* *c_CTRL-R_,*
 			Insert the contents of a register characterwise, with
 			each line delimited by ", " instead of the newline
 			(and indent).
-CTRL-R CTRL-Q {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-Q*
+CTRL-R CTRL-Q {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-Q* *c_CTRL-R_CTRL-Q*
 			Query for a separator string, then insert the contents
 			of a register characterwise, with each line delimited
 			by it.
-CTRL-R CTRL-Q CTRL-Q {0-9a-z"%#*+/:.-}		      *i_CTRL-R_CTRL-Q_CTRL-Q*
+			     *i_CTRL-R_CTRL-Q_CTRL-Q* *c_CTRL-R_CTRL-Q_CTRL-Q*
+CTRL-R CTRL-Q CTRL-Q {0-9a-z"%#*+/:.-}
 			Insert the contents of a register characterwise, with
 			each line delimited by the previously queried (|gqp|,
 			|i_CTRL-R_CTRL-Q|) separator string.
-CTRL-R CTRL-U {0-9a-z"%#*+/:.-}				     *i_CTRL-R_CTRL-U*
+CTRL-R CTRL-U {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-U* *c_CTRL-R_CTRL-U*
 			Query for a separator pattern, un-join the contents of
 			a register, then insert it linewise.
-CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}		      *i_CTRL-R_CTRL-U_CTRL-U*
+			     *i_CTRL-R_CTRL-U_CTRL-U* *c_CTRL-R_CTRL-U_CTRL-U*
+CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}
 			Un-join the contents of
 			a register on the previously queried (|gup|,
 			|i_CTRL_R_CTRL-U|) pattern, then insert it linewise.
@@ -195,6 +201,9 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+2.30	RELEASEME
+- ENH: Extend CTRL-R insert mode mappings to command-line mode.
+
 2.21	23-Apr-2013
 - FIX: In gpp and gPp, keep leading zeros when incrementing the number.
 - FIX: In gpp and gPp, do not interpret leading zeros as octal numbers when
@@ -264,7 +273,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2013 Ingo Karkat
+Copyright: (C) 2006-2014 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

@@ -3,7 +3,7 @@
 "
 " DEPENDENCIES:
 
-" Copyright: (C) 2006-2013 Ingo Karkat
+" Copyright: (C) 2006-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -11,6 +11,9 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.30.024	14-Mar-2014	Make beep in UnconditionalPaste#Insert()
+"				configurable; in command-line mode, no beep
+"				occurs when an invalid register is specified.
 "   2.22.023	14-Jun-2013	Minor: Make substitute() robust against
 "				'ignorecase'.
 "   2.21.022	11-Apr-2013	FIX: In gpp and gPp, keep leading zeros when
@@ -316,12 +319,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	endif
     endtry
 endfunction
-function! UnconditionalPaste#Insert( regName, how )
+function! UnconditionalPaste#Insert( regName, how, isBeep )
     if a:regName !~? '[0-9a-z"%#*+:.-]'
 	" Note the lack of "="; we don't support the expression register here,
 	" because we would need to do the querying and evaluation all by
 	" ourselves.
-	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	if a:isBeep
+	    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	endif
 	return ''
     endif
 

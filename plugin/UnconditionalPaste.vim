@@ -14,8 +14,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.30.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
-"				indented linewise paste.
 "   2.30.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
 "				command-line mode.
 "   2.20.020	18-Mar-2013	ENH: Add g]p / g]P mappings to paste linewise
@@ -118,11 +116,10 @@ endif
 "- mappings --------------------------------------------------------------------
 
 function! s:CreateMappings()
-    for [l:pasteName, l:pasteType] in
+    for [l:pasteName, pasteType] in
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Indented', 'l'],
-    \       ['Commented', '#'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
@@ -148,8 +145,6 @@ function! s:CreateMappings()
 		    nmap g[P <Plug>UnconditionalPasteIndentedBefore
 		    nmap g[p <Plug>UnconditionalPasteIndentedBefore
 		endif
-	    elseif l:pasteName ==# 'Commented'
-		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
 	    if l:pasteType ==# 'q' || l:pasteType ==# 'u'
 		" On repeat of one of the mappings that query, we want to skip
@@ -188,7 +183,7 @@ function! s:CreateMappings()
 	endfor
     endfor
 
-    for [l:pasteName, l:pasteType, l:pasteKey] in
+    for [l:pasteName, pasteType, pasteKey] in
     \   [
     \       ['Char', 'c', '<C-c>'], ['Comma', ',', ','],
     \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],

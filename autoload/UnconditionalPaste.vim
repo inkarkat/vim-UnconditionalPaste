@@ -11,6 +11,12 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.30.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"				indented linewise paste.
+"   2.30.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
+"				single line, put the separator in front (gqp) /
+"				after (gqP); otherwise, the mapping is identical
+"				to normal p / P and therefore worthless.
 "   2.30.024	14-Mar-2014	Make beep in UnconditionalPaste#Insert()
 "				configurable; in command-line mode, no beep
 "				occurs when an invalid register is specified.
@@ -119,6 +125,9 @@ endfunction
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction
+function! s:IsSingleElement( text )
+    return a:text !~# '\n.*\%(\n\|\S\)'
+endfunction
 function! s:Unjoin( text, separatorPattern )
     let l:text = substitute(a:text, a:separatorPattern, '\n', 'g')
 
@@ -153,7 +162,7 @@ function! s:SingleIncrement( text, vcol, offset )
     let l:didIncrement = 0
     let l:vcol = 0
     let l:result = []
-    for l:line in split(a:text, "\n", 1)
+    for l:line in split(a:text, '\n', 1)
 	let [l:vcol, l:incrementedLine] = s:IncrementLine(l:line, a:vcol, l:replacement)
 	let l:didIncrement = l:didIncrement || (l:line !=# l:incrementedLine)
 	call add(l:result, l:incrementedLine)
@@ -162,7 +171,7 @@ function! s:SingleIncrement( text, vcol, offset )
     if ! l:didIncrement
 	" Fall back to incrementing the first number.
 	let l:vcol = 0
-	let l:result = map(split(a:text, "\n", 1), 'substitute(v:val, "\\d\\+", l:replacement, "")')
+	let l:result = map(split(a:text, '\n', 1), 'substitute(v:val, "\\d\\+", l:replacement, "")')
     endif
 
     return [l:vcol, join(l:result, "\n")]
@@ -211,8 +220,6 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 
 	    if l:regType[0] ==# "\<C-v>"
 		let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	    else
-		let l:pasteContent = l:regContent
 	    endif
 
 	    if a:how ==# 'c'
@@ -240,6 +247,22 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 
 	    let l:pasteContent = s:Flatten(l:pasteContent, l:separator)
+
+	    if a:0 && a:how !=# 'c' && s:IsSingleElement(l:regContent)
+		" DWIM: Put the separator in front (gqp) / after (gqP);
+		" otherwise, the mapping is identical to normal p / P and
+		" therefore worthless. Do not do this for plain gcp / gcP, as
+		" I often use that mapping to avoid the special handling of
+		" smartput.vim, and this embellishment would counter that.
+		" For that case, better use gsp.
+		if a:1 ==# 'p'
+		    let l:pasteContent = l:separator . l:pasteContent
+		elseif a:1 ==# 'P'
+		    let l:pasteContent .= l:separator
+		else
+		    throw 'ASSERT: unknown paste command: ' . string(a:1)
+		endif
+	    endif
 	elseif a:how ==? 'u'
 	    if a:how ==# 'u'
 		let l:separatorPattern = input('Enter separator pattern: ')
@@ -260,6 +283,39 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	elseif a:how ==# '#'
+	    if empty(&commentstring)
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		return ''
+	    endif
+
+	    let l:pasteContent =
+	    \   join(
+	    \       map(
+	    \           split(l:pasteContent, '\n', 1),
+	    \           'empty(v:val) ? "" : printf(&commentstring, v:val)'
+	    \       ),
+	    \       "\n"
+	    \   )
+	elseif a:how ==# 's'
+	    let l:pasteType = l:regType " Keep the original paste type.
+
+	    if l:regType ==# 'V'
+		let l:spaceCharacter = "\n"
+	    else
+		let l:spaceCharacter = ' '
+	    endif
+	    let l:prefix = repeat(l:spaceCharacter, max([l:count, 1]))
+	    let l:suffix = repeat(l:spaceCharacter, max([l:count, 1]))
+	    let l:count = 0
+
+	    if l:regType ==# 'v'
+		let l:pasteContent = l:prefix . l:pasteContent . l:suffix
+	    elseif l:regType ==# 'V'
+		let l:pasteContent = l:prefix . l:pasteContent . l:suffix
+	    else
+		let l:pasteContent = join(map(split(l:pasteContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
+	    endif
 	elseif a:how ==? 'p' || a:how ==? '.p'
 	    let l:pasteType = l:regType " Keep the original paste type.
 	    let l:offset = (a:1 ==# 'p' ? 1 : -1)

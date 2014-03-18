@@ -11,8 +11,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.30.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
-"				indented linewise paste.
 "   2.30.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
 "				single line, put the separator in front (gqp) /
 "				after (gqP); otherwise, the mapping is identical
@@ -283,20 +281,6 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	elseif a:how ==# '#'
-	    if empty(&commentstring)
-		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		return ''
-	    endif
-
-	    let l:pasteContent =
-	    \   join(
-	    \       map(
-	    \           split(l:pasteContent, '\n', 1),
-	    \           'empty(v:val) ? "" : printf(&commentstring, v:val)'
-	    \       ),
-	    \       "\n"
-	    \   )
 	elseif a:how ==? 'p' || a:how ==? '.p'
 	    let l:pasteType = l:regType " Keep the original paste type.
 	    let l:offset = (a:1 ==# 'p' ? 1 : -1)

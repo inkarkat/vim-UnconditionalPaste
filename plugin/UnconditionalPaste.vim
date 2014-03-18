@@ -6,7 +6,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2012 Ingo Karkat
+" Copyright: (C) 2006-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -14,6 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   2.30.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"				indented linewise paste.
+"   2.30.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
+"				command-line mode.
 "   2.20.020	18-Mar-2013	ENH: Add g]p / g]P mappings to paste linewise
 "				with adjusted indent. Thanks to Gary Fixler for
 "				the suggestion.
@@ -114,10 +118,11 @@ endif
 "- mappings --------------------------------------------------------------------
 
 function! s:CreateMappings()
-    for [l:pasteName, pasteType] in
+    for [l:pasteName, l:pasteType] in
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Indented', 'l'],
+    \       ['Commented', '#'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
@@ -143,6 +148,8 @@ function! s:CreateMappings()
 		    nmap g[P <Plug>UnconditionalPasteIndentedBefore
 		    nmap g[p <Plug>UnconditionalPasteIndentedBefore
 		endif
+	    elseif l:pasteName ==# 'Commented'
+		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
 	    if l:pasteType ==# 'q' || l:pasteType ==# 'u'
 		" On repeat of one of the mappings that query, we want to skip
@@ -181,7 +188,7 @@ function! s:CreateMappings()
 	endfor
     endfor
 
-    for [l:pasteName, pasteType, pasteKey] in
+    for [l:pasteName, l:pasteType, l:pasteKey] in
     \   [
     \       ['Char', 'c', '<C-c>'], ['Comma', ',', ','],
     \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
@@ -192,16 +199,21 @@ function! s:CreateMappings()
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert
 	" newlines (^@ are inserted), and i_CTRL-R_CTRL-O inserts above the
 	" current line when the register ends with a newline.
-	execute printf('inoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s)<CR>',
-	\   l:plugMappingName,
-	\   string(l:pasteType)
-	\)
-	if ! hasmapto(l:plugMappingName, 'i')
-	    execute printf('imap <C-r>%s %s',
-	    \   l:pasteKey,
-	    \   l:plugMappingName
+	for l:mode in ['i', 'c']
+	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %d)<CR>',
+	    \   l:mode,
+	    \   l:plugMappingName,
+	    \   string(l:pasteType),
+	    \   (l:mode ==# 'i')
 	    \)
-	endif
+	    if ! hasmapto(l:plugMappingName, l:mode)
+		execute printf('%smap <C-r>%s %s',
+		\   l:mode,
+		\   l:pasteKey,
+		\   l:plugMappingName
+		\)
+	    endif
+	endfor
     endfor
 endfunction
 call s:CreateMappings()

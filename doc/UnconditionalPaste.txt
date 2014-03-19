@@ -54,8 +54,22 @@ USAGE						    *UnconditionalPaste-usage*
 						       *g]p* *g[P* *g]P* *g[p*
 ["x]g]p, ["x]g[P  or	Paste linewise (even if yanked text is not a complete
 	 ["x]g]P  or	line) [count] times like |glp|, but adjust the indent
-	 ["x]g[p	to the current line (like |]p|) .
-
+	 ["x]g[p	to the current line (like |]p|).
+								   *g#p* *g#P*
+["x]g#p, ["x]g#P	Paste linewise (even if yanked text is not a complete
+			line) as commented text [count] times. This applies
+			'commentstring' to each individual line, and adjusts
+			the indent (of the entire comment) to the current line
+			(like |]p|).
+			This is useful when you want to paste indented text as
+			comments, but avoid the progressive auto-indenting
+			that would normally happen with |i_CTRL-R|.
+								   *gsp* *gsP*
+["x]gsp, ["x]gsP	Paste with [count] spaces (characterwise; blockwise:
+			around each line) / empty lines (linewise) around the
+			register contents. When pasting before the start or
+			after the end of the line / buffer, this is added only
+			to the "other" side away from the border.
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
 			instead of the newline (and indent).
@@ -167,6 +181,10 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pb <Plug>UnconditionalPasteBlockAfter
     nmap <Leader>Pi <Plug>UnconditionalPasteIndentedBefore
     nmap <Leader>pi <Plug>UnconditionalPasteIndentedAfter
+    nmap <Leader>P# <Plug>UnconditionalPasteCommentedBefore
+    nmap <Leader>p# <Plug>UnconditionalPasteCommentedAfter
+    nmap <Leader>Ps <Plug>UnconditionalPasteSpacedBefore
+    nmap <Leader>ps <Plug>UnconditionalPasteSpacedAfter
     nmap <Leader>P, <Plug>UnconditionalPasteCommaBefore
     nmap <Leader>p, <Plug>UnconditionalPasteCommaAfter
     nmap <Leader>Pq <Plug>UnconditionalPasteQueriedBefore
@@ -188,6 +206,13 @@ script (e.g. in your |vimrc|): >
     imap <C-G>Q <Plug>UnconditionalPasteRecallQueried
     imap <C-G>u <Plug>UnconditionalPasteUnjoin
     imap <C-G>U <Plug>UnconditionalPasteRecallUnjoin
+
+    cmap <C-G>c <Plug>UnconditionalPasteChar
+    cmap <C-G>, <Plug>UnconditionalPasteComma
+    cmap <C-G>q <Plug>UnconditionalPasteQueried
+    cmap <C-G>Q <Plug>UnconditionalPasteRecallQueried
+    cmap <C-G>u <Plug>UnconditionalPasteUnjoin
+    cmap <C-G>U <Plug>UnconditionalPasteRecallUnjoin
 <
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*
@@ -206,6 +231,9 @@ HISTORY						  *UnconditionalPaste-history*
 - When doing gqp / q,p of a characterwise or single line, put the separator in
   front (gqp) / after (gqP); otherwise, the mapping is identical to normal p /
   P and therefore worthless.
+- Add g#p mapping to apply 'commentstring' to each indented linewise paste.
+- Add gsp mapping to paste with [count] spaces / empty lines around the
+  register contents.
 
 2.21	23-Apr-2013
 - FIX: In gpp and gPp, keep leading zeros when incrementing the number.

@@ -118,6 +118,8 @@
 "	0.02	10-Apr-2006	Added flattening (replacing newlines with
 "				spaces) for characterwise paste.
 "	0.01	10-Apr-2006	file creation from vimtip #1199
+let s:save_cpo = &cpo
+set cpo&vim
 
 function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
@@ -189,6 +191,48 @@ endfunction
 function! s:GlobalIncrement( text, vcol, offset )
     let l:replacement = '\=s:DecimalNumberStringIncrement(submatch(0),' . a:offset . ')'
     return [0, substitute(a:text, '\d\+', l:replacement, 'g')]
+endfunction
+
+function! s:CheckSeparators( regType, pasteCommand, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
+    if a:regType ==# 'V'
+	let l:isAtStart = (line('.') == 1)
+	let l:isAtEnd = (line('.') == line('$'))
+
+	let l:isPrevious = (line('.') > 1 && empty(getline(line('.') - 1)))
+	let l:isCurrent = empty(getline('.'))
+	let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
+
+	let l:isBefore = (a:pasteCommand ==# 'P' ? l:isPrevious : l:isCurrent)
+	let l:isAfter = (a:pasteCommand ==# 'P' ? l:isCurrent : l:isNext)
+    else
+	let l:isAtStart = (col('.') == 1)
+	let l:isAtEnd = s:IsAtEndOfLine()
+	let l:isBefore = search((a:pasteCommand ==# 'P' ? a:separatorPattern . '\%#' : '\%#' . a:separatorPattern), 'bcnW', line('.'))
+	let l:isAfter = search((a:pasteCommand ==# 'P' ? '\%#' . a:separatorPattern : '\%#.' . a:separatorPattern), 'cnW', line('.'))
+    endif
+    let l:isPrefix = ! (a:pasteCommand ==# 'P' && l:isAtStart && ! l:isAtEnd || l:isBefore && (! l:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
+    let l:isSuffix = ! (a:pasteCommand ==# 'p' && l:isAtEnd && ! l:isAtStart || l:isAfter && (! l:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
+
+    return [l:isPrefix, l:isSuffix]
+endfunction
+function! s:SpecialPasteLines( content, pasteAfterExpr )
+    let l:lnum = line('.')
+    let l:additionalLineCnt = 0
+    for l:text in a:content
+	if l:lnum > line('$') | let l:additionalLineCnt += 1 | endif
+
+	let l:line = getline(l:lnum)
+	let l:col = match(l:line, a:pasteAfterExpr)
+	" Note: Could use ingo#text#Insert(), but avoid dependency to
+	" ingo-library for now.
+	"call ingo#text#Insert([l:lnum, l:col + 1], l:text)
+	call setline(l:lnum, strpart(l:line, 0, l:col) . l:text . strpart(l:line, l:col))
+	let l:lnum += 1
+    endfor
+
+    if l:additionalLineCnt > 0 && l:additionalLineCnt > &report
+	echomsg printf('%d more line%s', l:additionalLineCnt, (l:additionalLineCnt == 1 ? '' : 's'))
+    endif
 endfunction
 
 function! UnconditionalPaste#GetCount()
@@ -310,27 +354,8 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	elseif a:how ==# 's'
 	    let l:pasteType = l:regType " Keep the original paste type.
 
-	    if l:regType ==# 'V'
-		let l:spaceCharacter = "\n"
-		let l:isAtStart = (line('.') == 1)
-		let l:isAtEnd = (line('.') == line('$'))
-
-		let l:isPrevious = (line('.') > 1 && empty(getline(line('.') - 1)))
-		let l:isCurrent = empty(getline('.'))
-		let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
-
-		let l:isBefore = (a:1 ==# 'P' ? l:isPrevious : l:isCurrent)
-		let l:isAfter = (a:1 ==# 'P' ? l:isCurrent : l:isNext)
-	    else
-		let l:spaceCharacter = ' '
-		let l:isAtStart = (col('.') == 1)
-		let l:isAtEnd = s:IsAtEndOfLine()
-		let l:isBefore = search((a:1 ==# 'P' ? '\s\%#' : '\%#\s'), 'bcnW', line('.'))
-		let l:isAfter = search((a:1 ==# 'P' ? '\%#\s' : '\%#.\s'), 'cnW', line('.'))
-	    endif
-	    let l:isPrefix = ! (a:1 ==# 'P' && l:isAtStart && ! l:isAtEnd || l:isBefore && ! l:isAfter)
-	    let l:isSuffix = ! (a:1 ==# 'p' && l:isAtEnd && ! l:isAtStart || l:isAfter && ! l:isBefore)
-
+	    let [l:isPrefix, l:isSuffix] = s:CheckSeparators(l:regType, a:1, '\s', 1)
+	    let l:spaceCharacter = (l:regType ==# 'V' ? "\n" : ' ')
 	    let l:prefix = (l:isPrefix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
 	    let l:suffix = (l:isSuffix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
 	    let l:count = 0
@@ -342,6 +367,36 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		let l:pasteContent = join(map(split(l:pasteContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	    endif
+	elseif a:how ==? 'd'
+	    let l:isMultiLine = (l:pasteContent =~# '\n')
+	    if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
+		let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
+	    elseif l:isMultiLine && a:1 ==# 'p' && s:IsAtEndOfLine() && getline('.') =~# '.'
+		let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
+	    else
+		let [l:isPrefix, l:isSuffix] = s:CheckSeparators('v', a:1, '\V\C' . escape(g:UnconditionalPaste_Separator, '\'), 0)
+		let l:pasteType = 'b'
+	    endif
+	    let l:prefix = (l:isPrefix ? g:UnconditionalPaste_Separator : '')
+	    let l:suffix = (l:isSuffix ? g:UnconditionalPaste_Separator : '')
+
+	    let l:lines = split(l:pasteContent, '\n', 1)
+	    if l:regType ==# 'V' && empty(l:lines[-1]) | call remove(l:lines, -1) | endif
+	    call map(
+	    \   l:lines,
+	    \   'l:prefix . (l:count > 1 ? repeat(v:val . g:UnconditionalPaste_Separator, l:count - 1) : "") . v:val . l:suffix'
+	    \)
+	    let l:count = 0
+
+	    if l:pasteType ==# 'prepend'
+		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$')
+		return ''
+	    elseif l:pasteType ==# 'append'
+		call s:SpecialPasteLines(l:lines, '$')
+		return ''
+	    endif
+
+	    let l:pasteContent = join(l:lines, "\n")
 	elseif a:how ==? 'p' || a:how ==? '.p'
 	    let l:pasteType = l:regType " Keep the original paste type.
 	    let l:offset = (a:1 ==# 'p' ? 1 : -1)
@@ -415,4 +470,6 @@ function! UnconditionalPaste#Insert( regName, how, isBeep )
     return UnconditionalPaste#Paste(a:regName, a:how)
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

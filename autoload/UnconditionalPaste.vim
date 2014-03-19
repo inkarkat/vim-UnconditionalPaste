@@ -11,11 +11,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.30.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
-"				side where there's already whitespace / empty
-"				lines (but not when on both sides). This doesn't
-"				consider [count], as it would be too difficult
-"				to implement.
 "   2.30.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
 "				indented linewise paste.
 "				Add gsp mapping to paste with [count] spaces /
@@ -118,8 +113,6 @@
 "	0.02	10-Apr-2006	Added flattening (replacing newlines with
 "				spaces) for characterwise paste.
 "	0.01	10-Apr-2006	file creation from vimtip #1199
-let s:save_cpo = &cpo
-set cpo&vim
 
 function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
@@ -316,25 +309,13 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		let l:spaceCharacter = "\n"
 		let l:isAtStart = (line('.') == 1)
 		let l:isAtEnd = (line('.') == line('$'))
-
-		let l:isPrevious = (line('.') > 1 && empty(getline(line('.') - 1)))
-		let l:isCurrent = empty(getline('.'))
-		let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
-
-		let l:isBefore = (a:1 ==# 'P' ? l:isPrevious : l:isCurrent)
-		let l:isAfter = (a:1 ==# 'P' ? l:isCurrent : l:isNext)
 	    else
 		let l:spaceCharacter = ' '
 		let l:isAtStart = (col('.') == 1)
 		let l:isAtEnd = s:IsAtEndOfLine()
-		let l:isBefore = search((a:1 ==# 'P' ? '\s\%#' : '\%#\s'), 'bcnW', line('.'))
-		let l:isAfter = search((a:1 ==# 'P' ? '\%#\s' : '\%#.\s'), 'cnW', line('.'))
 	    endif
-	    let l:isPrefix = ! (a:1 ==# 'P' && l:isAtStart && ! l:isAtEnd || l:isBefore && ! l:isAfter)
-	    let l:isSuffix = ! (a:1 ==# 'p' && l:isAtEnd && ! l:isAtStart || l:isAfter && ! l:isBefore)
-
-	    let l:prefix = (l:isPrefix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
-	    let l:suffix = (l:isSuffix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
+	    let l:prefix = (a:1 ==# 'P' && l:isAtStart ? '' : repeat(l:spaceCharacter, max([l:count, 1])))
+	    let l:suffix = (a:1 ==# 'p' && l:isAtEnd ? '' : repeat(l:spaceCharacter, max([l:count, 1])))
 	    let l:count = 0
 
 	    if l:regType ==# 'v'
@@ -344,24 +325,6 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		let l:pasteContent = join(map(split(l:pasteContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	    endif
-	elseif a:how ==? 'd'
-	    let l:isPrefix = 1
-	    let l:isSuffix = 1
-	    let l:prefix = (l:isPrefix ? g:UnconditionalPaste_Separator : '')
-	    let l:suffix = (l:isSuffix ? g:UnconditionalPaste_Separator : '')
-
-	    let l:lines = split(l:pasteContent, '\n', 1)
-	    if l:regType ==# 'V' && empty(l:lines[-1]) | call remove(l:lines, -1) | endif
-	    let l:pasteContent =
-	    \	join(
-	    \	    map(
-	    \		l:lines,
-	    \		'l:prefix . (l:count > 1 ? repeat(v:val . g:UnconditionalPaste_Separator, l:count - 1) : "") . v:val . l:suffix'
-	    \	    ),
-	    \	    "\n"
-	    \   )
-	    let l:pasteType = 'b'
-	    let l:count = 0
 	elseif a:how ==? 'p' || a:how ==? '.p'
 	    let l:pasteType = l:regType " Keep the original paste type.
 	    let l:offset = (a:1 ==# 'p' ? 1 : -1)
@@ -435,6 +398,4 @@ function! UnconditionalPaste#Insert( regName, how, isBeep )
     return UnconditionalPaste#Paste(a:regName, a:how)
 endfunction
 
-let &cpo = s:save_cpo
-unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

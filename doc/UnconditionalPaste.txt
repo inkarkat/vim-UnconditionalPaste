@@ -68,8 +68,11 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]gsp, ["x]gsP	Paste with [count] spaces (characterwise; blockwise:
 			around each line) / empty lines (linewise) around the
 			register contents. When pasting before the start or
-			after the end of the line / buffer, this is added only
-			to the "other" side away from the border.
+			after the end of the line / buffer, or with whitespace
+			/ empty lines around the current position, this is
+			added only to the "other" side, unless there's
+			emptyness at both sides. (Else, you could just use
+			plain |p|/|P|.)
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
 			instead of the newline (and indent).

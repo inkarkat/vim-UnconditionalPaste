@@ -11,16 +11,28 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.30.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
+"   3.00.028	21-Mar-2014	Add gBp mapping that is a separator-less version
+"				of gDp.
+"				When pasting additional lines with gBp / gDp,
+"				space-indent them to the cursor position, like
+"				the default blockwise paste does (but not for
+"				the special prepend / append cases).
+"   3.00.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
 "				side where there's already whitespace / empty
 "				lines (but not when on both sides). This doesn't
 "				consider [count], as it would be too difficult
 "				to implement.
-"   2.30.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"				Extract s:CheckSeparators() for reuse by the
+"				following mapping.
+"				Add gdp / gDp mappings to paste as a minimal
+"				fitting block with (queried / recalled)
+"				separator string, with special cases at the end
+"				of leading indent and at the end of the line.
+"   3.00.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
 "				indented linewise paste.
 "				Add gsp mapping to paste with [count] spaces /
 "				empty lines around the register contents.
-"   2.30.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
+"   3.00.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
 "				single line, put the separator in front (gqp) /
 "				after (gqP); otherwise, the mapping is identical
 "				to normal p / P and therefore worthless.
@@ -215,14 +227,21 @@ function! s:CheckSeparators( regType, pasteCommand, separatorPattern, isUseSepar
 
     return [l:isPrefix, l:isSuffix]
 endfunction
-function! s:SpecialPasteLines( content, pasteAfterExpr )
+function! s:SpecialPasteLines( content, pasteAfterExpr, newLineIndent )
     let l:lnum = line('.')
     let l:additionalLineCnt = 0
     for l:text in a:content
-	if l:lnum > line('$') | let l:additionalLineCnt += 1 | endif
+	if l:lnum > line('$')
+	    let l:line = ''
+	    let l:col = 0
 
-	let l:line = getline(l:lnum)
-	let l:col = match(l:line, a:pasteAfterExpr)
+	    let l:text = a:newLineIndent . l:text
+	    let l:additionalLineCnt += 1
+	else
+	    let l:line = getline(l:lnum)
+	    let l:col = match(l:line, a:pasteAfterExpr)
+	endif
+
 	" Note: Could use ingo#text#Insert(), but avoid dependency to
 	" ingo-library for now.
 	"call ingo#text#Insert([l:lnum, l:col + 1], l:text)
@@ -367,32 +386,57 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		let l:pasteContent = join(map(split(l:pasteContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	    endif
-	elseif a:how ==? 'd'
+	elseif a:how =~# '^[dDB]$'
+	    if a:how ==# 'B'
+		let l:separator = ''
+	    elseif a:how ==# 'D'
+		let l:separator = g:UnconditionalPaste_Separator
+	    elseif a:how ==# 'd'
+		let l:separator = input('Enter separator string: ')
+		if empty(l:separator)
+		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		    return ''
+		endif
+		let g:UnconditionalPaste_Separator = l:separator
+	    else
+		throw 'ASSERT: Invalid how: ' . string(a:how)
+	    endif
+
+
 	    let l:isMultiLine = (l:pasteContent =~# '\n')
 	    if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
 	    elseif l:isMultiLine && a:1 ==# 'p' && s:IsAtEndOfLine() && getline('.') =~# '.'
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
 	    else
-		let [l:isPrefix, l:isSuffix] = s:CheckSeparators('v', a:1, '\V\C' . escape(g:UnconditionalPaste_Separator, '\'), 0)
+		if a:how ==# 'B'
+		    let [l:isPrefix, l:isSuffix] = [0, 0]
+		else
+		    let [l:isPrefix, l:isSuffix] = s:CheckSeparators('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
+		endif
 		let l:pasteType = 'b'
 	    endif
-	    let l:prefix = (l:isPrefix ? g:UnconditionalPaste_Separator : '')
-	    let l:suffix = (l:isSuffix ? g:UnconditionalPaste_Separator : '')
+	    let l:prefix = (l:isPrefix ? l:separator : '')
+	    let l:suffix = (l:isSuffix ? l:separator : '')
 
 	    let l:lines = split(l:pasteContent, '\n', 1)
 	    if l:regType ==# 'V' && empty(l:lines[-1]) | call remove(l:lines, -1) | endif
 	    call map(
 	    \   l:lines,
-	    \   'l:prefix . (l:count > 1 ? repeat(v:val . g:UnconditionalPaste_Separator, l:count - 1) : "") . v:val . l:suffix'
+	    \   'l:prefix . (l:count > 1 ? repeat(v:val . l:separator, l:count - 1) : "") . v:val . l:suffix'
 	    \)
 	    let l:count = 0
 
 	    if l:pasteType ==# 'prepend'
-		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$')
+		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
 		return ''
 	    elseif l:pasteType ==# 'append'
-		call s:SpecialPasteLines(l:lines, '$')
+		call s:SpecialPasteLines(l:lines, '$', '')
+		return ''
+	    elseif l:isMultiLine
+		let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
+		let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
+		call s:SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
 		return ''
 	    endif
 

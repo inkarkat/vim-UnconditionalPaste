@@ -14,11 +14,20 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.30.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"   3.00.033	21-Mar-2014	Add gBp mapping to paste as a minimal fitting
+"				block with jagged right edge, a separator-less
+"				variant of gDp.
+"				Add g>p mapping to paste shifted register
+"				contents.
+"   3.00.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
+"				fitting block with (queried / recalled)
+"				separator string, with special cases at the end
+"				of leading indent and at the end of the line.
+"   3.00.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
 "				indented linewise paste.
 "				Add gsp mapping to paste with [count] spaces /
 "				empty lines around the register contents.
-"   2.30.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
+"   3.00.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
 "				command-line mode.
 "   2.20.020	18-Mar-2013	ENH: Add g]p / g]P mappings to paste linewise
 "				with adjusted indent. Thanks to Gary Fixler for
@@ -108,6 +117,9 @@ set cpo&vim
 
 "- configuration ---------------------------------------------------------------
 
+if ! exists('g:UnconditionalPaste_Separator')
+    let g:UnconditionalPaste_Separator = "\t"
+endif
 if ! exists('g:UnconditionalPaste_JoinSeparator')
     let g:UnconditionalPaste_JoinSeparator = "\t"
 endif
@@ -124,8 +136,11 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Indented', 'l'],
+    \       ['Shifted', '>'],
     \       ['Commented', '#'],
     \       ['Spaced', 's'],
+    \       ['Jagged', 'B'],
+    \       ['Delimited', 'd'], ['RecallDelimited', 'D'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
@@ -154,7 +169,7 @@ function! s:CreateMappings()
 	    elseif l:pasteName ==# 'Commented'
 		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
-	    if l:pasteType ==# 'q' || l:pasteType ==# 'u'
+	    if l:pasteType ==# 'd' || l:pasteType ==# 'q' || l:pasteType ==# 'u'
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction

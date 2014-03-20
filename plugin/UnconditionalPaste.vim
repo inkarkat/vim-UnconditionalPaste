@@ -17,8 +17,6 @@
 "   3.00.033	21-Mar-2014	Add gBp mapping to paste as a minimal fitting
 "				block with jagged right edge, a separator-less
 "				variant of gDp.
-"				Add g>p mapping to paste shifted register
-"				contents.
 "   3.00.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
 "				fitting block with (queried / recalled)
 "				separator string, with special cases at the end
@@ -136,7 +134,6 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Indented', 'l'],
-    \       ['Shifted', '>'],
     \       ['Commented', '#'],
     \       ['Spaced', 's'],
     \       ['Jagged', 'B'],

@@ -14,15 +14,23 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   2.30.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
+"   3.00.033	21-Mar-2014	Add gBp mapping to paste as a minimal fitting
+"				block with jagged right edge, a separator-less
+"				variant of gDp.
+"				Add g>p mapping to paste shifted register
+"				contents.
+"				Add g:UnconditionalPaste_IsFullLineRetabOnShift
+"				configuration whether to use the
+"				AlignFromCursor.vim functionality if it's there.
+"   3.00.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
 "				fitting block with (queried / recalled)
 "				separator string, with special cases at the end
 "				of leading indent and at the end of the line.
-"   2.30.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"   3.00.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
 "				indented linewise paste.
 "				Add gsp mapping to paste with [count] spaces /
 "				empty lines around the register contents.
-"   2.30.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
+"   3.00.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
 "				command-line mode.
 "   2.20.020	18-Mar-2013	ENH: Add g]p / g]P mappings to paste linewise
 "				with adjusted indent. Thanks to Gary Fixler for
@@ -122,6 +130,9 @@ if ! exists('g:UnconditionalPaste_UnjoinSeparatorPattern')
     let g:UnconditionalPaste_UnjoinSeparatorPattern = '\_s\+'
 endif
 
+if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
+    let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
+endif
 
 
 "- mappings --------------------------------------------------------------------
@@ -131,8 +142,10 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Indented', 'l'],
+    \       ['Shifted', '>'],
     \       ['Commented', '#'],
     \       ['Spaced', 's'],
+    \       ['Jagged', 'B'],
     \       ['Delimited', 'd'], ['RecallDelimited', 'D'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],

@@ -13,10 +13,6 @@
 " REVISION	DATE		REMARKS
 "   3.00.028	21-Mar-2014	Add gBp mapping that is a separator-less version
 "				of gDp.
-"				When pasting additional lines with gBp / gDp,
-"				space-indent them to the cursor position, like
-"				the default blockwise paste does (but not for
-"				the special prepend / append cases).
 "   3.00.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
 "				side where there's already whitespace / empty
 "				lines (but not when on both sides). This doesn't
@@ -227,21 +223,14 @@ function! s:CheckSeparators( regType, pasteCommand, separatorPattern, isUseSepar
 
     return [l:isPrefix, l:isSuffix]
 endfunction
-function! s:SpecialPasteLines( content, pasteAfterExpr, newLineIndent )
+function! s:SpecialPasteLines( content, pasteAfterExpr )
     let l:lnum = line('.')
     let l:additionalLineCnt = 0
     for l:text in a:content
-	if l:lnum > line('$')
-	    let l:line = ''
-	    let l:col = 0
+	if l:lnum > line('$') | let l:additionalLineCnt += 1 | endif
 
-	    let l:text = a:newLineIndent . l:text
-	    let l:additionalLineCnt += 1
-	else
-	    let l:line = getline(l:lnum)
-	    let l:col = match(l:line, a:pasteAfterExpr)
-	endif
-
+	let l:line = getline(l:lnum)
+	let l:col = match(l:line, a:pasteAfterExpr)
 	" Note: Could use ingo#text#Insert(), but avoid dependency to
 	" ingo-library for now.
 	"call ingo#text#Insert([l:lnum, l:col + 1], l:text)
@@ -428,15 +417,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    let l:count = 0
 
 	    if l:pasteType ==# 'prepend'
-		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
+		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$')
 		return ''
 	    elseif l:pasteType ==# 'append'
-		call s:SpecialPasteLines(l:lines, '$', '')
+		call s:SpecialPasteLines(l:lines, '$')
 		return ''
 	    elseif l:isMultiLine
 		let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
-		let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
-		call s:SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
+		call s:SpecialPasteLines(l:lines, l:pasteColExpr)
 		return ''
 	    endif
 

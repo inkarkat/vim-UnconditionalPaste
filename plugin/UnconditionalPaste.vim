@@ -14,18 +14,15 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   3.00.033	21-Mar-2014	Add gBp mapping to paste as a minimal fitting
-"				block with jagged right edge, a separator-less
-"				variant of gDp.
-"   3.00.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
+"   2.30.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
 "				fitting block with (queried / recalled)
 "				separator string, with special cases at the end
 "				of leading indent and at the end of the line.
-"   3.00.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"   2.30.031	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
 "				indented linewise paste.
 "				Add gsp mapping to paste with [count] spaces /
 "				empty lines around the register contents.
-"   3.00.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
+"   2.30.030	14-Mar-2014	ENH: Extend CTRL-R insert mode mappings to
 "				command-line mode.
 "   2.20.020	18-Mar-2013	ENH: Add g]p / g]P mappings to paste linewise
 "				with adjusted indent. Thanks to Gary Fixler for
@@ -136,7 +133,6 @@ function! s:CreateMappings()
     \       ['Indented', 'l'],
     \       ['Commented', '#'],
     \       ['Spaced', 's'],
-    \       ['Jagged', 'B'],
     \       ['Delimited', 'd'], ['RecallDelimited', 'D'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],

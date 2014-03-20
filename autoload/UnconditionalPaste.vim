@@ -11,15 +11,7 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   3.00.028	21-Mar-2014	Add gBp mapping that is a separator-less version
-"				of gDp.
-"				When pasting additional lines with gBp / gDp,
-"				space-indent them to the cursor position, like
-"				the default blockwise paste does (but not for
-"				the special prepend / append cases).
-"				Add g>p mapping to paste shifted register
-"				contents.
-"   3.00.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
+"   2.30.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
 "				side where there's already whitespace / empty
 "				lines (but not when on both sides). This doesn't
 "				consider [count], as it would be too difficult
@@ -30,11 +22,11 @@
 "				fitting block with (queried / recalled)
 "				separator string, with special cases at the end
 "				of leading indent and at the end of the line.
-"   3.00.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
+"   2.30.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
 "				indented linewise paste.
 "				Add gsp mapping to paste with [count] spaces /
 "				empty lines around the register contents.
-"   3.00.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
+"   2.30.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
 "				single line, put the separator in front (gqp) /
 "				after (gqP); otherwise, the mapping is identical
 "				to normal p / P and therefore worthless.
@@ -229,102 +221,18 @@ function! s:CheckSeparators( regType, pasteCommand, separatorPattern, isUseSepar
 
     return [l:isPrefix, l:isSuffix]
 endfunction
-function! s:SpecialPasteLines( content, pasteAfterExpr, newLineIndent )
+function! s:SpecialPasteLines( content, pasteAfterExpr )
     let l:lnum = line('.')
     let l:additionalLineCnt = 0
     for l:text in a:content
-	if l:lnum > line('$')
-	    let l:line = ''
-	    let l:col = 0
+	if l:lnum > line('$') | let l:additionalLineCnt += 1 | endif
 
-	    let l:text = a:newLineIndent . l:text
-	    let l:additionalLineCnt += 1
-	else
-	    let l:line = getline(l:lnum)
-	    let l:col = match(l:line, a:pasteAfterExpr)
-	endif
-
+	let l:line = getline(l:lnum)
+	let l:col = match(l:line, a:pasteAfterExpr)
 	" Note: Could use ingo#text#Insert(), but avoid dependency to
 	" ingo-library for now.
 	"call ingo#text#Insert([l:lnum, l:col + 1], l:text)
 	call setline(l:lnum, strpart(l:line, 0, l:col) . l:text . strpart(l:line, l:col))
-	let l:lnum += 1
-    endfor
-
-    if l:additionalLineCnt > 0 && l:additionalLineCnt > &report
-	echomsg printf('%d more line%s', l:additionalLineCnt, (l:additionalLineCnt == 1 ? '' : 's'))
-    endif
-endfunction
-function! s:SpecialShiftedPrepend( content, count )
-    let l:contentWidths = map(copy(a:content), 'ingo#compat#strdisplaywidth(v:val)')
-    let l:maxContentWidth = max(l:contentWidths)
-    let l:targetWidth = l:maxContentWidth + a:count * &l:shiftwidth - (l:maxContentWidth % &l:shiftwidth)
-
-    let l:lnum = line('.')
-    let l:additionalLineCnt = 0
-
-    for l:text in a:content
-	let l:textWidth = remove(l:contentWidths, 0)
-	if l:lnum > line('$')
-	    let l:line = ''
-	    let l:additionalLineCnt += 1
-	else
-	    let l:line = getline(l:lnum)
-	endif
-
-	if empty(l:line)
-	    let l:newLine = l:text   " Skip indenting when pasting to an empty line.
-	else
-	    let l:indentWidth = l:targetWidth - l:textWidth
-
-	    " In order to properly render the contained Tab characters of the
-	    " original line, they need to be first expanded to spaces.
-	    let l:expandedLine = substitute(l:line, '^\t\+', '\=substitute(submatch(0), "\\t", repeat(" ", &l:tabstop), "g")', '')
-
-	    let l:newLine = l:text . repeat(' ', l:indentWidth) . l:expandedLine
-	    let l:newLine = AlignFromCursor#GetRetabbedFromCol(l:newLine, len(l:text) + 1)
-	endif
-	call setline(l:lnum, l:newLine)
-	let l:lnum += 1
-    endfor
-
-    if l:additionalLineCnt > 0 && l:additionalLineCnt > &report
-	echomsg printf('%d more line%s', l:additionalLineCnt, (l:additionalLineCnt == 1 ? '' : 's'))
-    endif
-endfunction
-function! s:SpecialShiftedAppend( content, count )
-    let l:lnum = line('.')
-    let l:baseScreenWidth = ingo#compat#strdisplaywidth(getline(l:lnum))
-    let l:baseTargetWidth = l:baseScreenWidth + a:count * &l:shiftwidth - (l:baseScreenWidth % &l:shiftwidth)
-
-    let l:additionalLineCnt = 0
-
-    for l:text in a:content
-	if l:lnum > line('$')
-	    let l:line = ''
-	    let l:currentScreenWidth = 0
-
-	    let l:additionalLineCnt += 1
-	else
-	    let l:line = getline(l:lnum)
-	    let l:currentScreenWidth = ingo#compat#strdisplaywidth(getline(l:lnum))
-	endif
-
-	if empty(l:text)
-	    let l:newLine = l:line   " Skip indenting when pasting an empty line.
-	else
-	    if l:currentScreenWidth < l:baseTargetWidth
-		let l:indentWidth = l:baseTargetWidth - l:currentScreenWidth
-	    else
-		" This line is longer than the targeted width of the first
-		" line's indent; add another indent to it.
-		let l:indentWidth = &l:shiftwidth - (l:currentScreenWidth % &l:shiftwidth)
-	    endif
-
-	    let l:newLine = l:line . repeat(' ', l:indentWidth) . l:text
-	    let l:newLine = AlignFromCursor#GetRetabbedFromCol(l:newLine, len(l:line) + 1)
-	endif
-	call setline(l:lnum, l:newLine)
 	let l:lnum += 1
     endfor
 
@@ -435,23 +343,6 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	elseif a:how ==# '>'
-	    let l:shiftCount = max([l:count, 1])
-	    if l:regType !=# 'V'
-		if l:regType ==# 'v'
-		    let l:lines = [s:Flatten(l:pasteContent, ' ')]
-		else
-		    let l:lines = split(l:pasteContent, '\n', 1)
-		endif
-
-		if a:1 ==# 'P'
-		    call s:SpecialShiftedPrepend(l:lines, l:shiftCount)
-		else
-		    call s:SpecialShiftedAppend(l:lines, l:shiftCount)
-		endif
-		return ''
-	    endif
-	    let l:count = 0
 	elseif a:how ==# '#'
 	    if empty(&commentstring)
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
@@ -482,20 +373,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		let l:pasteContent = join(map(split(l:pasteContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	    endif
-	elseif a:how =~# '^[dDB]$'
-	    if a:how ==# 'B'
-		let l:separator = ''
-	    elseif a:how ==# 'D'
-		let l:separator = g:UnconditionalPaste_Separator
-	    elseif a:how ==# 'd'
+	elseif a:how ==? 'd'
+	    if a:how ==# 'd'
 		let l:separator = input('Enter separator string: ')
 		if empty(l:separator)
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		    return ''
 		endif
 		let g:UnconditionalPaste_Separator = l:separator
-	    else
-		throw 'ASSERT: Invalid how: ' . string(a:how)
 	    endif
 
 
@@ -505,34 +390,29 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    elseif l:isMultiLine && a:1 ==# 'p' && s:IsAtEndOfLine() && getline('.') =~# '.'
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
 	    else
-		if a:how ==# 'B'
-		    let [l:isPrefix, l:isSuffix] = [0, 0]
-		else
-		    let [l:isPrefix, l:isSuffix] = s:CheckSeparators('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
-		endif
+		let [l:isPrefix, l:isSuffix] = s:CheckSeparators('v', a:1, '\V\C' . escape(g:UnconditionalPaste_Separator, '\'), 0)
 		let l:pasteType = 'b'
 	    endif
-	    let l:prefix = (l:isPrefix ? l:separator : '')
-	    let l:suffix = (l:isSuffix ? l:separator : '')
+	    let l:prefix = (l:isPrefix ? g:UnconditionalPaste_Separator : '')
+	    let l:suffix = (l:isSuffix ? g:UnconditionalPaste_Separator : '')
 
 	    let l:lines = split(l:pasteContent, '\n', 1)
 	    if l:regType ==# 'V' && empty(l:lines[-1]) | call remove(l:lines, -1) | endif
 	    call map(
 	    \   l:lines,
-	    \   'l:prefix . (l:count > 1 ? repeat(v:val . l:separator, l:count - 1) : "") . v:val . l:suffix'
+	    \   'l:prefix . (l:count > 1 ? repeat(v:val . g:UnconditionalPaste_Separator, l:count - 1) : "") . v:val . l:suffix'
 	    \)
 	    let l:count = 0
 
 	    if l:pasteType ==# 'prepend'
-		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
+		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$')
 		return ''
 	    elseif l:pasteType ==# 'append'
-		call s:SpecialPasteLines(l:lines, '$', '')
+		call s:SpecialPasteLines(l:lines, '$')
 		return ''
 	    elseif l:isMultiLine
 		let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
-		let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
-		call s:SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
+		call s:SpecialPasteLines(l:lines, l:pasteColExpr)
 		return ''
 	    endif
 
@@ -579,12 +459,6 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    call setreg(l:regName, l:pasteContent, l:pasteType)
 		execute 'normal! "' . l:regName . (l:count ? l:count : '') . a:1
 	    call setreg(l:regName, l:regContent, l:regType)
-
-	    if a:how ==# '>' && l:regType ==# 'V'
-		for l:cnt in range(l:shiftCount)    " Repeatedly use the :> command; multiple shiftwidths can only be indented from visual mode, but we don't want to clobber the selection, and expect only low [count]s, anyway.
-		    silent '[,']>
-		endfor
-	    endif
 	else
 	    return l:pasteContent
 	endif

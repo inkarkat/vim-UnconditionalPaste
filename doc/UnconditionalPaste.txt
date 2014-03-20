@@ -55,6 +55,15 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]g]p, ["x]g[P  or	Paste linewise (even if yanked text is not a complete
 	 ["x]g]P  or	line) [count] times like |glp|, but adjust the indent
 	 ["x]g[p	to the current line (like |]p|).
+								   *g>p* *g>P*
+["x]g>p, ["x]g>P	Paste lines with [count] times 'shiftwidth' indent.
+			For characterwise and blockwise register contents,
+			paste at the beginning / end of the line(s) with the
+			indent before (|g>p|) / after (|g>P|) each line's
+			content. Multiple characterwise lines are flattened
+			into one as with |gcp|. The indent of blocks is based
+			on the current line's width; if subsequent lines are
+			longer, and additional indent is added there.
 								   *g#p* *g#P*
 ["x]g#p, ["x]g#P	Paste linewise (even if yanked text is not a complete
 			line) as commented text [count] times. This applies
@@ -185,6 +194,11 @@ DEPENDENCIES				     *UnconditionalPaste-dependencies*
 
 - Requires Vim 7.0 or higher.
 - repeat.vim (vimscript #2136) plugin (optional)
+- |AlignFromCursor.vim| plugin (vimscript #4155), version 2.02 or higher
+  (optional).
+- |ingo-library.vim| plugin (vimscript #4433), version 1.017 or higher
+  (optional, only for Vim versions that don't have the |strdisplaywidth()|
+  function and when using the |g>p| mapping).
 
 ==============================================================================
 CONFIGURATION				    *UnconditionalPaste-configuration*
@@ -208,6 +222,14 @@ lines); to preset another one (it will be overridden by |gup| and
 |i_CTRL-R_CTRL-U|), use: >
     let g:UnconditionalPaste_UnjoinSeparatorPattern = '-'
 <
+				 *g:UnconditionalPaste_IsFullLineRetabOnShift*
+The |g>p| / |g>P| mappings uses the |AlignFromCursor.vim| plugin's
+functionality (if installed) to only affect the whitespace between the
+original text and the pasted line. If you want to always |:retab|! all the
+whitespace in the entire line, disable this via: >
+    let g:UnconditionalPaste_IsFullLineRetabOnShift = 1
+<
+
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
 keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
@@ -220,6 +242,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pb <Plug>UnconditionalPasteBlockAfter
     nmap <Leader>Pi <Plug>UnconditionalPasteIndentedBefore
     nmap <Leader>pi <Plug>UnconditionalPasteIndentedAfter
+    nmap <Leader>P> <Plug>UnconditionalPasteShiftedBefore
+    nmap <Leader>p> <Plug>UnconditionalPasteShiftedAfter
     nmap <Leader>P# <Plug>UnconditionalPasteCommentedBefore
     nmap <Leader>p# <Plug>UnconditionalPasteCommentedAfter
     nmap <Leader>Ps <Plug>UnconditionalPasteSpacedBefore
@@ -284,6 +308,7 @@ HISTORY						  *UnconditionalPaste-history*
   and at the end of the line.
 - Add gBp mapping to paste as a minimal fitting block with jagged right edge,
   a separator-less variant of gDp.
+- Add g>p mapping to paste shifted register contents.
 
 2.21	23-Apr-2013
 - FIX: In gpp and gPp, keep leading zeros when incrementing the number.

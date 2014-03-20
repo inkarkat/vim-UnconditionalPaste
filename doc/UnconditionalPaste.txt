@@ -73,17 +73,30 @@ USAGE						    *UnconditionalPaste-usage*
 			added only to the "other" side, unless there's
 			emptyness at both sides. (Else, you could just use
 			plain |p|/|P|.)
+								   *gBp* *gBP*
+["x]gBp, ["x]gBP	Paste as a minimal fitting (not rectangular) block
+			with a jagged right edge; i.e. the lines
+			"foobar\nhi\n" will be pasted as 6-character "foobar"
+			in the current line and 2-character "hi" in the
+			following one.
+			With [count], each line's content is pasted [count]
+			times.
+			When pasting with |gBp| at the end of the line,
+			appends at the jagged end of following lines.
+			When pasting with |gBP| on the first non-indent
+			character (after column 1) of a line, prepends after
+			existing indent of following lines.
 								   *gdp* *gdP*
 ["x]gdp, ["x]gdP	Query for a separator string, then paste as a minimal
-			fitting (not rectangular) block with that separator
-			around each line, omitting the separator at the start
-			and end of the line or when there's already one at
-			that side, like with |gsp|.
+			fitting (not rectangular) block (like |gBp|) with that
+			separator around each line, omitting the separator at
+			the start and end of the line or when there's already
+			one at that side, like with |gsp|.
 			With [count], each line's content is pasted [count]
 			times, with the separator between each.
 			When pasting with |gdp| at the end of the line,
-			appends (with separator) at the end of following
-			lines.
+			appends (with separator) at the jagged end of
+			following lines.
 			When pasting with |gdP| on the first non-indent
 			character (after column 1) of a line, prepends (with
 			separator) after existing indent of following lines.
@@ -211,6 +224,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>p# <Plug>UnconditionalPasteCommentedAfter
     nmap <Leader>Ps <Plug>UnconditionalPasteSpacedBefore
     nmap <Leader>ps <Plug>UnconditionalPasteSpacedAfter
+    nmap <Leader>PB <Plug>UnconditionalPasteJaggedBefore
+    nmap <Leader>pB <Plug>UnconditionalPasteJaggedAfter
     nmap <Leader>Pd <Plug>UnconditionalPasteDelimitedBefore
     nmap <Leader>pd <Plug>UnconditionalPasteDelimitedAfter
     nmap <Leader>PD <Plug>UnconditionalPasteRecallDelimitedBefore
@@ -256,7 +271,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-2.30	RELEASEME
+3.00	RELEASEME
 - ENH: Extend CTRL-R insert mode mappings to command-line mode.
 - When doing gqp / q,p of a characterwise or single line, put the separator in
   front (gqp) / after (gqP); otherwise, the mapping is identical to normal p /
@@ -267,6 +282,8 @@ HISTORY						  *UnconditionalPaste-history*
 - Add gdp / gDp mappings to paste as a minimal fitting block with (queried /
   recalled) separator string, with special cases at the end of leading indent
   and at the end of the line.
+- Add gBp mapping to paste as a minimal fitting block with jagged right edge,
+  a separator-less variant of gDp.
 
 2.21	23-Apr-2013
 - FIX: In gpp and gPp, keep leading zeros when incrementing the number.

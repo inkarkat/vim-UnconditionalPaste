@@ -2,6 +2,9 @@
 " how it was yanked.
 "
 " DEPENDENCIES:
+"   - UnconditionalPaste/Increment.vim autoload script
+"   - UnconditionalPaste/Separators.vim autoload script
+"   - UnconditionalPaste/Shifted.vim autoload script
 
 " Copyright: (C) 2006-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -17,6 +20,12 @@
 "				space-indent them to the cursor position, like
 "				the default blockwise paste does (but not for
 "				the special prepend / append cases).
+"				Add g>p mapping to paste shifted register
+"				contents.
+"				Factor out functions required only by certain
+"				paste types into separate autoload scripts.
+"				Add g]]p and g[[p mappings to paste like with
+"				g]p, but with more / less indent.
 "   3.00.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
 "				side where there's already whitespace / empty
 "				lines (but not when on both sides). This doesn't
@@ -158,131 +167,8 @@ function! s:Unjoin( text, separatorPattern )
 endfunction
 " Note: Could use ingo#number#DecimalStringIncrement(), but avoid dependency to
 " ingo-library for now.
-function! s:DecimalNumberStringIncrement( number, offset )
-    " Note: Need to use str2nr() to avoid interpreting leading zeros as octal
-    " number.
-    return printf('%0' . strlen(a:number) . 'd', str2nr(a:number) + a:offset)
-endfunction
-function! s:IsAtEndOfLine()
+function! UnconditionalPaste#IsAtEndOfLine()
     return (col('.') + len(matchstr(getline('.'), '.$')) >= col('$'))    " I18N: Cannot just add 1; need to consider the byte length of the last character in the line.
-endfunction
-function! s:IncrementLine( line, vcol, replacement )
-    if a:vcol == -1 || a:vcol == 0 && s:IsAtEndOfLine()
-	" Increment the last number.
-	return [-1, substitute(a:line, '\d\+\ze\D*$', a:replacement, '')]
-    endif
-
-    let l:text = a:line
-    let l:vcol = (a:vcol == 0 ? virtcol('.') : a:vcol)
-    if l:vcol > 1
-	return [l:vcol, substitute(a:line, '\d*\%>' . (l:vcol - 1) . 'v\d\+', a:replacement, '')]
-    else
-	return [1, substitute(a:line, '\d\+', a:replacement, '')]
-    endif
-endfunction
-function! s:SingleIncrement( text, vcol, offset )
-    let l:replacement = '\=s:DecimalNumberStringIncrement(submatch(0),' . a:offset . ')'
-
-    let l:didIncrement = 0
-    let l:vcol = 0
-    let l:result = []
-    for l:line in split(a:text, '\n', 1)
-	let [l:vcol, l:incrementedLine] = s:IncrementLine(l:line, a:vcol, l:replacement)
-	let l:didIncrement = l:didIncrement || (l:line !=# l:incrementedLine)
-	call add(l:result, l:incrementedLine)
-    endfor
-
-    if ! l:didIncrement
-	" Fall back to incrementing the first number.
-	let l:vcol = 0
-	let l:result = map(split(a:text, '\n', 1), 'substitute(v:val, "\\d\\+", l:replacement, "")')
-    endif
-
-    return [l:vcol, join(l:result, "\n")]
-endfunction
-function! s:GlobalIncrement( text, vcol, offset )
-    let l:replacement = '\=s:DecimalNumberStringIncrement(submatch(0),' . a:offset . ')'
-    return [0, substitute(a:text, '\d\+', l:replacement, 'g')]
-endfunction
-
-function! s:CheckSeparators( regType, pasteCommand, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
-    if a:regType ==# 'V'
-	let l:isAtStart = (line('.') == 1)
-	let l:isAtEnd = (line('.') == line('$'))
-
-	let l:isPrevious = (line('.') > 1 && empty(getline(line('.') - 1)))
-	let l:isCurrent = empty(getline('.'))
-	let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
-
-	let l:isBefore = (a:pasteCommand ==# 'P' ? l:isPrevious : l:isCurrent)
-	let l:isAfter = (a:pasteCommand ==# 'P' ? l:isCurrent : l:isNext)
-    else
-	let l:isAtStart = (col('.') == 1)
-	let l:isAtEnd = s:IsAtEndOfLine()
-	let l:isBefore = search((a:pasteCommand ==# 'P' ? a:separatorPattern . '\%#' : '\%#' . a:separatorPattern), 'bcnW', line('.'))
-	let l:isAfter = search((a:pasteCommand ==# 'P' ? '\%#' . a:separatorPattern : '\%#.' . a:separatorPattern), 'cnW', line('.'))
-    endif
-    let l:isPrefix = ! (a:pasteCommand ==# 'P' && l:isAtStart && ! l:isAtEnd || l:isBefore && (! l:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
-    let l:isSuffix = ! (a:pasteCommand ==# 'p' && l:isAtEnd && ! l:isAtStart || l:isAfter && (! l:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
-
-    return [l:isPrefix, l:isSuffix]
-endfunction
-function! s:SpecialPasteLines( content, pasteAfterExpr, newLineIndent )
-    let l:lnum = line('.')
-    let l:additionalLineCnt = 0
-    for l:text in a:content
-	if l:lnum > line('$')
-	    let l:line = ''
-	    let l:col = 0
-
-	    let l:text = a:newLineIndent . l:text
-	    let l:additionalLineCnt += 1
-	else
-	    let l:line = getline(l:lnum)
-	    let l:col = match(l:line, a:pasteAfterExpr)
-	endif
-
-	" Note: Could use ingo#text#Insert(), but avoid dependency to
-	" ingo-library for now.
-	"call ingo#text#Insert([l:lnum, l:col + 1], l:text)
-	call setline(l:lnum, strpart(l:line, 0, l:col) . l:text . strpart(l:line, l:col))
-	let l:lnum += 1
-    endfor
-
-    if l:additionalLineCnt > 0 && l:additionalLineCnt > &report
-	echomsg printf('%d more line%s', l:additionalLineCnt, (l:additionalLineCnt == 1 ? '' : 's'))
-    endif
-endfunction
-function! s:SpecialShiftedAppend( content, count )
-    let l:lnum = line('.')
-    let l:additionalLineCnt = 0
-    for l:text in a:content
-	if l:lnum > line('$')
-	    let l:line = ''
-	    let l:currentScreenWidth = 0
-
-	    let l:additionalLineCnt += 1
-	else
-	    let l:line = getline(l:lnum)
-	    let l:currentScreenWidth = ingo#compat#strdisplaywidth(getline(l:lnum))
-	endif
-
-	if empty(l:text)
-	    let l:newLine = l:line   " Skip indenting when pasting an empty line.
-	else
-	    let l:indentWidth = a:count * &l:shiftwidth - (l:currentScreenWidth % &l:shiftwidth)
-
-	    let l:newLine = l:line . repeat(' ', l:indentWidth) . l:text
-	    let l:newLine = AlignFromCursor#GetRetabbedFromCol(l:newLine, len(l:line) + 1)
-	endif
-	call setline(l:lnum, l:newLine)
-	let l:lnum += 1
-    endfor
-
-    if l:additionalLineCnt > 0 && l:additionalLineCnt > &report
-	echomsg printf('%d more line%s', l:additionalLineCnt, (l:additionalLineCnt == 1 ? '' : 's'))
-    endif
-    " code
 endfunction
 
 function! UnconditionalPaste#GetCount()
@@ -316,6 +202,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     try
 	let l:pasteContent = l:regContent
 	let l:pasteType = 'l'
+	let l:shiftCommand = ''
 
 	if a:how ==# 'b'
 	    let l:pasteType = 'b'
@@ -387,9 +274,20 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	elseif a:how =~# '^[mn]$'
+	    let l:shiftCount = max([l:count, 1])
+	    let l:shiftCommand = (a:how ==# 'm' ? '>' : '<')
+	    let l:count = 0
+
+	    if l:regType[0] ==# "\<C-v>"
+		let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
+	    endif
 	elseif a:how ==# '>'
 	    let l:shiftCount = max([l:count, 1])
-	    if l:regType !=# 'V'
+	    let l:count = 0
+	    if l:regType ==# 'V'
+		let l:shiftCommand = '>'
+	    else
 		if l:regType ==# 'v'
 		    let l:lines = [s:Flatten(l:pasteContent, ' ')]
 		else
@@ -397,12 +295,12 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		endif
 
 		if a:1 ==# 'P'
+		    call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
 		else
-		    call s:SpecialShiftedAppend(l:lines, l:shiftCount)
+		    call UnconditionalPaste#Shifted#SpecialShiftedAppend(l:lines, l:shiftCount)
 		endif
 		return ''
 	    endif
-	    let l:count = 0
 	elseif a:how ==# '#'
 	    if empty(&commentstring)
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
@@ -420,7 +318,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	elseif a:how ==# 's'
 	    let l:pasteType = l:regType " Keep the original paste type.
 
-	    let [l:isPrefix, l:isSuffix] = s:CheckSeparators(l:regType, a:1, '\s', 1)
+	    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(l:regType, a:1, '\s', 1)
 	    let l:spaceCharacter = (l:regType ==# 'V' ? "\n" : ' ')
 	    let l:prefix = (l:isPrefix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
 	    let l:suffix = (l:isSuffix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
@@ -453,13 +351,13 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    let l:isMultiLine = (l:pasteContent =~# '\n')
 	    if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
-	    elseif l:isMultiLine && a:1 ==# 'p' && s:IsAtEndOfLine() && getline('.') =~# '.'
+	    elseif l:isMultiLine && a:1 ==# 'p' && UnconditionalPaste#IsAtEndOfLine() && getline('.') =~# '.'
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
 	    else
 		if a:how ==# 'B'
 		    let [l:isPrefix, l:isSuffix] = [0, 0]
 		else
-		    let [l:isPrefix, l:isSuffix] = s:CheckSeparators('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
+		    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
 		endif
 		let l:pasteType = 'b'
 	    endif
@@ -475,15 +373,15 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    let l:count = 0
 
 	    if l:pasteType ==# 'prepend'
-		call s:SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
+		call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
 		return ''
 	    elseif l:pasteType ==# 'append'
-		call s:SpecialPasteLines(l:lines, '$', '')
+		call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '$', '')
 		return ''
 	    elseif l:isMultiLine
 		let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
 		let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
-		call s:SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
+		call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
 		return ''
 	    endif
 
@@ -506,7 +404,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	    let s:lastCount = l:baseCount
 
-	    let l:IncrementFunc = (a:how ==# 'p' || a:how ==# '.p' ? 's:SingleIncrement' : 's:GlobalIncrement')
+	    let l:IncrementFunc = (a:how ==# 'p' || a:how ==# '.p' ? 'UnconditionalPaste#Increment#Single' : 'UnconditionalPaste#Increment#Global')
 	    let [s:lastVcol, l:pasteContent] = call(l:IncrementFunc, [l:regContent, l:vcol, l:offset * l:baseCount])
 	    if l:pasteContent ==# l:regContent
 		" No number was found in the register; this is probably not what
@@ -531,9 +429,9 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		execute 'normal! "' . l:regName . (l:count ? l:count : '') . a:1
 	    call setreg(l:regName, l:regContent, l:regType)
 
-	    if a:how ==# '>' && l:regType ==# 'V'
+	    if ! empty(l:shiftCommand)
 		for l:cnt in range(l:shiftCount)    " Repeatedly use the :> command; multiple shiftwidths can only be indented from visual mode, but we don't want to clobber the selection, and expect only low [count]s, anyway.
-		    silent '[,']>
+		    execute "silent '[,']" . l:shiftCommand
 		endfor
 	    endif
 	else

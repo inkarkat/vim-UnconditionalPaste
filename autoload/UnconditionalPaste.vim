@@ -165,7 +165,7 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
-" Note: Could use ingo#number#DecimalStringIncrement(), but avoid dependency to
+" Note: Could use ingo#cursor#IsAtEndOfLine(), but avoid dependency to
 " ingo-library for now.
 function! UnconditionalPaste#IsAtEndOfLine()
     return (col('.') + len(matchstr(getline('.'), '.$')) >= col('$'))    " I18N: Cannot just add 1; need to consider the byte length of the last character in the line.

@@ -305,7 +305,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-3.00	RELEASEME
+3.00	24-Mar-2014
 - ENH: Extend CTRL-R insert mode mappings to command-line mode.
 - When doing gqp / q,p of a characterwise or single line, put the separator in
   front (gqp) / after (gqP); otherwise, the mapping is identical to normal p /

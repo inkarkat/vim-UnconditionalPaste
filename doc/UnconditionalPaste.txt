@@ -305,6 +305,11 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+3.01	RELEASEME
+- For gsp, remove surrounding whitespace (characterwise) / empty lines
+  (linewise) before adding the spaces / empty lines. This ensures a more
+  dependable and deterministic DWIM behavior.
+
 3.00	24-Mar-2014
 - ENH: Extend CTRL-R insert mode mappings to command-line mode.
 - When doing gqp / q,p of a characterwise or single line, put the separator in

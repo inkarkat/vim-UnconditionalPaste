@@ -22,6 +22,8 @@
 "				Add g:UnconditionalPaste_IsFullLineRetabOnShift
 "				configuration whether to use the
 "				AlignFromCursor.vim functionality if it's there.
+"				Add g]]p and g[[p mappings to paste like with
+"				g]p, but with more / less indent.
 "   3.00.032	20-Mar-2014	Add gdp / gDp mappings to paste as a minimal
 "				fitting block with (queried / recalled)
 "				separator string, with special cases at the end
@@ -142,6 +144,7 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
     \       ['Indented', 'l'],
+    \       ['MoreIndent', 'm'], ['LessIndent', 'n'],
     \       ['Shifted', '>'],
     \       ['Commented', '#'],
     \       ['Spaced', 's'],
@@ -160,19 +163,24 @@ function! s:CreateMappings()
 	    let l:pasteMappingDefaultKeys = (len(l:pasteType) == 1 ? l:pasteType . l:pasteCmd : '')
 
 
-	    if l:pasteName ==# 'Indented'
+	    if l:pasteName =~# 'Indent\|^Commented$'
+		if l:pasteName ==# 'Indented'
+		    let l:pasteMappingDefaultKeys = ']' . l:pasteCmd
+
+		    " Define additional variations like with the built-in ]P.
+		    if ! hasmapto('<Plug>UnconditionalPasteIndentBefore', 'n')
+			nmap g]P <Plug>UnconditionalPasteIndentedBefore
+			nmap g[P <Plug>UnconditionalPasteIndentedBefore
+			nmap g[p <Plug>UnconditionalPasteIndentedBefore
+		    endif
+		elseif l:pasteName ==# 'MoreIndent'
+		    let l:pasteMappingDefaultKeys = ']]' . l:pasteCmd
+		elseif l:pasteName ==# 'LessIndent'
+		    let l:pasteMappingDefaultKeys = '[[' . l:pasteCmd
+		endif
+
 		" This is a variant of forced linewise paste (glp) that uses ]p
 		" instead of p for pasting.
-		let l:pasteMappingDefaultKeys = ']' . l:pasteCmd
-		let l:pasteCmd = ']' . l:pasteCmd
-
-		" Define additional variations like with the built-in ]P.
-		if ! hasmapto('<Plug>UnconditionalPasteIndentBefore', 'n')
-		    nmap g]P <Plug>UnconditionalPasteIndentedBefore
-		    nmap g[P <Plug>UnconditionalPasteIndentedBefore
-		    nmap g[p <Plug>UnconditionalPasteIndentedBefore
-		endif
-	    elseif l:pasteName ==# 'Commented'
 		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
 	    if l:pasteType ==# 'd' || l:pasteType ==# 'q' || l:pasteType ==# 'u'

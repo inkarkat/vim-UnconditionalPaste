@@ -305,7 +305,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-3.01	RELEASEME
+3.01	23-May-2014
 - For gsp, remove surrounding whitespace (characterwise) / empty lines
   (linewise) before adding the spaces / empty lines. This ensures a more
   dependable and deterministic DWIM behavior.

@@ -14,6 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   3.01.029	05-May-2014	For gsp, remove surrounding whitespace
+"				(characterwise) / empty lines (linewise) before
+"				adding the spaces / empty lines. This ensures a
+"				more dependable and deterministic DWIM behavior.
 "   3.00.028	21-Mar-2014	Add gBp mapping that is a separator-less version
 "				of gDp.
 "				When pasting additional lines with gBp / gDp,
@@ -325,11 +329,12 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    let l:count = 0
 
 	    if l:regType ==# 'v'
-		let l:pasteContent = l:prefix . l:pasteContent . l:suffix
+		" Note: Could use ingo#str#Trim() here.
+		let l:pasteContent = l:prefix . substitute(l:regContent, '^\_s*\(.\{-}\)\_s*$', '\1', '') . l:suffix
 	    elseif l:regType ==# 'V'
-		let l:pasteContent = l:prefix . l:pasteContent . l:suffix
+		let l:pasteContent = l:prefix . substitute(l:regContent, '^\n*\(.\{-}\)\n*$', '\1\n', '') . l:suffix
 	    else
-		let l:pasteContent = join(map(split(l:pasteContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
+		let l:pasteContent = join(map(split(l:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	    endif
 	elseif a:how =~# '^[dDB]$'
 	    if a:how ==# 'B'

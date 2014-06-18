@@ -101,22 +101,23 @@ USAGE						    *UnconditionalPaste-usage*
 			When pasting with |gBP| on the first non-indent
 			character (after column 1) of a line, prepends after
 			existing indent of following lines.
-								   *gdp* *gdP*
-["x]gdp, ["x]gdP	Query for a separator string, then paste as a minimal
+								 *gqbp* *gqbP*
+["x]gqbp, ["x]gqbP	Query for a separator string, then paste as a minimal
 			fitting (not rectangular) block (like |gBp|) with that
-			separator around each line, omitting the separator at
-			the start and end of the line or when there's already
-			one at that side, like with |gsp|.
+			separator around each line (similar to |gqp|),
+			omitting the separator at the start and end of the
+			line or when there's already one at that side, like
+			with |gsp|.
 			With [count], each line's content is pasted [count]
 			times, with the separator between each.
-			When pasting with |gdp| at the end of the line,
+			When pasting with |gqbp| at the end of the line,
 			appends (with separator) at the jagged end of
 			following lines.
-			When pasting with |gdP| on the first non-indent
+			When pasting with |gqbP| on the first non-indent
 			character (after column 1) of a line, prepends (with
 			separator) after existing indent of following lines.
-								   *gDp* *gDP*
-["x]gDp, ["x]gDP	Paste blockwise with the previously queried (|gdp|)
+								 *gQBp* *gQBP*
+["x]gQBp, ["x]gQBP	Paste blockwise with the previously queried (|gqbp|)
 			separator string.
 
 								   *g,p* *g,P*
@@ -211,8 +212,8 @@ CONFIGURATION				    *UnconditionalPaste-configuration*
 
 For a permanent configuration, put the following commands into your |vimrc|:
 					      *g:UnconditionalPaste_Separator*
-The default separator string for the |gDp| mapping is a <Tab> character; to
-preset another one (it will be overridden by |gdp|), use: >
+The default separator string for the |gQBp| mapping is a <Tab> character; to
+preset another one (it will be overridden by |gqbp|), use: >
     let g:UnconditionalPaste_Separator = 'text'
 <
 					  *g:UnconditionalPaste_JoinSeparator*
@@ -304,6 +305,13 @@ IDEAS						    *UnconditionalPaste-ideas*
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+3.02	RELEASEME
+- CHG: Change default mappings of gdp and gDp to gqbp and gQBp, respectively,
+  to avoid slowing down the built-in |gd| and |gD| commands with a wait for
+  the mapping timeout. Though the new defaults are one keystroke longer, they
+  are a better mnemonic (combining gqp and gBp), and this is a rather obscure
+  mapping, anyway.
 
 3.01	23-May-2014
 - For gsp, remove surrounding whitespace (characterwise) / empty lines

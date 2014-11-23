@@ -306,7 +306,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-3.02	RELEASEME
+3.02	19-Jun-2014
 - CHG: Change default mappings of gdp and gDp to gqbp and gQBp, respectively,
   to avoid slowing down the built-in |gd| and |gD| commands with a wait for
   the mapping timeout. Though the new defaults are one keystroke longer, they

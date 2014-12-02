@@ -14,6 +14,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   3.02.030	17-Jun-2014	CHG: Change default mappings of gdp and gDp to
+"				gqbp and gQBp, respectively.
 "   3.01.029	05-May-2014	For gsp, remove surrounding whitespace
 "				(characterwise) / empty lines (linewise) before
 "				adding the spaces / empty lines. This ensures a
@@ -336,12 +338,12 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    else
 		let l:pasteContent = join(map(split(l:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	    endif
-	elseif a:how =~# '^[dDB]$'
+	elseif a:how =~# '^\%(qb\|QB\|B\)$'
 	    if a:how ==# 'B'
 		let l:separator = ''
-	    elseif a:how ==# 'D'
+	    elseif a:how ==# 'QB'
 		let l:separator = g:UnconditionalPaste_Separator
-	    elseif a:how ==# 'd'
+	    elseif a:how ==# 'qb'
 		let l:separator = input('Enter separator string: ')
 		if empty(l:separator)
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.

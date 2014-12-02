@@ -306,6 +306,12 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+3.03	RELEASEME
+- BUG: gsp / gsP border check adds spaces on both sides when there's a single
+  character in line (like when there's a completely empty line, where this
+  would be correct). Differentiate between empty and single-char line and then
+  clear the isAtStart / isAtEnd flag not in the direction of the paste.
+
 3.02	19-Jun-2014
 - CHG: Change default mappings of gdp and gDp to gqbp and gQBp, respectively,
   to avoid slowing down the built-in |gd| and |gD| commands with a wait for

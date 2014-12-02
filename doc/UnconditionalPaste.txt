@@ -123,6 +123,10 @@ USAGE						    *UnconditionalPaste-usage*
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
 			instead of the newline (and indent).
+							 *g,quotep* *g,quoteP*
+["x]g,"p, ["x]g,"P	Paste characterwise, with each line surrounded by
+			double quotes and delimited by ", " instead of the
+			newline (and indent).
 								   *gqp* *gqP*
 ["x]gqp, ["x]gqP	Query for a separator string, then paste
 			characterwise, with each line delimited by it.
@@ -306,7 +310,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-3.03	RELEASEME
+3.03	03-Dec-2014
 - BUG: gsp / gsP border check adds spaces on both sides when there's a single
   character in line (like when there's a completely empty line, where this
   would be correct). Differentiate between empty and single-char line and then

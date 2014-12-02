@@ -14,6 +14,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   3.02.034	17-Jun-2014	CHG: Change default mappings of gdp and gDp to
+"				gqbp and gQBp, respectively.
 "   3.00.033	21-Mar-2014	Add gBp mapping to paste as a minimal fitting
 "				block with jagged right edge, a separator-less
 "				variant of gDp.
@@ -149,7 +151,7 @@ function! s:CreateMappings()
     \       ['Commented', '#'],
     \       ['Spaced', 's'],
     \       ['Jagged', 'B'],
-    \       ['Delimited', 'd'], ['RecallDelimited', 'D'],
+    \       ['Delimited', 'qb'], ['RecallDelimited', 'QB'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
@@ -160,7 +162,7 @@ function! s:CreateMappings()
 	    let l:plugMappingName = '<Plug>' . l:mappingName
 
 	    " Do not create default mappings for the special paste repeats.
-	    let l:pasteMappingDefaultKeys = (len(l:pasteType) == 1 ? l:pasteType . l:pasteCmd : '')
+	    let l:pasteMappingDefaultKeys = (l:pasteType[0] == '.' ? '' : l:pasteType . l:pasteCmd)
 
 
 	    if l:pasteName =~# 'Indent\|^Commented$'
@@ -183,7 +185,7 @@ function! s:CreateMappings()
 		" instead of p for pasting.
 		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
-	    if l:pasteType ==# 'd' || l:pasteType ==# 'q' || l:pasteType ==# 'u'
+	    if l:pasteType ==# 'qb' || l:pasteType ==# 'q' || l:pasteType ==# 'u'
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction

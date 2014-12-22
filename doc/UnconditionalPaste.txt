@@ -123,13 +123,18 @@ USAGE						    *UnconditionalPaste-usage*
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
 			instead of the newline (and indent).
-							 *g,quotep* *g,quoteP*
-["x]g,"p, ["x]g,"P	Paste characterwise, with each line surrounded by
-			double quotes and delimited by ", " instead of the
-			newline (and indent).
+					   *g,'p* *g,'P* *g,quotep* *g,quoteP*
+["x]g,'p, ["x]g,'P	Paste characterwise, with each line surrounded by
+["x]g,"p, ["x]g,"P	single / double quotes and delimited by ", " instead
+			of the newline (and indent).
 								   *gqp* *gqP*
 ["x]gqp, ["x]gqP	Query for a separator string, then paste
 			characterwise, with each line delimited by it.
+			You can also additionally input a prefix and suffix
+			(as {prefix}^M{separator}^M{suffix}, with ^M entered
+			as <C-V><Enter>). Examples:
+			"^M, ^M"   -> "foo, bar, baz" ~
+			"^M", "^M" -> "foo", "bar", "baz" ~
 								   *gQp* *gQP*
 ["x]gQp, ["x]gQP	Paste characterwise, with each line delimited by the
 			previously queried (|gqp|) separator string.
@@ -175,7 +180,7 @@ CTRL-R , {0-9a-z"%#*+/:.-}			     *i_CTRL-R_,* *c_CTRL-R_,*
 CTRL-R CTRL-Q {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-Q* *c_CTRL-R_CTRL-Q*
 			Query for a separator string, then insert the contents
 			of a register characterwise, with each line delimited
-			by it.
+			by it. Like |gqp|, but in insert mode.
 			     *i_CTRL-R_CTRL-Q_CTRL-Q* *c_CTRL-R_CTRL-Q_CTRL-Q*
 CTRL-R CTRL-Q CTRL-Q {0-9a-z"%#*+/:.-}
 			Insert the contents of a register characterwise, with
@@ -271,6 +276,10 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pD <Plug>UnconditionalPasteRecallDelimitedAfter
     nmap <Leader>P, <Plug>UnconditionalPasteCommaBefore
     nmap <Leader>p, <Plug>UnconditionalPasteCommaAfter
+    nmap <Leader>P' <Plug>UnconditionalPasteCommaSingleQuoteBefore
+    nmap <Leader>p' <Plug>UnconditionalPasteCommaSingleQuoteAfter
+    nmap <Leader>P" <Plug>UnconditionalPasteCommaDoubleQuoteBefore
+    nmap <Leader>p" <Plug>UnconditionalPasteCommaDoubleQuoteAfter
     nmap <Leader>Pq <Plug>UnconditionalPasteQueriedBefore
     nmap <Leader>pq <Plug>UnconditionalPasteQueriedAfter
     nmap <Leader>PQ <Plug>UnconditionalPasteRecallQueriedBefore
@@ -309,6 +318,11 @@ IDEAS						    *UnconditionalPaste-ideas*
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+3.10	RELEASEME
+- Add g,'p and g,"p variants of g,p.
+- ENH: Allow to specify prefix and suffix when querying for the separator
+  string in gqp and i_CTRL-R_CTRL-Q.
 
 3.03	03-Dec-2014
 - BUG: gsp / gsP border check adds spaces on both sides when there's a single

@@ -10,6 +10,8 @@
 " REVISION	DATE		REMARKS
 "   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
 
+" Note: Could use ingo#number#DecimalStringIncrement(), but avoid dependency to
+" ingo-library for now.
 function! s:DecimalNumberStringIncrement( number, offset )
     " Note: Need to use str2nr() to avoid interpreting leading zeros as octal
     " number.

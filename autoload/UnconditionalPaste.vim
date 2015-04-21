@@ -14,7 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   3.10.031	03-Dec-2014	Add g,"p variant of g,p.
+"   3.10.031	03-Dec-2014	Add g,'p and g,"p variants of g,p.
+"				ENH: Allow to specify prefix and suffix when
+"				querying for the separator string in gqp and
+"				i_CTRL-R_CTRL-Q.
 "   3.02.030	17-Jun-2014	CHG: Change default mappings of gdp and gDp to
 "				gqbp and gQBp, respectively.
 "   3.01.029	05-May-2014	For gsp, remove surrounding whitespace
@@ -213,7 +216,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 
 	if a:how ==# 'b'
 	    let l:pasteType = 'b'
-	elseif a:how =~# '^[c,qQ]$\|^,"$'
+	elseif a:how =~# '^[c,qQ]$\|^,[''"]$'
 	    let l:pasteType = 'c'
 	    let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = ['', '', '', '']
 
@@ -229,14 +232,25 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		    let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
 		endif
 	    elseif a:how ==# 'q'
-		let l:separator = input('Enter separator string: ')
+		let l:separator = input('Enter separator string (or prefix^Mseparator^Msuffix): ')
 		if empty(l:separator)
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		    return ''
 		endif
-		let g:UnconditionalPaste_JoinSeparator = l:separator
+
+		unlet! g:UnconditionalPaste_JoinSeparator
+		if l:separator =~# '^\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*$'
+		    let g:UnconditionalPaste_JoinSeparator = split(l:separator, '\r', 1)
+		    let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
+		else
+		    let g:UnconditionalPaste_JoinSeparator = l:separator
+		endif
 	    elseif a:how ==# 'Q'
-		let l:separator = g:UnconditionalPaste_JoinSeparator
+		if type(g:UnconditionalPaste_JoinSeparator) == type([])
+		    let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
+		else
+		    let l:separator = g:UnconditionalPaste_JoinSeparator
+		endif
 	    else
 		throw 'ASSERT: Invalid how: ' . string(a:how)
 	    endif

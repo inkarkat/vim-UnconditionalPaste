@@ -319,7 +319,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-3.10	RELEASEME
+3.10	23-Dec-2014
 - Add g,'p and g,"p variants of g,p.
 - ENH: Allow to specify prefix and suffix when querying for the separator
   string in gqp and i_CTRL-R_CTRL-Q.

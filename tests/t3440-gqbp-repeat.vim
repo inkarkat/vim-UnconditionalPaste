@@ -1,7 +1,7 @@
-" Test repeat of gdp.
+" Test repeat of gqbp.
 
 call SetRegister('r', "foobar", 'v')
-execute "normal \"rgdp+-+\<CR>"
+execute "normal \"rgqbp+-+\<CR>"
 call VerifyRegister()
 normal hj.
 call VerifyRegister()

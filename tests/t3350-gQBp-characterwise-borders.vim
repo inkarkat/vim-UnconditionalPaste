@@ -1,13 +1,13 @@
-" Test gDp of a word at line borders.
+" Test gQBp of a word at line borders.
 
 normal! yyP
 call SetRegister('"', "FOO", 'v')
-normal 0gDP
-normal $gDp
+normal 0gQBP
+normal $gQBp
 
 normal! j
-normal 0gDp
-normal $gDP
+normal 0gQBp
+normal $gQBP
 call VerifyRegister()
 
 call vimtest#SaveOut()

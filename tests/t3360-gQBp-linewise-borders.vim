@@ -1,8 +1,8 @@
-" Test gDp of a line at buffer borders.
+" Test gQBp of a line at buffer borders.
 
 call SetRegister('"', "FOO\n", 'V')
-normal gg0wgDP
-normal G0wgDp
+normal gg0wgQBP
+normal G0wgQBp
 call VerifyRegister()
 
 call vimtest#SaveOut()

@@ -5,8 +5,10 @@
 "   - UnconditionalPaste/Increment.vim autoload script
 "   - UnconditionalPaste/Separators.vim autoload script
 "   - UnconditionalPaste/Shifted.vim autoload script
+"   - ingo/cmdargs.vim autoload script
+"   - ingo/cursor.vim autoload script
 
-" Copyright: (C) 2006-2014 Ingo Karkat
+" Copyright: (C) 2006-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -14,6 +16,15 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   3.20.032	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
+"				establish hard dependency on ingo-library.
+"				BUG: Escaped characters like \n are handled
+"				inconsistently in gqp: resolved as {separator},
+"				taken literally in {prefix} and {suffix}. Use
+"				ingo#cmdargs#GetUnescapedExpr() to resolve them
+"				(also for gqbp, which only supports
+"				{separator}). Change s:Flatten() to prevent
+"				interpretation of the separator.
 "   3.10.031	03-Dec-2014	Add g,'p and g,"p variants of g,p.
 "				ENH: Allow to specify prefix and suffix when
 "				querying for the separator string in gqp and
@@ -160,7 +171,7 @@ function! s:Flatten( text, separator )
     " Remove newlines and whitespace at the begin and end of the text, convert
     " all other newlines (plus leading and trailing whitespace) to the passed
     " separator.
-    return substitute(substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g'), '\s*\%(\n\s*\)\+', a:separator, 'g')
+    return substitute(substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g'), '\s*\%(\n\s*\)\+', escape(a:separator, '\&'), 'g')
 endfunction
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
@@ -174,11 +185,6 @@ function! s:Unjoin( text, separatorPattern )
     " A (single!) trailing separator is automatically swallowed by the linewise
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
-endfunction
-" Note: Could use ingo#cursor#IsAtEndOfLine(), but avoid dependency to
-" ingo-library for now.
-function! UnconditionalPaste#IsAtEndOfLine()
-    return (col('.') + len(matchstr(getline('.'), '.$')) >= col('$'))    " I18N: Cannot just add 1; need to consider the byte length of the last character in the line.
 endfunction
 
 function! UnconditionalPaste#GetCount()
@@ -240,9 +246,10 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 
 		unlet! g:UnconditionalPaste_JoinSeparator
 		if l:separator =~# '^\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*$'
-		    let g:UnconditionalPaste_JoinSeparator = split(l:separator, '\r', 1)
+		    let g:UnconditionalPaste_JoinSeparator = map(split(l:separator, '\r', 1), 'ingo#cmdargs#GetUnescapedExpr(v:val)')
 		    let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
 		else
+		    let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
 		    let g:UnconditionalPaste_JoinSeparator = l:separator
 		endif
 	    elseif a:how ==# 'Q'
@@ -368,6 +375,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		    return ''
 		endif
+		let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
 		let g:UnconditionalPaste_Separator = l:separator
 	    else
 		throw 'ASSERT: Invalid how: ' . string(a:how)
@@ -377,7 +385,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    let l:isMultiLine = (l:pasteContent =~# '\n')
 	    if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
-	    elseif l:isMultiLine && a:1 ==# 'p' && UnconditionalPaste#IsAtEndOfLine() && getline('.') =~# '.'
+	    elseif l:isMultiLine && a:1 ==# 'p' && ingo#cursor#IsAtEndOfLine() && getline('.') =~# '.'
 		let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
 	    else
 		if a:how ==# 'B'

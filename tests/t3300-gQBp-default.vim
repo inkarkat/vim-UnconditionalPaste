@@ -1,7 +1,7 @@
-" Test gDp of a word in the default register.
+" Test gQBp of a word in the default register.
 
 call SetRegister('"', "foobar", 'v')
-normal gDp
+normal gQBp
 call VerifyRegister()
 
 call vimtest#SaveOut()

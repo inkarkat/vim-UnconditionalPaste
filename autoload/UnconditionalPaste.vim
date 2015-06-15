@@ -16,6 +16,11 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   3.20.033	15-Jun-2015	Factor out s:QuerySeparatorPattern().
+"				ENH: If there's only a single line to paste and
+"				no [count] with the blockwise commands (gbp,
+"				gBp, gqbq, gQBp), first query about a separator
+"				pattern and un-join the register contents.
 "   3.20.032	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
 "				establish hard dependency on ingo-library.
 "				BUG: Escaped characters like \n are handled
@@ -186,6 +191,14 @@ function! s:Unjoin( text, separatorPattern )
     " pasting. For consistency, do the same for a single leading separator.
     return (l:text =~# '^\n' ? l:text[1:] : l:text)
 endfunction
+function! s:QuerySeparatorPattern()
+    let l:separatorPattern = input('Enter separator pattern: ')
+    if empty(l:separatorPattern)
+	return 0
+    endif
+    let g:UnconditionalPaste_UnjoinSeparatorPattern = l:separatorPattern
+    return 1
+endfunction
 
 function! UnconditionalPaste#GetCount()
     return s:count
@@ -219,6 +232,31 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	let l:pasteContent = l:regContent
 	let l:pasteType = 'l'
 	let l:shiftCommand = ''
+
+	if l:count == 0 && a:how =~# '^\cq\?b$' && s:IsSingleElement(l:regContent)
+	    " Query / re-use separator pattern, and split into multiple lines
+	    " first.
+	    if a:how !=# 'QB'
+		if ! s:QuerySeparatorPattern()
+		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		    return ''
+		endif
+	    endif
+
+	    let l:pasteContent = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
+
+	    " For blockwise pasting, a (single!) trailing separator means an
+	    " additional empty line in the block; this probably isn't intended.
+	    if l:pasteContent =~# '\n$' | let l:pasteContent = l:pasteContent[0:-2] | endif
+
+	    if l:pasteContent ==# l:regContent
+		" No unjoining took place; this is probably not what the user
+		" intended (maybe wrong register?), so don't just insert the
+		" contents unchanged, but rather alert the user.
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		return ''
+	    endif
+	endif
 
 	if a:how ==# 'b'
 	    let l:pasteType = 'b'
@@ -288,12 +326,10 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    endif
 	elseif a:how ==? 'u'
 	    if a:how ==# 'u'
-		let l:separatorPattern = input('Enter separator pattern: ')
-		if empty(l:separatorPattern)
+		if ! s:QuerySeparatorPattern()
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		    return ''
 		endif
-		let g:UnconditionalPaste_UnjoinSeparatorPattern = l:separatorPattern
 	    endif
 
 	    let l:pasteContent = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)

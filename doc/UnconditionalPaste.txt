@@ -49,7 +49,9 @@ USAGE						    *UnconditionalPaste-usage*
 								   *gbp* *gbP*
 ["x]gbp, ["x]gbP	Paste blockwise (inserting multiple lines in-place,
 			pushing existing text further to the right) [count]
-			times.
+			times. If there's only a single line to paste and no
+			[count], first query about a separator pattern and
+			un-join the register contents.
 
 						       *g]p* *g[P* *g]P* *g[p*
 ["x]g]p, ["x]g[P  or	Paste linewise (even if yanked text is not a complete
@@ -101,6 +103,9 @@ USAGE						    *UnconditionalPaste-usage*
 			When pasting with |gBP| on the first non-indent
 			character (after column 1) of a line, prepends after
 			existing indent of following lines.
+			If there's only a single line to paste and no [count],
+			first query about a separator pattern and un-join the
+			register contents.
 								 *gqbp* *gqbP*
 ["x]gqbp, ["x]gqbP	Query for a separator string, then paste as a minimal
 			fitting (not rectangular) block (like |gBp|) with that
@@ -116,9 +121,13 @@ USAGE						    *UnconditionalPaste-usage*
 			When pasting with |gqbP| on the first non-indent
 			character (after column 1) of a line, prepends (with
 			separator) after existing indent of following lines.
+			If there's only a single line to paste and no [count],
+			first query about a separator pattern and un-join the
+			register contents.
 								 *gQBp* *gQBP*
 ["x]gQBp, ["x]gQBP	Paste blockwise with the previously queried (|gqbp|)
-			separator string.
+			separator string (and separator pattern, if single
+			line).
 
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
@@ -325,6 +334,10 @@ HISTORY						  *UnconditionalPaste-history*
   as {separator}, taken literally in {prefix} and {suffix}. Use
   ingo#cmdargs#GetUnescapedExpr() to resolve them (also for gqbp, which only
   supports {separator}).
+- ENH: If there's only a single line to paste and no [count] with the
+  blockwise commands (gbp, gBp, gqbq, gQBp), first query about a separator
+  pattern and un-join the register contents. Otherwise, these variants don't
+  make much sense (and for the corner cases, a count of 1 can be supplied).
 
 3.10	23-Dec-2014
 - Add g,'p and g,"p variants of g,p.

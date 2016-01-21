@@ -14,6 +14,7 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   3.10.031	03-Dec-2014	Add g,'p and g,"p variants of g,p.
 "   3.02.034	17-Jun-2014	CHG: Change default mappings of gdp and gDp to
 "				gqbp and gQBp, respectively.
 "   3.00.033	21-Mar-2014	Add gBp mapping to paste as a minimal fitting
@@ -144,7 +145,7 @@ endif
 function! s:CreateMappings()
     for [l:pasteName, l:pasteType] in
     \   [
-    \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','],
+    \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','], ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
     \       ['Indented', 'l'],
     \       ['MoreIndent', 'm'], ['LessIndent', 'n'],
     \       ['Shifted', '>'],

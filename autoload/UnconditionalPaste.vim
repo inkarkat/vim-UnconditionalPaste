@@ -186,10 +186,13 @@ function! s:IsSingleElement( text )
 endfunction
 function! s:Unjoin( text, separatorPattern )
     let l:text = substitute(a:text, a:separatorPattern, '\n', 'g')
+    if l:text ==# a:text
+	return [0, l:text]
+    endif
 
     " A (single!) trailing separator is automatically swallowed by the linewise
     " pasting. For consistency, do the same for a single leading separator.
-    return (l:text =~# '^\n' ? l:text[1:] : l:text)
+    return [1, (l:text =~# '^\n' ? l:text[1:] : l:text)]
 endfunction
 function! s:QuerySeparatorPattern()
     let l:separatorPattern = input('Enter separator pattern: ')
@@ -243,19 +246,18 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		endif
 	    endif
 
-	    let l:pasteContent = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
-
-	    " For blockwise pasting, a (single!) trailing separator means an
-	    " additional empty line in the block; this probably isn't intended.
-	    if l:pasteContent =~# '\n$' | let l:pasteContent = l:pasteContent[0:-2] | endif
-
-	    if l:pasteContent ==# l:regContent
+	    let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
+	    if ! l:isSuccess
 		" No unjoining took place; this is probably not what the user
 		" intended (maybe wrong register?), so don't just insert the
 		" contents unchanged, but rather alert the user.
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		return ''
 	    endif
+
+	    " For blockwise pasting, a (single!) trailing separator means an
+	    " additional empty line in the block; this probably isn't intended.
+	    if l:pasteContent =~# '\n$' | let l:pasteContent = l:pasteContent[0:-2] | endif
 	endif
 
 	if a:how ==# 'b'
@@ -332,8 +334,8 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		endif
 	    endif
 
-	    let l:pasteContent = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
-	    if l:pasteContent ==# l:regContent
+	    let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
+	    if ! l:isSuccess
 		" No unjoining took place; this is probably not what the user
 		" intended (maybe wrong register?), so don't just insert the
 		" contents unchanged, but rather alert the user.

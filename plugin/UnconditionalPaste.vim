@@ -6,7 +6,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2014 Ingo Karkat
+" Copyright: (C) 2006-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -14,6 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.00.033	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
+"   3.20.032	22-Jan-2016	CHG: Split off gSp "paste as paragraph" from gsp
+"				"paste with spacing" and turn the latter into
+"				"paste with spaces".
 "   3.10.031	03-Dec-2014	Add g,'p and g,"p variants of g,p.
 "   3.02.034	17-Jun-2014	CHG: Change default mappings of gdp and gDp to
 "				gqbp and gQBp, respectively.
@@ -150,11 +154,11 @@ function! s:CreateMappings()
     \       ['MoreIndent', 'm'], ['LessIndent', 'n'],
     \       ['Shifted', '>'],
     \       ['Commented', '#'],
-    \       ['Spaced', 's'],
+    \       ['Spaced', 's'], ['Paragraphed', 'S'],
     \       ['Jagged', 'B'],
     \       ['Delimited', 'qb'], ['RecallDelimited', 'QB'],
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
-    \       ['Unjoin', 'u'], ['RecallUnjoin', 'U'],
+    \       ['Unjoin', 'uj'], ['RecallUnjoin', 'UJ'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P']
     \   ]
@@ -186,7 +190,7 @@ function! s:CreateMappings()
 		" instead of p for pasting.
 		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
-	    if l:pasteType ==# 'qb' || l:pasteType ==# 'q' || l:pasteType ==# 'u'
+	    if l:pasteType ==# 'qb' || l:pasteType ==# 'q' || l:pasteType ==# 'uj'
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
@@ -227,7 +231,7 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c', '<C-c>'], ['Comma', ',', ','],
     \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
-    \       ['Unjoin', 'u', '<C-u>'], ['RecallUnjoin', 'U', '<C-u><C-u>']
+    \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>']
     \   ]
 	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName
 	" XXX: Can only use i_CTRL-R here (though I want literal insertion, not

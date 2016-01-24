@@ -7,8 +7,9 @@
 "   - UnconditionalPaste/Shifted.vim autoload script
 "   - ingo/cmdargs.vim autoload script
 "   - ingo/cursor.vim autoload script
+"   - ingo/str.vim autoload script
 
-" Copyright: (C) 2006-2015 Ingo Karkat
+" Copyright: (C) 2006-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -16,6 +17,12 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.00.035	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
+"   3.20.034	22-Jan-2016	CHG: Split off gSp from gsp; the latter now
+"				flattens line(s) like gcp, whereas the new gSp
+"				forces linewise surrounding with empty lines.
+"				Use ingo#str#Trim(), now that we have a
+"				mandatory dependency on ingo-library.
 "   3.20.033	15-Jun-2015	Factor out s:QuerySeparatorPattern().
 "				ENH: If there's only a single line to paste and
 "				no [count] with the blockwise commands (gbp,
@@ -326,8 +333,8 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		    throw 'ASSERT: unknown paste command: ' . string(a:1)
 		endif
 	    endif
-	elseif a:how ==? 'u'
-	    if a:how ==# 'u'
+	elseif a:how ==? 'uj'
+	    if a:how ==# 'uj'
 		if ! s:QuerySeparatorPattern()
 		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 		    return ''
@@ -386,21 +393,33 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	    \       "\n"
 	    \   )
 	elseif a:how ==# 's'
-	    let l:pasteType = l:regType " Keep the original paste type.
-
-	    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(l:regType, a:1, '\s', 1)
-	    let l:spaceCharacter = (l:regType ==# 'V' ? "\n" : ' ')
-	    let l:prefix = (l:isPrefix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
-	    let l:suffix = (l:isSuffix ? repeat(l:spaceCharacter, max([l:count, 1])) : '')
+	    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\s', 1)
+	    let l:prefix = (l:isPrefix ? repeat(' ', max([l:count, 1])) : '')
+	    let l:suffix = (l:isSuffix ? repeat(' ', max([l:count, 1])) : '')
 	    let l:count = 0
 
 	    if l:regType ==# 'v'
-		" Note: Could use ingo#str#Trim() here.
-		let l:pasteContent = l:prefix . substitute(l:regContent, '^\_s*\(.\{-}\)\_s*$', '\1', '') . l:suffix
+		let l:pasteType = l:regType " Keep the original paste type.
+		let l:pasteContent = l:prefix . ingo#str#Trim(l:regContent) . l:suffix
 	    elseif l:regType ==# 'V'
+		let l:pasteType = 'c'
+		let l:pasteContent = l:prefix . ingo#str#Trim(l:regContent) . l:suffix
+		let l:pasteContent = l:prefix . s:Flatten(l:regContent, ' ') . l:suffix
+	    else
+		let l:pasteType = l:regType " Keep the original paste type.
+		let l:pasteContent = join(map(split(l:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
+	    endif
+	elseif a:how ==# 'S'
+	    let l:pasteType = 'l'
+	    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', a:1, '\s', 1)
+	    let l:prefix = (l:isPrefix ? repeat("\n", max([l:count, 1])) : '')
+	    let l:suffix = (l:isSuffix ? repeat("\n", max([l:count, 1])) : '')
+	    let l:count = 0
+
+	    if l:regType ==# 'V'
 		let l:pasteContent = l:prefix . substitute(l:regContent, '^\n*\(.\{-}\)\n*$', '\1\n', '') . l:suffix
 	    else
-		let l:pasteContent = join(map(split(l:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
+		let l:pasteContent = l:prefix . l:regContent . "\n" . l:suffix
 	    endif
 	elseif a:how =~# '^\%(qb\|QB\|B\)$'
 	    if a:how ==# 'B'

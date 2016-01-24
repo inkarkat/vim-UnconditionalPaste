@@ -83,13 +83,22 @@ USAGE						    *UnconditionalPaste-usage*
 			that would normally happen with |i_CTRL-R|.
 								   *gsp* *gsP*
 ["x]gsp, ["x]gsP	Paste with [count] spaces (characterwise; blockwise:
-			around each line) / empty lines (linewise) around the
-			register contents. When pasting before the start or
-			after the end of the line / buffer, or with whitespace
-			/ empty lines around the current position, this is
-			added only to the "other" side, unless there's
-			emptyness at both sides. (Else, you could just use
-			plain |p|/|P|.)
+			around each line; linewise: flattened like |gcp|)
+			around the register contents. When pasting before the
+			start or after the end of the line, or with whitespace
+			around the current position, this is added only to the
+			"other" side, unless there's emptyness at both sides.
+			(Else, you could just use plain |p|/|P|.)
+			Note: To paste with <Tab> instead of spaces (at the
+			beginning or end), you can use |g>P| / |g>p| if you
+			use tab-indenting or |gQP| / |gQp| (with the default
+			separator) if 'expandtab' is set.	   *gSp* *gSP*
+["x]gSp, ["x]gSP	Paste linewise (like |glp|) with [count] empty lines
+			around the register contents. When pasting before the
+			start or after the end of the buffer, or with empty
+			lines around the current position, this is added only
+			to the "other" side, unless there's emptyness at both
+			sides. (Else, you could just use plain |p|/|P|.)
 								   *gBp* *gBP*
 ["x]gBp, ["x]gBP	Paste as a minimal fitting (not rectangular) block
 			with a jagged right edge; i.e. the lines
@@ -148,12 +157,12 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]gQp, ["x]gQP	Paste characterwise, with each line delimited by the
 			previously queried (|gqp|) separator string.
 
-								   *gup* *guP*
-["x]gup, ["x]guP	Query for a separator pattern, un-join the register
+								 *gujp* *gujP*
+["x]gujp, ["x]gujP	Query for a separator pattern, un-join the register
 			contents, then paste linewise.
-								   *gUp* *gUP*
-["x]gUp, ["x]gUP	Un-join the register contents on the previously
-			queried (|gup|) separator pattern, then paste
+								 *gUJp* *gUJP*
+["x]gUJp, ["x]gUJP	Un-join the register contents on the previously
+			queried (|gujp|) separator pattern, then paste
 			linewise.
 
 								   *gpp* *gpP*
@@ -200,9 +209,9 @@ CTRL-R CTRL-U {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-U* *c_CTRL-R_CTRL-U*
 			a register, then insert it linewise.
 			     *i_CTRL-R_CTRL-U_CTRL-U* *c_CTRL-R_CTRL-U_CTRL-U*
 CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}
-			Un-join the contents of
-			a register on the previously queried (|gup|,
-			|i_CTRL_R_CTRL-U|) pattern, then insert it linewise.
+			Un-join the contents of a register on the previously
+			queried (|gujp|, |i_CTRL_R_CTRL-U|) pattern, then
+			insert it linewise.
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*
@@ -240,9 +249,9 @@ mappings is a <Tab> character; to preset another one (it will be overridden by
     let g:UnconditionalPaste_JoinSeparator = 'text'
 <
 				 *g:UnconditionalPaste_UnjoinSeparatorPattern*
-The default separator pattern for the |gUp| and |i_CTRL-R_CTRL-U_CTRL-U|
+The default separator pattern for the |gUJp| and |i_CTRL-R_CTRL-U_CTRL-U|
 mappings matches any whitespace and newlines (i.e. it will get rid of empty
-lines); to preset another one (it will be overridden by |gup| and
+lines); to preset another one (it will be overridden by |gujp| and
 |i_CTRL-R_CTRL-U|), use: >
     let g:UnconditionalPaste_UnjoinSeparatorPattern = '-'
 <
@@ -327,7 +336,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-3.20	RELEASEME
+4.00	RELEASEME
 - Establish hard dependency on ingo-library. *** You need to separately
   install ingo-library (vimscript #4433) version 1.024 (or higher)! ***
 - BUG: Escaped characters like \n are handled inconsistently in gqp: resolved
@@ -338,6 +347,12 @@ HISTORY						  *UnconditionalPaste-history*
   blockwise commands (gbp, gBp, gqbq, gQBp), first query about a separator
   pattern and un-join the register contents. Otherwise, these variants don't
   make much sense (and for the corner cases, a count of 1 can be supplied).
+- CHG: Split off |gSp| from |gsp|; the latter now flattens line(s) like |gcp|,
+  whereas the new |gSp| forces linewise surrounding with empty lines. I found
+  that I often |dd| a line in order to append it to another line with a space
+  in between.
+- CHG: Change gup / gUp to gujp / gUJp and add gup / gUp to lower / uppercase
+  the first character of the register
 
 3.10	23-Dec-2014
 - Add g,'p and g,"p variants of g,p.
@@ -448,7 +463,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2015 Ingo Karkat
+Copyright: (C) 2006-2016 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

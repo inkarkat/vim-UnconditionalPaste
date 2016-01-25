@@ -160,7 +160,8 @@ function! s:CreateMappings()
     \       ['Queried', 'q'], ['RecallQueried', 'Q'],
     \       ['Unjoin', 'uj'], ['RecallUnjoin', 'UJ'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
-    \       ['GPlus', 'P'], ['GPlusRepeat', '.P']
+    \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
+    \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~']
     \   ]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
@@ -231,7 +232,8 @@ function! s:CreateMappings()
     \   [
     \       ['Char', 'c', '<C-c>'], ['Comma', ',', ','],
     \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
-    \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>']
+    \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>'],
+    \       ['ToggleCase', '~', '~']
     \   ]
 	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName
 	" XXX: Can only use i_CTRL-R here (though I want literal insertion, not

@@ -6,7 +6,10 @@
 "   - UnconditionalPaste/Separators.vim autoload script
 "   - UnconditionalPaste/Shifted.vim autoload script
 "   - ingo/cmdargs.vim autoload script
+"   - ingo/cmdline/showmode.vim autoload script
 "   - ingo/cursor.vim autoload script
+"   - ingo/err.vim autoload script
+"   - ingo/msg.vim autoload script
 "   - ingo/str.vim autoload script
 
 " Copyright: (C) 2006-2016 Ingo Karkat
@@ -19,6 +22,12 @@
 " REVISION	DATE		REMARKS
 "   4.00.036	26-Jan-2016	Need to use temporary default register also for
 "				the built-in read-only registers {:%.}.
+"				Use ingo-library functions for echoing of
+"				potential Vim error (e.g. when unjoining on
+"				invalid pattern like ,\().
+"				FIX: Vim error on CTRL-R ... mappings
+"				incorrectly inserted "0". Need to return '' from
+"				:catch.
 "   4.00.035	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
 "   3.20.034	22-Jan-2016	CHG: Split off gSp from gsp; the latter now
 "				flattens line(s) like gcp, whereas the new gSp
@@ -551,16 +560,19 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		    execute "silent '[,']" . l:shiftCommand
 		endfor
 	    endif
+	    return 1
 	else
 	    return l:pasteContent
 	endif
     catch /^Vim\%((\a\+)\)\=:/
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^\CVim\%((\a\+)\)\=:', '', '')
-	echohl ErrorMsg
-	echomsg v:errmsg
-	echohl None
+	if a:0
+	    call ingo#err#SetVimException()
+	    return 0
+	else
+	    call ingo#cmdline#showmode#TemporaryNoShowMode()
+	    call ingo#msg#VimExceptionMsg()
+	    return ''
+	endif
     finally
 	if a:regName =~# '[=:.%]'
 	    call setreg('"', l:save_reg, l:save_regmode)

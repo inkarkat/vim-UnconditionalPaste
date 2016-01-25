@@ -178,6 +178,11 @@ USAGE						    *UnconditionalPaste-usage*
 			decremented by 1.
 			Do this [count] times, with each paste further
 			incremented / decremented.
+						       *gup* *guP* *gUp* *gUP*
+["x]gup, ["x]guP	Paste with the first alphabetical character of the
+			first / [count] word(s) made lowercase.
+["x]gUp, ["x]gUP	Paste with the first alphabetical character of the
+			first / [count] word(s) made uppercase.
 
 
 CTRL-R CTRL-C {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-C* *c_CTRL-R_CTRL-C*
@@ -212,6 +217,11 @@ CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}
 			Un-join the contents of a register on the previously
 			queried (|gujp|, |i_CTRL_R_CTRL-U|) pattern, then
 			insert it linewise.
+						     *i_CTRL-R_~* *c_CTRL-R_~*
+CTRL-R ~ {0-9a-z"%#*+/:.-}
+			Insert the contents of a register, toggling the case
+			of the first alphabetical character of the first word
+			(similar to |gup| / |gUp|).
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*
@@ -301,14 +311,16 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pq <Plug>UnconditionalPasteQueriedAfter
     nmap <Leader>PQ <Plug>UnconditionalPasteRecallQueriedBefore
     nmap <Leader>pQ <Plug>UnconditionalPasteRecallQueriedAfter
-    nmap <Leader>Pu <Plug>UnconditionalPasteUnjoinBefore
-    nmap <Leader>pu <Plug>UnconditionalPasteUnjoinAfter
-    nmap <Leader>PU <Plug>UnconditionalPasteRecallUnjoinBefore
-    nmap <Leader>pU <Plug>UnconditionalPasteRecallUnjoinAfter
+    nmap <Leader>Puj <Plug>UnconditionalPasteUnjoinBefore
+    nmap <Leader>puj <Plug>UnconditionalPasteUnjoinAfter
+    nmap <Leader>PUJ <Plug>UnconditionalPasteRecallUnjoinBefore
+    nmap <Leader>pUJ <Plug>UnconditionalPasteRecallUnjoinAfter
     nmap <Leader>Pp <Plug>UnconditionalPastePlusBefore
     nmap <Leader>pp <Plug>UnconditionalPastePlusAfter
     nmap <Leader>PP <Plug>UnconditionalPasteGPlusBefore
     nmap <Leader>pP <Plug>UnconditionalPasteGPlusAfter
+    nmap <Leader>pu <Plug>UnconditionalPasteLowercase
+    nmap <Leader>pU <Plug>UnconditionalPasteUppercase
 
     imap <C-G>c <Plug>UnconditionalPasteChar
     imap <C-G>, <Plug>UnconditionalPasteComma
@@ -316,6 +328,7 @@ script (e.g. in your |vimrc|): >
     imap <C-G>Q <Plug>UnconditionalPasteRecallQueried
     imap <C-G>u <Plug>UnconditionalPasteUnjoin
     imap <C-G>U <Plug>UnconditionalPasteRecallUnjoin
+    imap <C-G>~ <Plug>UnconditionalPasteToggleCase
 
     cmap <C-G>c <Plug>UnconditionalPasteChar
     cmap <C-G>, <Plug>UnconditionalPasteComma

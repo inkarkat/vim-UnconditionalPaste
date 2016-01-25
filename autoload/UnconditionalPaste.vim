@@ -17,6 +17,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.00.036	26-Jan-2016	Need to use temporary default register also for
+"				the built-in read-only registers {:%.}.
 "   4.00.035	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
 "   3.20.034	22-Jan-2016	CHG: Split off gSp from gsp; the latter now
 "				flattens line(s) like gcp, whereas the new gSp
@@ -219,14 +221,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
-    if a:regName ==# '='
+    if a:regName =~# '[=:.%]'
 	" Cannot evaluate the expression register within a function; unscoped
 	" variables do not refer to the global scope. Therefore, evaluation
 	" happened earlier in the mappings, and stored this in s:exprResult.
 	" To get the expression result into the buffer, use the unnamed
 	" register, and restore it later.
 	let l:regName = '"'
-	let l:regContent = s:exprResult
+	let l:regContent = (a:regName ==# '=' ? s:exprResult : getreg(a:regName))
 
 	" Note: Because of the conditional and because there is no yank
 	" involved, do not use ingo#register#KeepRegisterExecuteOrFunc() here.
@@ -513,6 +515,30 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		let s:lastCount = l:baseCount + l:count - 1
 		let l:count = 0
 	    endif
+	elseif a:how ==? 'u' || a:how ==# '~'
+	    let l:pasteType = l:regType " Keep the original paste type.
+	    if a:how ==# 'u'
+		let l:conversion = ['\<\u', '\l&']
+	    elseif a:how ==# 'U'
+		let l:conversion = ['\<\l', '\u&']
+	    elseif a:how ==# '~'
+		let l:conversion = ['\<\(\l\)\|\(\u\)', '\u\1\l\2']
+	    else
+		throw 'ASSERT: Invalid a:how: ' . string(a:how)
+	    endif
+
+	    let l:count = max([1, l:count])
+	    while l:count > 0
+		let l:pasteContent = substitute(l:pasteContent, l:conversion[0], l:conversion[1], '')
+		let l:count -=1
+	    endwhile
+
+	    if l:pasteContent ==# l:regContent
+		" No change in case has been performed; this is probably not
+		" what the user intended.
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+		return ''
+	    endif
 	endif
 
 	if a:0
@@ -536,7 +562,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	echomsg v:errmsg
 	echohl None
     finally
-	if a:regName ==# '='
+	if a:regName =~# '[=:.%]'
 	    call setreg('"', l:save_reg, l:save_regmode)
 	    let &clipboard = l:save_clipboard
 	endif

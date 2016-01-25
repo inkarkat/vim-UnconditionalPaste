@@ -6,10 +6,7 @@
 "   - UnconditionalPaste/Separators.vim autoload script
 "   - UnconditionalPaste/Shifted.vim autoload script
 "   - ingo/cmdargs.vim autoload script
-"   - ingo/cmdline/showmode.vim autoload script
 "   - ingo/cursor.vim autoload script
-"   - ingo/err.vim autoload script
-"   - ingo/msg.vim autoload script
 "   - ingo/str.vim autoload script
 
 " Copyright: (C) 2006-2016 Ingo Karkat
@@ -20,14 +17,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   4.00.036	26-Jan-2016	Need to use temporary default register also for
-"				the built-in read-only registers {:%.}.
-"				Use ingo-library functions for echoing of
-"				potential Vim error (e.g. when unjoining on
-"				invalid pattern like ,\().
-"				FIX: Vim error on CTRL-R ... mappings
-"				incorrectly inserted "0". Need to return '' from
-"				:catch.
 "   4.00.035	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
 "   3.20.034	22-Jan-2016	CHG: Split off gSp from gsp; the latter now
 "				flattens line(s) like gcp, whereas the new gSp
@@ -230,14 +219,14 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
-    if a:regName =~# '[=:.%]'
+    if a:regName ==# '='
 	" Cannot evaluate the expression register within a function; unscoped
 	" variables do not refer to the global scope. Therefore, evaluation
 	" happened earlier in the mappings, and stored this in s:exprResult.
 	" To get the expression result into the buffer, use the unnamed
 	" register, and restore it later.
 	let l:regName = '"'
-	let l:regContent = (a:regName ==# '=' ? s:exprResult : getreg(a:regName))
+	let l:regContent = s:exprResult
 
 	" Note: Because of the conditional and because there is no yank
 	" involved, do not use ingo#register#KeepRegisterExecuteOrFunc() here.
@@ -560,21 +549,18 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 		    execute "silent '[,']" . l:shiftCommand
 		endfor
 	    endif
-	    return 1
 	else
 	    return l:pasteContent
 	endif
     catch /^Vim\%((\a\+)\)\=:/
-	if a:0
-	    call ingo#err#SetVimException()
-	    return 0
-	else
-	    call ingo#cmdline#showmode#TemporaryNoShowMode()
-	    call ingo#msg#VimExceptionMsg()
-	    return ''
-	endif
+	" v:exception contains what is normally in v:errmsg, but with extra
+	" exception source info prepended, which we cut away.
+	let v:errmsg = substitute(v:exception, '^\CVim\%((\a\+)\)\=:', '', '')
+	echohl ErrorMsg
+	echomsg v:errmsg
+	echohl None
     finally
-	if a:regName =~# '[=:.%]'
+	if a:regName ==# '='
 	    call setreg('"', l:save_reg, l:save_regmode)
 	    let &clipboard = l:save_clipboard
 	endif

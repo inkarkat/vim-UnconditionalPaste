@@ -210,7 +210,9 @@ function! s:CreateMappings()
 	    \   'if v:register ==# "="<Bar>' .
 	    \   '    call UnconditionalPaste#HandleExprReg(getreg("="))<Bar>' .
 	    \   'endif<Bar>' .
-	    \   'call UnconditionalPaste#Paste(v:register, %s, %s)<Bar>' .
+	    \   'if ! UnconditionalPaste#Paste(v:register, %s, %s)<Bar>' .
+	    \   '   echoerr ingo#err#Get()<Bar>' .
+	    \   'endif<Bar>' .
 	    \   'silent! call repeat#set("\<lt>Plug>%s", UnconditionalPaste#GetCount())<CR>',
 	    \
 	    \   l:plugMappingName,

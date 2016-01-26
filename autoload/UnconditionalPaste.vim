@@ -6,7 +6,10 @@
 "   - UnconditionalPaste/Separators.vim autoload script
 "   - UnconditionalPaste/Shifted.vim autoload script
 "   - ingo/cmdargs.vim autoload script
+"   - ingo/cmdline/showmode.vim autoload script
 "   - ingo/cursor.vim autoload script
+"   - ingo/err.vim autoload script
+"   - ingo/msg.vim autoload script
 "   - ingo/str.vim autoload script
 
 " Copyright: (C) 2006-2016 Ingo Karkat
@@ -17,6 +20,24 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.00.037	27-Jan-2016	Refactoring: Handle all known a:how in
+"				s:ApplyAlgorithm(), and assert on invalid one.
+"				Don't preset l:pasteType, and use v/V/C-v which
+"				are consistent with a:regType, not c/l/b.
+"   4.00.036	26-Jan-2016	Need to use temporary default register also for
+"				the built-in read-only registers {:%.}.
+"				Use ingo-library functions for echoing of
+"				potential Vim error (e.g. when unjoining on
+"				invalid pattern like ,\().
+"				FIX: Vim error on CTRL-R ... mappings
+"				incorrectly inserted "0". Need to return '' from
+"				:catch.
+"				Refactoring: Factor out s:ApplyAlgorithm() from
+"				the actual pasting (except for the special case
+"				of
+"				UnconditionalPaste#Separators#SpecialPasteLines()),
+"				as a first step towards allowing multiple
+"				transformations.
 "   4.00.035	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
 "   3.20.034	22-Jan-2016	CHG: Split off gSp from gsp; the latter now
 "				flattens line(s) like gcp, whereas the new gSp
@@ -213,20 +234,324 @@ endfunction
 function! UnconditionalPaste#GetCount()
     return s:count
 endfunction
+function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
+    let l:pasteContent = a:regContent
+    let l:shiftCommand = ''
+    let l:shiftCount = 0
+    let l:count = a:count
+
+    if l:count == 0 && a:how =~# '^\cq\?b$' && s:IsSingleElement(a:regContent)
+	" Query / re-use separator pattern, and split into multiple lines
+	" first.
+	if a:how !=# 'QB'
+	    if ! s:QuerySeparatorPattern()
+		throw 'beep'
+	    endif
+	endif
+
+	let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
+	if ! l:isSuccess
+	    " No unjoining took place; this is probably not what the user
+	    " intended (maybe wrong register?), so don't just insert the
+	    " contents unchanged, but rather alert the user.
+	    throw 'beep'
+	endif
+
+	" For blockwise pasting, a (single!) trailing separator means an
+	" additional empty line in the block; this probably isn't intended.
+	if l:pasteContent =~# '\n$' | let l:pasteContent = l:pasteContent[0:-2] | endif
+    endif
+
+    if a:how =~# '^[il]$'
+	let l:pasteType = 'V'
+	if a:regType[0] ==# "\<C-v>"
+	    let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
+	endif
+    elseif a:how ==# 'b'
+	let l:pasteType = "\<C-v>"
+    elseif a:how =~# '^[c,qQ]$\|^,[''"]$'
+	let l:pasteType = 'v'
+	let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = ['', '', '', '']
+
+	if a:regType[0] ==# "\<C-v>"
+	    let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
+	endif
+
+	if a:how ==# 'c'
+	    let l:separator = ' '
+	elseif a:how[0] ==# ','
+	    let l:separator = ', '
+	    if ! empty(a:how[1])
+		let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
+	    endif
+	elseif a:how ==# 'q'
+	    let l:separator = input('Enter separator string (or prefix^Mseparator^Msuffix): ')
+	    if empty(l:separator)
+		throw 'beep'
+	    endif
+
+	    unlet! g:UnconditionalPaste_JoinSeparator
+	    if l:separator =~# '^\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*$'
+		let g:UnconditionalPaste_JoinSeparator = map(split(l:separator, '\r', 1), 'ingo#cmdargs#GetUnescapedExpr(v:val)')
+		let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
+	    else
+		let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
+		let g:UnconditionalPaste_JoinSeparator = l:separator
+	    endif
+	elseif a:how ==# 'Q'
+	    if type(g:UnconditionalPaste_JoinSeparator) == type([])
+		let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
+	    else
+		let l:separator = g:UnconditionalPaste_JoinSeparator
+	    endif
+	else
+	    throw 'ASSERT: Invalid how: ' . string(a:how)
+	endif
+
+	if l:count > 1
+	    " To join the multiplied pastes with the desired separator, we
+	    " need to process the multiplication on our own.
+	    let l:pasteContent = repeat(l:pasteContent . "\n", l:count)
+	    let l:count = 0
+	endif
+
+	let l:pasteContent = l:prefix . s:Flatten(l:pasteContent, l:linePrefix . l:separator . l:lineSuffix) . l:suffix
+
+	if a:0 && a:how !=# 'c' && s:IsSingleElement(a:regContent)
+	    " DWIM: Put the separator in front (gqp) / after (gqP);
+	    " otherwise, the mapping is identical to normal p / P and
+	    " therefore worthless. Do not do this for plain gcp / gcP, as
+	    " I often use that mapping to avoid the special handling of
+	    " smartput.vim, and this embellishment would counter that.
+	    " For that case, better use gsp.
+	    if a:1 ==# 'p'
+		let l:pasteContent = l:separator . l:pasteContent
+	    elseif a:1 ==# 'P'
+		let l:pasteContent .= l:separator
+	    else
+		throw 'ASSERT: unknown paste command: ' . string(a:1)
+	    endif
+	endif
+    elseif a:how ==? 'uj'
+	if a:how ==# 'uj'
+	    if ! s:QuerySeparatorPattern()
+		throw 'beep'
+	    endif
+	endif
+
+	let l:pasteType = 'V'
+	let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
+	if ! l:isSuccess
+	    " No unjoining took place; this is probably not what the user
+	    " intended (maybe wrong register?), so don't just insert the
+	    " contents unchanged, but rather alert the user.
+	    throw 'beep'
+	endif
+    elseif a:how =~# '^[mn]$'
+	let l:pasteType = 'V'
+	let l:shiftCount = max([l:count, 1])
+	let l:shiftCommand = (a:how ==# 'm' ? '>' : '<')
+	let l:count = 0
+
+	if a:regType[0] ==# "\<C-v>"
+	    let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
+	endif
+    elseif a:how ==# '>'
+	let l:pasteType = 'V'
+	let l:shiftCount = max([l:count, 1])
+	let l:count = 0
+	if a:regType ==# 'V'
+	    let l:shiftCommand = '>'
+	else
+	    if a:regType ==# 'v'
+		let l:lines = [s:Flatten(l:pasteContent, ' ')]
+	    else
+		let l:lines = split(l:pasteContent, '\n', 1)
+	    endif
+
+	    if a:1 ==# 'P'
+		call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
+	    else
+		call UnconditionalPaste#Shifted#SpecialShiftedAppend(l:lines, l:shiftCount)
+	    endif
+	    return ['', '', 0, '', 0]
+	endif
+    elseif a:how ==# '#'
+	if empty(&commentstring)
+	    throw 'beep'
+	endif
+
+	let l:pasteType = 'V'
+	let l:pasteContent =
+	    \	join(
+	    \	    map(
+	    \		split(l:pasteContent, '\n', 1),
+	    \		'empty(v:val) ? "" : printf(&commentstring, v:val)'
+	    \	    ),
+	    \	    "\n"
+	    \	)
+    elseif a:how ==# 's'
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\s', 1)
+	let l:prefix = (l:isPrefix ? repeat(' ', max([l:count, 1])) : '')
+	let l:suffix = (l:isSuffix ? repeat(' ', max([l:count, 1])) : '')
+	let l:count = 0
+
+	if a:regType ==# 'v'
+	    let l:pasteType = a:regType " Keep the original paste type.
+	    let l:pasteContent = l:prefix . ingo#str#Trim(a:regContent) . l:suffix
+	elseif a:regType ==# 'V'
+	    let l:pasteType = 'v'
+	    let l:pasteContent = l:prefix . ingo#str#Trim(a:regContent) . l:suffix
+	    let l:pasteContent = l:prefix . s:Flatten(a:regContent, ' ') . l:suffix
+	else
+	    let l:pasteType = a:regType " Keep the original paste type.
+	    let l:pasteContent = join(map(split(a:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
+	endif
+    elseif a:how ==# 'S'
+	let l:pasteType = 'V'
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', a:1, '\s', 1)
+	let l:prefix = (l:isPrefix ? repeat("\n", max([l:count, 1])) : '')
+	let l:suffix = (l:isSuffix ? repeat("\n", max([l:count, 1])) : '')
+	let l:count = 0
+
+	if a:regType ==# 'V'
+	    let l:pasteContent = l:prefix . substitute(a:regContent, '^\n*\(.\{-}\)\n*$', '\1\n', '') . l:suffix
+	else
+	    let l:pasteContent = l:prefix . a:regContent . "\n" . l:suffix
+	endif
+    elseif a:how =~# '^\%(qb\|QB\|B\)$'
+	if a:how ==# 'B'
+	    let l:separator = ''
+	elseif a:how ==# 'QB'
+	    let l:separator = g:UnconditionalPaste_Separator
+	elseif a:how ==# 'qb'
+	    let l:separator = input('Enter separator string: ')
+	    if empty(l:separator)
+		throw 'beep'
+	    endif
+	    let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
+	    let g:UnconditionalPaste_Separator = l:separator
+	else
+	    throw 'ASSERT: Invalid how: ' . string(a:how)
+	endif
+
+
+	let l:isMultiLine = (l:pasteContent =~# '\n')
+	if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
+	    let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
+	elseif l:isMultiLine && a:1 ==# 'p' && ingo#cursor#IsAtEndOfLine() && getline('.') =~# '.'
+	    let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
+	else
+	    if a:how ==# 'B'
+		let [l:isPrefix, l:isSuffix] = [0, 0]
+	    else
+		let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
+	    endif
+	    let l:pasteType = "\<C-v>"
+	endif
+	let l:prefix = (l:isPrefix ? l:separator : '')
+	let l:suffix = (l:isSuffix ? l:separator : '')
+
+	let l:lines = split(l:pasteContent, '\n', 1)
+	if a:regType ==# 'V' && empty(l:lines[-1]) | call remove(l:lines, -1) | endif
+	call map(
+	    \	l:lines,
+	    \	'l:prefix . (l:count > 1 ? repeat(v:val . l:separator, l:count - 1) : "") . v:val . l:suffix'
+	\)
+	let l:count = 0
+
+	if l:pasteType ==# 'prepend'
+	    call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
+	    return ['', '', 0, '', 0]
+	elseif l:pasteType ==# 'append'
+	    call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '$', '')
+	    return ['', '', 0, '', 0]
+	elseif l:isMultiLine
+	    let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
+	    let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
+	    call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
+	    return ['', '', 0, '', 0]
+	endif
+
+	let l:pasteContent = join(l:lines, "\n")
+    elseif a:how ==? 'p' || a:how ==? '.p'
+	let l:pasteType = a:regType " Keep the original paste type.
+	let l:offset = (a:1 ==# 'p' ? 1 : -1)
+	if a:how ==? 'p'
+	    let l:baseCount = 1
+	    let l:vcol = 0
+	elseif a:how ==? '.p'
+	    " Continue increasing with the last used (saved) offset, and
+	    " (for 'p') at the same number position (after the first paste,
+	    " the cursor will have jumped to the beginning of the pasted
+	    " text).
+	    let l:baseCount = s:lastCount + 1
+	    let l:vcol = s:lastVcol
+	else
+	    throw 'ASSERT: Invalid how: ' . string(a:how)
+	endif
+	let s:lastCount = l:baseCount
+
+	let l:IncrementFunc = (a:how ==# 'p' || a:how ==# '.p' ? 'UnconditionalPaste#Increment#Single' : 'UnconditionalPaste#Increment#Global')
+	let [s:lastVcol, l:pasteContent] = call(l:IncrementFunc, [a:regContent, l:vcol, l:offset * l:baseCount])
+	if l:pasteContent ==# a:regContent
+	    " No number was found in the register; this is probably not what
+	    " the user intended (maybe wrong register?), so don't just
+	    " insert the contents unchanged, but rather alert the user.
+	    throw 'beep'
+	endif
+
+	if l:count > 1
+	    " To increment each multiplied paste one more, we need to
+	    " process the multiplication on our own.
+	    let l:numbers = (l:offset > 0 ? range(l:baseCount, l:baseCount + l:count - 1) : range(-1 * (l:baseCount + l:count - 1), -1 * l:baseCount))
+	    let l:pasteContent = join(map(l:numbers, l:IncrementFunc . '(a:regContent, l:vcol, v:val)[1]'), (a:regType[0] ==# "\<C-v>" ? "\n" : ''))
+	    let s:lastCount = l:baseCount + l:count - 1
+	    let l:count = 0
+	endif
+    elseif a:how ==? 'u' || a:how ==# '~'
+	let l:pasteType = a:regType " Keep the original paste type.
+	if a:how ==# 'u'
+	    let l:conversion = ['\<\u', '\l&']
+	elseif a:how ==# 'U'
+	    let l:conversion = ['\<\l', '\u&']
+	elseif a:how ==# '~'
+	    let l:conversion = ['\<\(\l\)\|\(\u\)', '\u\1\l\2']
+	else
+	    throw 'ASSERT: Invalid a:how: ' . string(a:how)
+	endif
+
+	let l:count = max([1, l:count])
+	while l:count > 0
+	    let l:pasteContent = substitute(l:pasteContent, l:conversion[0], l:conversion[1], '')
+	    let l:count -=1
+	endwhile
+
+	if l:pasteContent ==# a:regContent
+	    " No change in case has been performed; this is probably not
+	    " what the user intended.
+	    throw 'beep'
+	endif
+    else
+	throw 'ASSERT: Unknown a:how: ' . string(a:how)
+    endif
+
+    return [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount]
+endfunction
 function! UnconditionalPaste#Paste( regName, how, ... )
     let l:count = v:count
     let s:count = v:count
     let l:regType = getregtype(a:regName)
     let l:regContent = getreg(a:regName, 1) " Expression evaluation inside function context may cause errors, therefore get unevaluated expression when a:regName ==# '='.
 
-    if a:regName ==# '='
+    if a:regName =~# '[=:.%]'
 	" Cannot evaluate the expression register within a function; unscoped
 	" variables do not refer to the global scope. Therefore, evaluation
 	" happened earlier in the mappings, and stored this in s:exprResult.
 	" To get the expression result into the buffer, use the unnamed
 	" register, and restore it later.
 	let l:regName = '"'
-	let l:regContent = s:exprResult
+	let l:regContent = (a:regName ==# '=' ? s:exprResult : getreg(a:regName))
 
 	" Note: Because of the conditional and because there is no yank
 	" involved, do not use ingo#register#KeepRegisterExecuteOrFunc() here.
@@ -239,328 +564,39 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     endif
 
     try
-	let l:pasteContent = l:regContent
-	let l:pasteType = 'l'
-	let l:shiftCommand = ''
+	let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [a:how, l:regContent, l:regType, l:count] + a:000)
 
-	if l:count == 0 && a:how =~# '^\cq\?b$' && s:IsSingleElement(l:regContent)
-	    " Query / re-use separator pattern, and split into multiple lines
-	    " first.
-	    if a:how !=# 'QB'
-		if ! s:QuerySeparatorPattern()
-		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		    return ''
-		endif
-	    endif
-
-	    let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
-	    if ! l:isSuccess
-		" No unjoining took place; this is probably not what the user
-		" intended (maybe wrong register?), so don't just insert the
-		" contents unchanged, but rather alert the user.
-		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		return ''
-	    endif
-
-	    " For blockwise pasting, a (single!) trailing separator means an
-	    " additional empty line in the block; this probably isn't intended.
-	    if l:pasteContent =~# '\n$' | let l:pasteContent = l:pasteContent[0:-2] | endif
-	endif
-
-	if a:how ==# 'b'
-	    let l:pasteType = 'b'
-	elseif a:how =~# '^[c,qQ]$\|^,[''"]$'
-	    let l:pasteType = 'c'
-	    let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = ['', '', '', '']
-
-	    if l:regType[0] ==# "\<C-v>"
-		let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	    endif
-
-	    if a:how ==# 'c'
-		let l:separator = ' '
-	    elseif a:how[0] ==# ','
-		let l:separator = ', '
-		if ! empty(a:how[1])
-		    let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
-		endif
-	    elseif a:how ==# 'q'
-		let l:separator = input('Enter separator string (or prefix^Mseparator^Msuffix): ')
-		if empty(l:separator)
-		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		    return ''
-		endif
-
-		unlet! g:UnconditionalPaste_JoinSeparator
-		if l:separator =~# '^\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*$'
-		    let g:UnconditionalPaste_JoinSeparator = map(split(l:separator, '\r', 1), 'ingo#cmdargs#GetUnescapedExpr(v:val)')
-		    let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
-		else
-		    let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
-		    let g:UnconditionalPaste_JoinSeparator = l:separator
-		endif
-	    elseif a:how ==# 'Q'
-		if type(g:UnconditionalPaste_JoinSeparator) == type([])
-		    let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
-		else
-		    let l:separator = g:UnconditionalPaste_JoinSeparator
-		endif
-	    else
-		throw 'ASSERT: Invalid how: ' . string(a:how)
-	    endif
-
-	    if l:count > 1
-		" To join the multiplied pastes with the desired separator, we
-		" need to process the multiplication on our own.
-		let l:pasteContent = repeat(l:pasteContent . "\n", l:count)
-		let l:count = 0
-	    endif
-
-	    let l:pasteContent = l:prefix . s:Flatten(l:pasteContent, l:linePrefix . l:separator . l:lineSuffix) . l:suffix
-
-	    if a:0 && a:how !=# 'c' && s:IsSingleElement(l:regContent)
-		" DWIM: Put the separator in front (gqp) / after (gqP);
-		" otherwise, the mapping is identical to normal p / P and
-		" therefore worthless. Do not do this for plain gcp / gcP, as
-		" I often use that mapping to avoid the special handling of
-		" smartput.vim, and this embellishment would counter that.
-		" For that case, better use gsp.
-		if a:1 ==# 'p'
-		    let l:pasteContent = l:separator . l:pasteContent
-		elseif a:1 ==# 'P'
-		    let l:pasteContent .= l:separator
-		else
-		    throw 'ASSERT: unknown paste command: ' . string(a:1)
-		endif
-	    endif
-	elseif a:how ==? 'uj'
-	    if a:how ==# 'uj'
-		if ! s:QuerySeparatorPattern()
-		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		    return ''
-		endif
-	    endif
-
-	    let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
-	    if ! l:isSuccess
-		" No unjoining took place; this is probably not what the user
-		" intended (maybe wrong register?), so don't just insert the
-		" contents unchanged, but rather alert the user.
-		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		return ''
-	    endif
-	elseif a:how ==# 'l' && l:regType[0] ==# "\<C-v>"
-	    let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	elseif a:how =~# '^[mn]$'
-	    let l:shiftCount = max([l:count, 1])
-	    let l:shiftCommand = (a:how ==# 'm' ? '>' : '<')
-	    let l:count = 0
-
-	    if l:regType[0] ==# "\<C-v>"
-		let l:pasteContent = s:StripTrailingWhitespace(l:regContent)
-	    endif
-	elseif a:how ==# '>'
-	    let l:shiftCount = max([l:count, 1])
-	    let l:count = 0
-	    if l:regType ==# 'V'
-		let l:shiftCommand = '>'
-	    else
-		if l:regType ==# 'v'
-		    let l:lines = [s:Flatten(l:pasteContent, ' ')]
-		else
-		    let l:lines = split(l:pasteContent, '\n', 1)
-		endif
-
-		if a:1 ==# 'P'
-		    call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
-		else
-		    call UnconditionalPaste#Shifted#SpecialShiftedAppend(l:lines, l:shiftCount)
-		endif
-		return ''
-	    endif
-	elseif a:how ==# '#'
-	    if empty(&commentstring)
-		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		return ''
-	    endif
-
-	    let l:pasteContent =
-	    \   join(
-	    \       map(
-	    \           split(l:pasteContent, '\n', 1),
-	    \           'empty(v:val) ? "" : printf(&commentstring, v:val)'
-	    \       ),
-	    \       "\n"
-	    \   )
-	elseif a:how ==# 's'
-	    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\s', 1)
-	    let l:prefix = (l:isPrefix ? repeat(' ', max([l:count, 1])) : '')
-	    let l:suffix = (l:isSuffix ? repeat(' ', max([l:count, 1])) : '')
-	    let l:count = 0
-
-	    if l:regType ==# 'v'
-		let l:pasteType = l:regType " Keep the original paste type.
-		let l:pasteContent = l:prefix . ingo#str#Trim(l:regContent) . l:suffix
-	    elseif l:regType ==# 'V'
-		let l:pasteType = 'c'
-		let l:pasteContent = l:prefix . ingo#str#Trim(l:regContent) . l:suffix
-		let l:pasteContent = l:prefix . s:Flatten(l:regContent, ' ') . l:suffix
-	    else
-		let l:pasteType = l:regType " Keep the original paste type.
-		let l:pasteContent = join(map(split(l:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
-	    endif
-	elseif a:how ==# 'S'
-	    let l:pasteType = 'l'
-	    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', a:1, '\s', 1)
-	    let l:prefix = (l:isPrefix ? repeat("\n", max([l:count, 1])) : '')
-	    let l:suffix = (l:isSuffix ? repeat("\n", max([l:count, 1])) : '')
-	    let l:count = 0
-
-	    if l:regType ==# 'V'
-		let l:pasteContent = l:prefix . substitute(l:regContent, '^\n*\(.\{-}\)\n*$', '\1\n', '') . l:suffix
-	    else
-		let l:pasteContent = l:prefix . l:regContent . "\n" . l:suffix
-	    endif
-	elseif a:how =~# '^\%(qb\|QB\|B\)$'
-	    if a:how ==# 'B'
-		let l:separator = ''
-	    elseif a:how ==# 'QB'
-		let l:separator = g:UnconditionalPaste_Separator
-	    elseif a:how ==# 'qb'
-		let l:separator = input('Enter separator string: ')
-		if empty(l:separator)
-		    execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		    return ''
-		endif
-		let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
-		let g:UnconditionalPaste_Separator = l:separator
-	    else
-		throw 'ASSERT: Invalid how: ' . string(a:how)
-	    endif
-
-
-	    let l:isMultiLine = (l:pasteContent =~# '\n')
-	    if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
-		let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
-	    elseif l:isMultiLine && a:1 ==# 'p' && ingo#cursor#IsAtEndOfLine() && getline('.') =~# '.'
-		let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
-	    else
-		if a:how ==# 'B'
-		    let [l:isPrefix, l:isSuffix] = [0, 0]
-		else
-		    let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
-		endif
-		let l:pasteType = 'b'
-	    endif
-	    let l:prefix = (l:isPrefix ? l:separator : '')
-	    let l:suffix = (l:isSuffix ? l:separator : '')
-
-	    let l:lines = split(l:pasteContent, '\n', 1)
-	    if l:regType ==# 'V' && empty(l:lines[-1]) | call remove(l:lines, -1) | endif
-	    call map(
-	    \   l:lines,
-	    \   'l:prefix . (l:count > 1 ? repeat(v:val . l:separator, l:count - 1) : "") . v:val . l:suffix'
-	    \)
-	    let l:count = 0
-
-	    if l:pasteType ==# 'prepend'
-		call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '^\s*\zs\S\|$', '')
-		return ''
-	    elseif l:pasteType ==# 'append'
-		call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '$', '')
-		return ''
-	    elseif l:isMultiLine
-		let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
-		let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
-		call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
-		return ''
-	    endif
-
-	    let l:pasteContent = join(l:lines, "\n")
-	elseif a:how ==? 'p' || a:how ==? '.p'
-	    let l:pasteType = l:regType " Keep the original paste type.
-	    let l:offset = (a:1 ==# 'p' ? 1 : -1)
-	    if a:how ==? 'p'
-		let l:baseCount = 1
-		let l:vcol = 0
-	    elseif a:how ==? '.p'
-		" Continue increasing with the last used (saved) offset, and
-		" (for 'p') at the same number position (after the first paste,
-		" the cursor will have jumped to the beginning of the pasted
-		" text).
-		let l:baseCount = s:lastCount + 1
-		let l:vcol = s:lastVcol
-	    else
-		throw 'ASSERT: Invalid how: ' . string(a:how)
-	    endif
-	    let s:lastCount = l:baseCount
-
-	    let l:IncrementFunc = (a:how ==# 'p' || a:how ==# '.p' ? 'UnconditionalPaste#Increment#Single' : 'UnconditionalPaste#Increment#Global')
-	    let [s:lastVcol, l:pasteContent] = call(l:IncrementFunc, [l:regContent, l:vcol, l:offset * l:baseCount])
-	    if l:pasteContent ==# l:regContent
-		" No number was found in the register; this is probably not what
-		" the user intended (maybe wrong register?), so don't just
-		" insert the contents unchanged, but rather alert the user.
-		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		return ''
-	    endif
-
-	    if l:count > 1
-		" To increment each multiplied paste one more, we need to
-		" process the multiplication on our own.
-		let l:numbers = (l:offset > 0 ? range(l:baseCount, l:baseCount + l:count - 1) : range(-1 * (l:baseCount + l:count - 1), -1 * l:baseCount))
-		let l:pasteContent = join(map(l:numbers, l:IncrementFunc . '(l:regContent, l:vcol, v:val)[1]'), (l:regType[0] ==# "\<C-v>" ? "\n" : ''))
-		let s:lastCount = l:baseCount + l:count - 1
-		let l:count = 0
-	    endif
-	elseif a:how ==? 'u' || a:how ==# '~'
-	    let l:pasteType = l:regType " Keep the original paste type.
-	    if a:how ==# 'u'
-		let l:conversion = ['\<\u', '\l&']
-	    elseif a:how ==# 'U'
-		let l:conversion = ['\<\l', '\u&']
-	    elseif a:how ==# '~'
-		let l:conversion = ['\<\(\l\)\|\(\u\)', '\u\1\l\2']
-	    else
-		throw 'ASSERT: Invalid a:how: ' . string(a:how)
-	    endif
-
-	    let l:count = max([1, l:count])
-	    while l:count > 0
-		let l:pasteContent = substitute(l:pasteContent, l:conversion[0], l:conversion[1], '')
-		let l:count -=1
-	    endwhile
-
-	    if l:pasteContent ==# l:regContent
-		" No change in case has been performed; this is probably not
-		" what the user intended.
-		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
-		return ''
-	    endif
-	endif
 
 	if a:0
-	    call setreg(l:regName, l:pasteContent, l:pasteType)
-		execute 'normal! "' . l:regName . (l:count ? l:count : '') . a:1
-	    call setreg(l:regName, l:regContent, l:regType)
+	    if ! empty(l:pasteContent)
+		call setreg(l:regName, l:pasteContent, l:pasteType)
+		    execute 'normal! "' . l:regName . (l:count ? l:count : '') . a:1
+		call setreg(l:regName, l:regContent, l:regType)
+	    endif
 
 	    if ! empty(l:shiftCommand)
 		for l:cnt in range(l:shiftCount)    " Repeatedly use the :> command; multiple shiftwidths can only be indented from visual mode, but we don't want to clobber the selection, and expect only low [count]s, anyway.
 		    execute "silent '[,']" . l:shiftCommand
 		endfor
 	    endif
+	    return 1
 	else
 	    return l:pasteContent
 	endif
+    catch /^beep$/
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	return (a:0 ? 1 : '')
     catch /^Vim\%((\a\+)\)\=:/
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^\CVim\%((\a\+)\)\=:', '', '')
-	echohl ErrorMsg
-	echomsg v:errmsg
-	echohl None
+	if a:0
+	    call ingo#err#SetVimException()
+	    return 0
+	else
+	    call ingo#cmdline#showmode#TemporaryNoShowMode()
+	    call ingo#msg#VimExceptionMsg()
+	    return ''
+	endif
     finally
-	if a:regName ==# '='
+	if a:regName =~# '[=:.%]'
 	    call setreg('"', l:save_reg, l:save_regmode)
 	    let &clipboard = l:save_clipboard
 	endif

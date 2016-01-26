@@ -20,10 +20,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   4.00.037	27-Jan-2016	Refactoring: Handle all known a:how in
-"				s:ApplyAlgorithm(), and assert on invalid one.
-"				Don't preset l:pasteType, and use v/V/C-v which
-"				are consistent with a:regType, not c/l/b.
 "   4.00.036	26-Jan-2016	Need to use temporary default register also for
 "				the built-in read-only registers {:%.}.
 "				Use ingo-library functions for echoing of
@@ -236,6 +232,7 @@ function! UnconditionalPaste#GetCount()
 endfunction
 function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
     let l:pasteContent = a:regContent
+    let l:pasteType = 'l'
     let l:shiftCommand = ''
     let l:shiftCount = 0
     let l:count = a:count
@@ -262,15 +259,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	if l:pasteContent =~# '\n$' | let l:pasteContent = l:pasteContent[0:-2] | endif
     endif
 
-    if a:how =~# '^[il]$'
-	let l:pasteType = 'V'
-	if a:regType[0] ==# "\<C-v>"
-	    let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
-	endif
-    elseif a:how ==# 'b'
-	let l:pasteType = "\<C-v>"
+    if a:how ==# 'b'
+	let l:pasteType = 'b'
     elseif a:how =~# '^[c,qQ]$\|^,[''"]$'
-	let l:pasteType = 'v'
+	let l:pasteType = 'c'
 	let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = ['', '', '', '']
 
 	if a:regType[0] ==# "\<C-v>"
@@ -339,7 +331,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    endif
 	endif
 
-	let l:pasteType = 'V'
 	let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
 	if ! l:isSuccess
 	    " No unjoining took place; this is probably not what the user
@@ -347,8 +338,9 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    " contents unchanged, but rather alert the user.
 	    throw 'beep'
 	endif
+    elseif a:how ==# 'l' && a:regType[0] ==# "\<C-v>"
+	let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
     elseif a:how =~# '^[mn]$'
-	let l:pasteType = 'V'
 	let l:shiftCount = max([l:count, 1])
 	let l:shiftCommand = (a:how ==# 'm' ? '>' : '<')
 	let l:count = 0
@@ -357,7 +349,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
 	endif
     elseif a:how ==# '>'
-	let l:pasteType = 'V'
 	let l:shiftCount = max([l:count, 1])
 	let l:count = 0
 	if a:regType ==# 'V'
@@ -381,7 +372,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    throw 'beep'
 	endif
 
-	let l:pasteType = 'V'
 	let l:pasteContent =
 	    \	join(
 	    \	    map(
@@ -400,7 +390,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    let l:pasteType = a:regType " Keep the original paste type.
 	    let l:pasteContent = l:prefix . ingo#str#Trim(a:regContent) . l:suffix
 	elseif a:regType ==# 'V'
-	    let l:pasteType = 'v'
+	    let l:pasteType = 'c'
 	    let l:pasteContent = l:prefix . ingo#str#Trim(a:regContent) . l:suffix
 	    let l:pasteContent = l:prefix . s:Flatten(a:regContent, ' ') . l:suffix
 	else
@@ -408,7 +398,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    let l:pasteContent = join(map(split(a:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")
 	endif
     elseif a:how ==# 'S'
-	let l:pasteType = 'V'
+	let l:pasteType = 'l'
 	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', a:1, '\s', 1)
 	let l:prefix = (l:isPrefix ? repeat("\n", max([l:count, 1])) : '')
 	let l:suffix = (l:isSuffix ? repeat("\n", max([l:count, 1])) : '')
@@ -447,7 +437,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    else
 		let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
 	    endif
-	    let l:pasteType = "\<C-v>"
+	    let l:pasteType = 'b'
 	endif
 	let l:prefix = (l:isPrefix ? l:separator : '')
 	let l:suffix = (l:isSuffix ? l:separator : '')
@@ -532,8 +522,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	    " what the user intended.
 	    throw 'beep'
 	endif
-    else
-	throw 'ASSERT: Unknown a:how: ' . string(a:how)
     endif
 
     return [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount]

@@ -366,6 +366,10 @@ HISTORY						  *UnconditionalPaste-history*
   in between.
 - CHG: Change gup / gUp to gujp / gUJp and add gup / gUp to lower / uppercase
   the first character of the register
+- Need to use temporary default register also for the built-in read-only
+  registers {:%.}.
+- FIX: Vim error on CTRL-R ... mappings incorrectly inserted "0". Need to
+  return '' from :catch.
 
 3.10	23-Dec-2014
 - Add g,'p and g,"p variants of g,p.

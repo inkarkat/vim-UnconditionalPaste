@@ -14,6 +14,11 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.00.034	27-Jan-2016	Use separate pasteType 'i' for g]p, instead of
+"				re-using 'l', to enable combinatorial type.
+"				Factor out mapping configuration into
+"				g:UnconditionalPaste_Mappings, to be read by the
+"				combinatorial type.
 "   4.00.033	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
 "   3.20.032	22-Jan-2016	CHG: Split off gSp "paste as paragraph" from gsp
 "				"paste with spacing" and turn the latter into
@@ -143,26 +148,29 @@ if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
 endif
 
-
-"- mappings --------------------------------------------------------------------
-
-function! s:CreateMappings()
-    for [l:pasteName, l:pasteType] in
+let g:UnconditionalPaste_Mappings =
     \   [
-    \       ['Char', 'c'], ['Line', 'l'], ['Block', 'b'], ['Comma', ','], ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
-    \       ['Indented', 'l'],
+    \       ['Char', 'c', '<C-c>'], ['Line', 'l'], ['Block', 'b'], ['Comma', ',', ','], ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
+    \       ['Indented', 'i'],
     \       ['MoreIndent', 'm'], ['LessIndent', 'n'],
     \       ['Shifted', '>'],
     \       ['Commented', '#'],
     \       ['Spaced', 's'], ['Paragraphed', 'S'],
     \       ['Jagged', 'B'],
     \       ['Delimited', 'qb'], ['RecallDelimited', 'QB'],
-    \       ['Queried', 'q'], ['RecallQueried', 'Q'],
-    \       ['Unjoin', 'uj'], ['RecallUnjoin', 'UJ'],
+    \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
+    \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
-    \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~']
+    \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],
+    \       ['Combinatorial', 'h']
     \   ]
+
+"- mappings --------------------------------------------------------------------
+
+function! s:CreateMappings()
+    for l:mapping in copy(g:UnconditionalPaste_Mappings)
+	let [l:pasteName, l:pasteType] = l:mapping[0:1]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
 	    let l:plugMappingName = '<Plug>' . l:mappingName
@@ -230,13 +238,7 @@ function! s:CreateMappings()
 	endfor
     endfor
 
-    for [l:pasteName, l:pasteType, l:pasteKey] in
-    \   [
-    \       ['Char', 'c', '<C-c>'], ['Comma', ',', ','],
-    \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
-    \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>'],
-    \       ['ToggleCase', '~', '~']
-    \   ]
+    for [l:pasteName, l:pasteType, l:pasteKey] in filter(copy(g:UnconditionalPaste_Mappings), '! empty(get(v:val, 2, ""))')
 	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName
 	" XXX: Can only use i_CTRL-R here (though I want literal insertion, not
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert

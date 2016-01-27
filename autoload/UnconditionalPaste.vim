@@ -540,21 +540,21 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	\   'v:val[0] !~# "^[.h]$"'
 	\)
 
-	let l:pasteTypes = []
+	let l:howList = []
 	while 1
-	    call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort)', join(l:pasteTypes, ' + '), join(l:types, '/')))
+	    call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort)', join(l:howList, ' + '), join(l:types, '/')))
 	    let l:key = ingo#query#get#Char()
 	    if empty(l:key)
 		redraw
 		return ['', '', 0, '', 0]
 	    elseif l:key ==# "\r"
 		break
-	    elseif ! empty(l:pasteTypes) && index(l:types, l:pasteTypes[-1] . l:key) != -1
+	    elseif ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
 		" Is a two-key type where the first key also is a valid type on
 		" its own; revise the previous recognized type now.
-		let l:pasteTypes[-1] .= l:key
+		let l:howList[-1] .= l:key
 	    elseif index(l:types, l:key) != -1
-		call add(l:pasteTypes, l:key)
+		call add(l:howList, l:key)
 	    elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
 		" Might be a two-key type (where the first key isn't a valid
 		" type on its own); get another key.
@@ -563,13 +563,14 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 		    redraw
 		    return ['', '', 0, '', 0]
 		elseif index(l:types, l:key . l:key2) != -1
-		    call add(l:pasteTypes, l:key . l:keys)
+		    call add(l:howList, l:key . l:keys)
 		endif
 	    endif
 	endwhile
 
-	for l:pasteType in l:pasteTypes
-	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:pasteType, l:pasteContent, l:pasteType, a:count] + a:000)
+	let l:pasteType = a:regType
+	for l:how in l:howList
+	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, a:count] + a:000)
 	endfor
     else
 	throw 'ASSERT: Unknown a:how: ' . string(a:how)

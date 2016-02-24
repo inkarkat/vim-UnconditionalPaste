@@ -6,6 +6,7 @@ call SetRegister('r', "foo\nbar\nb z\n", 'V')
 normal "r3gcp
 call VerifyRegister()
 normal .
+call VerifyRegister()
 
 call vimtest#SaveOut()
 call vimtest#Quit()

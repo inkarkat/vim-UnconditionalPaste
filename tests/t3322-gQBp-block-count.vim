@@ -1,9 +1,9 @@
-" Test gDp of a block with count.
+" Test gQBp of a block with count.
 
 call vimtest#SkipAndQuitIf(! vimtest#features#SupportsNormalWithCount(), 'Need support for :normal with count')
 
 call SetRegister('"', "FOO \nB  Z\nQUUX", "\<C-v>4")
-normal 3gDp
+normal 3gQBp
 call VerifyRegister()
 
 call vimtest#SaveOut()

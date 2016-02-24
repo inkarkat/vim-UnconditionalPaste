@@ -1,4 +1,4 @@
-" Test gDP after the last indent of a line with a different separator.
+" Test gQBP after the last indent of a line with a different separator.
 
 let g:UnconditionalPaste_Separator = '|'
 set autoindent
@@ -6,7 +6,7 @@ set autoindent
 4>
 call SetRegister('"', "FOO\nBAR\nBAZ\n", 'V')
 
-3normal ^gDP
+3normal ^gQBP
 
 call VerifyRegister()
 

@@ -1,6 +1,8 @@
-" Test gpp of number behind cursor in named register.
+" Test gpp of number with leading zeros behind cursor.
+" Tests that the leading zeros are kept, not swallowed.
+" Tests that the number is not interpreted as octal.
 
-call SetRegister('r', "42 of 99 have $111.\n", 'V')
+call SetRegister('r', "42 of 00099 have $111.\n", 'V')
 normal "rgpp
 call VerifyRegister()
 

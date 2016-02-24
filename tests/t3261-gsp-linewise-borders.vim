@@ -1,8 +1,8 @@
-" Test opposite gsp of a line at buffer borders.
+" Test opposite gsp of a line at line borders.
 
 call SetRegister('"', "FOO\n", 'V')
-normal gg0wgsp
-normal G0wgsP
+2normal 0gsp
+4normal $gsP
 call VerifyRegister()
 
 call vimtest#SaveOut()

@@ -1,7 +1,7 @@
-" Test gDp of block in named register.
+" Test gQBp of block in named register.
 
 call SetRegister('r', "FOO \nB  Z\nQUUX", "\<C-v>4")
-normal "rgDp
+normal "rgQBp
 call VerifyRegister()
 
 call vimtest#SaveOut()

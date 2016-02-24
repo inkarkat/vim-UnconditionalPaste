@@ -1,6 +1,6 @@
-" Test gcp of lines with leading and trailing whitespace in named register.
+" Test gcp of lines including empty lines in named register.
 
-call SetRegister('r', "\t    foo \n\tbar   \n  b z \t \n", 'V')
+call SetRegister('r', "\t    \n\nfoo \n\n\tbar   \n\n  b z \t \n\n\n", 'V')
 normal "rgcp
 call VerifyRegister()
 

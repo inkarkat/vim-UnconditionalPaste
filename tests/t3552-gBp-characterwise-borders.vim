@@ -1,9 +1,9 @@
-" Test gBp of a word in empty line.
+" Test gBp of a word in empty line without unjoin.
 
 normal! yyp0Dk0D
 call SetRegister('"', "FOO", 'v')
-normal gBp
-normal jgBP
+normal 1gBp
+normal j1gBP
 
 call VerifyRegister()
 

@@ -1,0 +1,15 @@
+    FOO
+    B Z
+    QUUX
+    c) g[p with blockwise ^
+    foo
+    bar
+    b z
+    b) g[P with linewise ^
+    foo bar
+    a) g]P with characterwise ^
+1 padding text
+2 padding text
+we (|) here
+4 padding text
+5 padding text

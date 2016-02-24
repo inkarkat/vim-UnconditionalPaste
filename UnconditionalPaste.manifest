@@ -1,3 +1,6 @@
 autoload/UnconditionalPaste.vim
+autoload/UnconditionalPaste/Increment.vim
+autoload/UnconditionalPaste/Separators.vim
+autoload/UnconditionalPaste/Shifted.vim
 plugin/UnconditionalPaste.vim
 doc/UnconditionalPaste.txt

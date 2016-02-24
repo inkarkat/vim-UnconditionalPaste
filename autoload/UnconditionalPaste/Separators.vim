@@ -1,14 +1,17 @@
 " UnconditionalPaste/Separators.vim: Functions for pasting with separators.
 "
 " DEPENDENCIES:
-"   - UnconditionalPaste.vim autoload script
+"   - ingo/cursor.vim autoload script
+"   - ingo/text.vim autoload script
 "
-" Copyright: (C) 2014 Ingo Karkat
+" Copyright: (C) 2014-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.20.003	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
+"				establish hard dependency on ingo-library.
 "   3.03.002	24-Nov-2014	BUG: gsp / gsP border check adds spaces on both
 "				sides when there's a single character in line
 "				(like when there's a completely empty line,
@@ -31,7 +34,7 @@ function! UnconditionalPaste#Separators#Check( regType, pasteCommand, separatorP
 	let l:isAfter = (a:pasteCommand ==# 'P' ? l:isCurrent : l:isNext)
     else
 	let l:isAtStart = (col('.') == 1)
-	let l:isAtEnd = UnconditionalPaste#IsAtEndOfLine()
+	let l:isAtEnd = ingo#cursor#IsAtEndOfLine()
 
 	if l:isAtStart && l:isAtEnd && ! empty(getline('.'))
 	    " When the current line is completely empty, add both prefix and
@@ -64,10 +67,7 @@ function! UnconditionalPaste#Separators#SpecialPasteLines( content, pasteAfterEx
 	    let l:col = match(l:line, a:pasteAfterExpr)
 	endif
 
-	" Note: Could use ingo#text#Insert(), but avoid dependency to
-	" ingo-library for now.
-	"call ingo#text#Insert([l:lnum, l:col + 1], l:text)
-	call setline(l:lnum, strpart(l:line, 0, l:col) . l:text . strpart(l:line, l:col))
+	call ingo#text#Insert([l:lnum, l:col + 1], l:text)
 	let l:lnum += 1
     endfor
 

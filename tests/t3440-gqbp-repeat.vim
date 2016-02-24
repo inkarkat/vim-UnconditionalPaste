@@ -1,7 +1,7 @@
-" Test repeat of gqbp.
+" Test repeat of gqbp without unjoin.
 
 call SetRegister('r', "foobar", 'v')
-execute "normal \"rgqbp+-+\<CR>"
+execute "normal \"r1gqbp+-+\<CR>"
 call VerifyRegister()
 normal hj.
 call VerifyRegister()

@@ -1,4 +1,4 @@
-" Test gDp at the end of line with a different separator.
+" Test gQBp at the end of line with a different separator.
 
 let g:UnconditionalPaste_Separator = '|'
 set autoindent
@@ -6,7 +6,7 @@ set autoindent
 4>
 call SetRegister('"', "FOO\nBAR\nBAZ\n", 'V')
 
-3normal $gDp
+3normal $gQBp
 
 call VerifyRegister()
 

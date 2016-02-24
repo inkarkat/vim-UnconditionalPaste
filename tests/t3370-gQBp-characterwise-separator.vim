@@ -1,24 +1,24 @@
-" Test gQBp of a word with separator around.
+" Test gQBp of a word with separator around without unjoin.
 
 " Tests that no additional separator is inserted at the side with separator.
 normal! yy5P
 %substitute/\%>2v /\t/g
 call SetRegister('"', "FOO", 'v')
 3normal! 0f(
-normal gQBP
+normal 1gQBP
 normal! j0f(
-normal gQBp
+normal 1gQBp
 
 normal! j0f)
-normal gQBp
+normal 1gQBp
 normal! j0f)
-normal gQBP
+normal 1gQBP
 
 " Tests that no additional separator is inserted when separator at both sides.
 normal! j0f(r	
-normal gQBP
+normal 1gQBP
 normal! j0f(r	h
-normal gQBp
+normal 1gQBp
 
 call VerifyRegister()
 

@@ -1,27 +1,18 @@
 " UnconditionalPaste/Shifted.vim: Functions for pasting with shiftwidth.
 "
 " DEPENDENCIES:
-"   - ingo/compat/strdisplaywidth.vim autoload script (only if Vim doesn't have
-"     strdisplaywidth())
+"   - ingo/compat/strdisplaywidth.vim autoload script
 "   - AlignFromCursor.vim autoload script (optional)
 "
-" Copyright: (C) 2014 Ingo Karkat
+" Copyright: (C) 2014-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   3.20.002	22-Apr-2015	Retire s:strdisplaywidth() and establish hard
+"				dependency on ingo-library.
 "   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
-
-if exists('*strdisplaywidth')
-    function! s:strdisplaywidth( expr, ... )
-	return call('strdisplaywidth', [a:expr] + a:000)
-    endfunction
-else
-    function! s:strdisplaywidth( expr, ... )
-	return call('ingo#compat#strdisplaywidth', [a:expr] + a:000)
-    endfunction
-endif
 
 silent! call AlignFromCursor#DoesNotExist()	" Execute a function to force autoload.
 if ! g:UnconditionalPaste_IsFullLineRetabOnShift && exists('*AlignFromCursor#GetRetabbedFromCol')
@@ -37,7 +28,7 @@ endif
 
 
 function! UnconditionalPaste#Shifted#SpecialShiftedPrepend( content, count )
-    let l:contentWidths = map(copy(a:content), 's:strdisplaywidth(v:val)')
+    let l:contentWidths = map(copy(a:content), 'ingo#compat#strdisplaywidth(v:val)')
     let l:maxContentWidth = max(l:contentWidths)
     let l:targetWidth = l:maxContentWidth + a:count * &l:shiftwidth - (l:maxContentWidth % &l:shiftwidth)
 
@@ -74,7 +65,7 @@ function! UnconditionalPaste#Shifted#SpecialShiftedPrepend( content, count )
 endfunction
 function! UnconditionalPaste#Shifted#SpecialShiftedAppend( content, count )
     let l:lnum = line('.')
-    let l:baseScreenWidth = s:strdisplaywidth(getline(l:lnum))
+    let l:baseScreenWidth = ingo#compat#strdisplaywidth(getline(l:lnum))
     let l:baseTargetWidth = l:baseScreenWidth + a:count * &l:shiftwidth - (l:baseScreenWidth % &l:shiftwidth)
 
     let l:additionalLineCnt = 0
@@ -87,7 +78,7 @@ function! UnconditionalPaste#Shifted#SpecialShiftedAppend( content, count )
 	    let l:additionalLineCnt += 1
 	else
 	    let l:line = getline(l:lnum)
-	    let l:currentScreenWidth = s:strdisplaywidth(getline(l:lnum))
+	    let l:currentScreenWidth = ingo#compat#strdisplaywidth(getline(l:lnum))
 	endif
 
 	if empty(l:text)

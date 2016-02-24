@@ -1,7 +1,7 @@
-" Test gqbp of a word in the default register.
+" Test gqbp of a word in the default register without unjoin.
 
 call SetRegister('"', "foobar", 'v')
-execute "normal gqbp+-+\<CR>"
+execute "normal 1gqbp+-+\<CR>"
 call VerifyRegister()
 
 call vimtest#SaveOut()

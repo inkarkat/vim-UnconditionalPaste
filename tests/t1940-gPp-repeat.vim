@@ -1,11 +1,11 @@
-" Test repeat of gpp.
+" Test repeat of gPp.
 
 call SetRegister('r', "42 of 99 have $111.\n", 'V')
-normal "rgpp
+normal "rgPp
 call VerifyRegister()
 normal ..
 call VerifyRegister()
-normal "rgpp
+normal "rgPp
 call VerifyRegister()
 
 call vimtest#SaveOut()

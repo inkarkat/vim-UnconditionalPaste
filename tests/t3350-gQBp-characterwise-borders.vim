@@ -1,13 +1,13 @@
-" Test gQBp of a word at line borders.
+" Test gQBp of a word at line borders without unjoin.
 
 normal! yyP
 call SetRegister('"', "FOO", 'v')
-normal 0gQBP
-normal $gQBp
+normal 01gQBP
+normal $1gQBp
 
 normal! j
-normal 0gQBp
-normal $gQBP
+normal 01gQBp
+normal $1gQBP
 call VerifyRegister()
 
 call vimtest#SaveOut()

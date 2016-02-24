@@ -6,6 +6,7 @@ call SetRegister('r', "42 of 99 have $111.\n", 'V')
 normal "r3gpp
 call VerifyRegister()
 normal `].
+call VerifyRegister()
 
 call vimtest#SaveOut()
 call vimtest#Quit()

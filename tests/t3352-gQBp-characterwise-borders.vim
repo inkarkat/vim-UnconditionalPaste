@@ -1,10 +1,10 @@
-" Test gQBp of a word in empty line.
+" Test gQBp of a word in empty line without unjoin.
 " Tests that spaces *are* inserted.
 
 normal! yyp0Dk0D
 call SetRegister('"', "FOO", 'v')
-normal gQBp
-normal jgQBP
+normal 1gQBp
+normal j1gQBP
 
 call VerifyRegister()
 

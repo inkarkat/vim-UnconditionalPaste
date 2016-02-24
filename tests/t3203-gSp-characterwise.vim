@@ -1,7 +1,7 @@
-" Test gsp of a word in the default register.
+" Test gSp of a word in the default register.
 
 call SetRegister('"', "foobar", 'v')
-normal gsp
+normal gSp
 call VerifyRegister()
 
 call vimtest#SaveOut()

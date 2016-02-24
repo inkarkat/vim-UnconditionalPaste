@@ -2,7 +2,7 @@
 
 call vimtest#SkipAndQuitIf(! vimtest#features#SupportsNormalWithCount(), 'Need support for :normal with count')
 
-call SetRegister('"', "FOO \nB  Z\nQUUX", "\<C-v>6")
+call SetRegister('"', "FOO \nB  Z\nQUUX", "\<C-v>4")
 normal 3gsp
 call VerifyRegister()
 

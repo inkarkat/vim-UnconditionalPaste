@@ -1,7 +1,7 @@
-" Test gDp of multiple lines in named register.
+" Test gQBp of multiple lines in named register.
 
 call SetRegister('r', "foo\nbar\nb z\n", 'V')
-normal "rgDp
+normal "rgQBp
 call VerifyRegister()
 
 call vimtest#SaveOut()

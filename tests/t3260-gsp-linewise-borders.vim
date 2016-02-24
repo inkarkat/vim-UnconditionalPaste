@@ -1,8 +1,8 @@
-" Test gsp of a line at buffer borders.
+" Test gsp of a line at line borders.
 
 call SetRegister('"', "FOO\n", 'V')
-normal gg0wgsP
-normal G0wgsp
+2normal 0gsP
+4normal $gsp
 call VerifyRegister()
 
 call vimtest#SaveOut()

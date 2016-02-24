@@ -1,8 +1,8 @@
-" Test opposite gQBp of a line at buffer borders.
+" Test opposite gQBp of a line at buffer borders without unjoin.
 
 call SetRegister('"', "FOO\n", 'V')
-normal gg0wgQBp
-normal G0wgQBP
+normal gg0w1gQBp
+normal G0w1gQBP
 call VerifyRegister()
 
 call vimtest#SaveOut()

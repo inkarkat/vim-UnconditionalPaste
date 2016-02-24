@@ -1,9 +1,9 @@
-" Test gDp of a multi-line selection with count.
+" Test gQBp of a multi-line selection with count.
 
 call vimtest#SkipAndQuitIf(! vimtest#features#SupportsNormalWithCount(), 'Need support for :normal with count')
 
 call SetRegister('"', "foo\n   \n\nbaz\n", 'V')
-normal 3gDp
+normal 3gQBp
 call VerifyRegister()
 
 call vimtest#SaveOut()

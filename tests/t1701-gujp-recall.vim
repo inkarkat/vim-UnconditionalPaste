@@ -1,11 +1,11 @@
-" Test recall of gup.
+" Test recall of gujp.
 
 call SetRegister('r', "FOO   BAR\tBAZ\t QUUX", 'v')
-execute "normal \"rgup[AQ]\<CR>"
+execute "normal \"rgujp[AQ]\<CR>"
 call VerifyRegister()
 
 call SetRegister('s', "MARTARNARQUARA", 'v')
-normal 3G"sgUP
+normal 3G"sgUJP
 call VerifyRegister()
 
 call vimtest#SaveOut()

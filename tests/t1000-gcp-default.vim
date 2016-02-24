@@ -1,6 +1,6 @@
 " Test gcp of multiple lines in default register.
 
-call SetRegister('"', "foo\nbar\nbaz\n", 'V')
+call SetRegister('"', "foo\nbar\nb z\n", 'V')
 normal gcp
 call VerifyRegister()
 

@@ -183,6 +183,22 @@ USAGE						    *UnconditionalPaste-usage*
 			first / [count] word(s) made lowercase.
 ["x]gUp, ["x]gUP	Paste with the first alphabetical character of the
 			first / [count] word(s) made uppercase.
+								   *ghp* *ghP*
+["x]ghp, ["x]ghP	Paste with a queried combination of above mappings.
+			The algorithm is the 1/2-character string between the
+			g..p / g..P in the mappings. A [count] before |ghp|
+			applies to each algorithm, you can override / supply
+			a local [count], too.
+
+                        EXAMPLES					     *
+			- Uppercase a word and paste linewise:
+			    ghpUc<Enter> ~
+			- Unjoin words and paste as quoted list:
+			    ghpuj,"<Enter><Space><Enter> ~
+			- Paste line 3 times and indent:
+			    ghp>3l<Enter> ~
+			Note: Not all combinations make sense or work
+			correctly.
 
 
 CTRL-R CTRL-C {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-C* *c_CTRL-R_CTRL-C*
@@ -319,8 +335,12 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pp <Plug>UnconditionalPastePlusAfter
     nmap <Leader>PP <Plug>UnconditionalPasteGPlusBefore
     nmap <Leader>pP <Plug>UnconditionalPasteGPlusAfter
-    nmap <Leader>pu <Plug>UnconditionalPasteLowercase
-    nmap <Leader>pU <Plug>UnconditionalPasteUppercase
+    nmap <Leader>Pu <Plug>UnconditionalPasteLowercaseBefore
+    nmap <Leader>Pu <Plug>UnconditionalPasteLowercaseAfter
+    nmap <Leader>pU <Plug>UnconditionalPasteUppercaseBefore
+    nmap <Leader>PU <Plug>UnconditionalPasteUppercaseAfter
+    nmap <Leader>ph <Plug>UnconditionalPasteCombinatorialBefore
+    nmap <Leader>Ph <Plug>UnconditionalPasteCombinatorialAfter
 
     imap <C-G>c <Plug>UnconditionalPasteChar
     imap <C-G>, <Plug>UnconditionalPasteComma

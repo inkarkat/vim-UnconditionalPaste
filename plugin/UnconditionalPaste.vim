@@ -14,7 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   4.00.034	27-Jan-2016	Use separate pasteType 'i' for g]p, instead of
+"   4.00.025	28-Jan-2016	"pasteType" means something different in the
+"				autoload implementation; rename to "how" for
+"				consistency.
+"   4.00.034	27-Jan-2016	Use separate how 'i' for g]p, instead of
 "				re-using 'l', to enable combinatorial type.
 "				Factor out mapping configuration into
 "				g:UnconditionalPaste_Mappings, to be read by the
@@ -170,13 +173,13 @@ let g:UnconditionalPaste_Mappings =
 
 function! s:CreateMappings()
     for l:mapping in copy(g:UnconditionalPaste_Mappings)
-	let [l:pasteName, l:pasteType] = l:mapping[0:1]
+	let [l:pasteName, l:how] = l:mapping[0:1]
 	for [l:direction, l:pasteCmd] in [['After', 'p'], ['Before', 'P']]
 	    let l:mappingName = 'UnconditionalPaste' . l:pasteName . l:direction
 	    let l:plugMappingName = '<Plug>' . l:mappingName
 
 	    " Do not create default mappings for the special paste repeats.
-	    let l:pasteMappingDefaultKeys = (l:pasteType[0] == '.' ? '' : l:pasteType . l:pasteCmd)
+	    let l:pasteMappingDefaultKeys = (l:how[0] == '.' ? '' : l:how . l:pasteCmd)
 
 
 	    if l:pasteName =~# 'Indent\|^Commented$'
@@ -199,11 +202,11 @@ function! s:CreateMappings()
 		" instead of p for pasting.
 		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
-	    if l:pasteType ==# 'qb' || l:pasteType ==# 'q' || l:pasteType ==# 'uj'
+	    if l:how ==# 'qb' || l:how ==# 'q' || l:how ==# 'uj'
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
-	    elseif l:pasteType ==? 'p'
+	    elseif l:how ==? 'p'
 		" On repeat of the UnconditionalPastePlus /
 		" UnconditionalPasteGPlus mappings, we want to continue
 		" increasing with the last used (saved) offset, and at the same
@@ -225,7 +228,7 @@ function! s:CreateMappings()
 	    \
 	    \   l:plugMappingName,
 	    \   l:mappingName,
-	    \   string(l:pasteType),
+	    \   string(l:how),
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
@@ -238,7 +241,7 @@ function! s:CreateMappings()
 	endfor
     endfor
 
-    for [l:pasteName, l:pasteType, l:pasteKey] in filter(copy(g:UnconditionalPaste_Mappings), '! empty(get(v:val, 2, ""))')
+    for [l:pasteName, l:how, l:pasteKey] in filter(copy(g:UnconditionalPaste_Mappings), '! empty(get(v:val, 2, ""))')
 	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName
 	" XXX: Can only use i_CTRL-R here (though I want literal insertion, not
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert
@@ -248,7 +251,7 @@ function! s:CreateMappings()
 	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %d)<CR>',
 	    \   l:mode,
 	    \   l:plugMappingName,
-	    \   string(l:pasteType),
+	    \   string(l:how),
 	    \   (l:mode ==# 'i')
 	    \)
 	    if ! hasmapto(l:plugMappingName, l:mode)

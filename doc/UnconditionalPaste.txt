@@ -185,10 +185,10 @@ USAGE						    *UnconditionalPaste-usage*
 			first / [count] word(s) made uppercase.
 								   *ghp* *ghP*
 ["x]ghp, ["x]ghP	Paste with a queried combination of above mappings.
-			The algorithm is the 1/2-character string between the
-			g..p / g..P in the mappings. A [count] before |ghp|
-			applies to each algorithm, you can override / supply
-			a local [count], too.
+			The algorithm is the 1 or 2-character string between
+			the g..p / g..P in the mappings. A [count] before
+			|ghp| applies to each algorithm, you can override /
+			supply a local [count], too.
 
                         EXAMPLES					     *
 			- Uppercase a word and paste linewise:
@@ -390,6 +390,8 @@ HISTORY						  *UnconditionalPaste-history*
   registers {:%.}.
 - FIX: Vim error on CTRL-R ... mappings incorrectly inserted "0". Need to
   return '' from :catch.
+- Add ghp / ghP combinatorial type that queries and then sequentially applies
+  multiple algorithms.
 
 3.10	23-Dec-2014
 - Add g,'p and g,"p variants of g,p.

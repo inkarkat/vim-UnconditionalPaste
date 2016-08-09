@@ -22,6 +22,14 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.10.039	10-Aug-2016	Add grp / gr!p / gRp / gR!p mappings that
+"				include / exclude lines matching queried /
+"				recalled pattern.
+"   4.00.038	28-Jan-2016	Pass shiftCommand and shiftCount through
+"				s:ApplyAlgorithm() and implement delta
+"				calculation (not sure if actually needed).
+"				Implement local [count] for individual how
+"				combinatorials.
 "   4.00.037	27-Jan-2016	Refactoring: Handle all known a:how in
 "				s:ApplyAlgorithm(), and assert on invalid one.
 "				Don't preset l:pasteType, and use v/V/C-v which
@@ -236,11 +244,11 @@ endfunction
 function! UnconditionalPaste#GetCount()
     return s:count
 endfunction
-function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
+function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shiftCount, ... )
     let l:pasteContent = a:regContent
-    let l:shiftCommand = ''
-    let l:shiftCount = 0
     let l:count = a:count
+    let l:shiftCommand = a:shiftCommand
+    let l:shiftCount = a:shiftCount
 
     if l:count == 0 && a:how =~# '^\cq\?b$' && s:IsSingleElement(a:regContent)
 	" Query / re-use separator pattern, and split into multiple lines
@@ -351,8 +359,20 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	endif
     elseif a:how =~# '^[mn]$'
 	let l:pasteType = 'V'
-	let l:shiftCount = max([l:count, 1])
+	let l:shiftAmount = max([l:count, 1])
 	let l:shiftCommand = (a:how ==# 'm' ? '>' : '<')
+	if empty(a:shiftCommand) || a:shiftCommand ==# l:shiftCommand
+	    let l:shiftCount += l:shiftAmount
+	else
+	    " Now shifting in the other direction.
+	    if a:shiftCount == l:shiftCount
+		let [l:shiftCommand, l:shiftCount] = ['', 0]
+	    elseif a:shiftCount > l:shiftCount
+		let [l:shiftCommand, l:shiftCount] = [a:shiftCommand, a:shiftCount - l:shiftCount]
+	    else
+		let l:shiftCount -= a:shiftCount
+	    endif
+	endif
 	let l:count = 0
 
 	if a:regType[0] ==# "\<C-v>"
@@ -540,21 +560,30 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 	\   'v:val[0] !~# "^[.h]$"'
 	\)
 
+	let l:localCount = ''
 	let l:howList = []
 	while 1
 	    call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort)', join(l:howList, ' + '), join(l:types, '/')))
 	    let l:key = ingo#query#get#Char()
+
+	    while l:key =~# '\d'
+		" Keep reading local count until a real how happens.
+		let l:localCount .= l:key
+		let l:key = ingo#query#get#Char()
+	    endwhile
+
 	    if empty(l:key)
 		redraw
 		return ['', '', 0, '', 0]
 	    elseif l:key ==# "\r"
 		break
-	    elseif ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
+	    elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
 		" Is a two-key type where the first key also is a valid type on
 		" its own; revise the previous recognized type now.
 		let l:howList[-1] .= l:key
 	    elseif index(l:types, l:key) != -1
-		call add(l:howList, l:key)
+		call add(l:howList, l:localCount . l:key)
+		let l:localCount = ''
 	    elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
 		" Might be a two-key type (where the first key isn't a valid
 		" type on its own); get another key.
@@ -563,15 +592,47 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, ... )
 		    redraw
 		    return ['', '', 0, '', 0]
 		elseif index(l:types, l:key . l:key2) != -1
-		    call add(l:howList, l:key . l:keys)
+		    call add(l:howList, l:localCount . l:key . l:keys)
+		    let l:localCount = ''
 		endif
 	    endif
 	endwhile
 
 	let l:pasteType = a:regType
 	for l:how in l:howList
-	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, a:count] + a:000)
+	    let [l:localCount, l:how] = matchlist(l:how, '^\(\d*\)\(.*\)$')[1:2]
+	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, (! empty(l:localCount) ? 0 + l:localCount : a:count), l:shiftCommand, l:shiftCount] + a:000)
 	endfor
+    elseif a:how =~# '^[rR]!\?$'
+	let l:isInverse = (a:how[1] ==# '!')
+	if a:how[0] ==# 'r'
+	    let l:pattern = input(printf('Enter %sfilter pattern: ', (l:isInverse ? 'inverse ': '')))
+	    if empty(l:pattern)
+		throw 'beep'
+	    endif
+	    if l:isInverse
+		let g:UnconditionalPaste_InvertedGrepPattern = l:pattern
+	    else
+		let g:UnconditionalPaste_GrepPattern = l:pattern
+	    endif
+	else
+	    if l:isInverse
+		let l:pattern = g:UnconditionalPaste_InvertedGrepPattern
+	    else
+		let l:pattern = g:UnconditionalPaste_GrepPattern
+	    endif
+	endif
+
+	let l:pasteType = a:regType
+	if a:regType ==# 'v'
+	    let l:lines = split(l:pasteContent, '\s\+', 1)
+	    let l:joiner = ' '
+	else
+	    let l:lines = split(l:pasteContent, '\n', 1)
+	    let l:joiner = "\n"
+	endif
+	call filter(l:lines, 'v:val ' . (l:isInverse ? '!' : '=') . '~ l:pattern')
+	let l:pasteContent = join(l:lines, l:joiner)
     else
 	throw 'ASSERT: Unknown a:how: ' . string(a:how)
     endif
@@ -604,7 +665,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     endif
 
     try
-	let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [a:how, l:regContent, l:regType, l:count] + a:000)
+	let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [a:how, l:regContent, l:regType, l:count, '', 0] + a:000)
 
 
 	if a:0

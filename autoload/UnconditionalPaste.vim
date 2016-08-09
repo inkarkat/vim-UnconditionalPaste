@@ -22,9 +22,6 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
-"   4.10.039	10-Aug-2016	Add grp / gr!p / gRp / gR!p mappings that
-"				include / exclude lines matching queried /
-"				recalled pattern.
 "   4.00.038	28-Jan-2016	Pass shiftCommand and shiftCount through
 "				s:ApplyAlgorithm() and implement delta
 "				calculation (not sure if actually needed).
@@ -603,36 +600,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    let [l:localCount, l:how] = matchlist(l:how, '^\(\d*\)\(.*\)$')[1:2]
 	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, (! empty(l:localCount) ? 0 + l:localCount : a:count), l:shiftCommand, l:shiftCount] + a:000)
 	endfor
-    elseif a:how =~# '^[rR]!\?$'
-	let l:isInverse = (a:how[1] ==# '!')
-	if a:how[0] ==# 'r'
-	    let l:pattern = input(printf('Enter %sfilter pattern: ', (l:isInverse ? 'inverse ': '')))
-	    if empty(l:pattern)
-		throw 'beep'
-	    endif
-	    if l:isInverse
-		let g:UnconditionalPaste_InvertedGrepPattern = l:pattern
-	    else
-		let g:UnconditionalPaste_GrepPattern = l:pattern
-	    endif
-	else
-	    if l:isInverse
-		let l:pattern = g:UnconditionalPaste_InvertedGrepPattern
-	    else
-		let l:pattern = g:UnconditionalPaste_GrepPattern
-	    endif
-	endif
-
-	let l:pasteType = a:regType
-	if a:regType ==# 'v'
-	    let l:lines = split(l:pasteContent, '\s\+', 1)
-	    let l:joiner = ' '
-	else
-	    let l:lines = split(l:pasteContent, '\n', 1)
-	    let l:joiner = "\n"
-	endif
-	call filter(l:lines, 'v:val ' . (l:isInverse ? '!' : '=') . '~ l:pattern')
-	let l:pasteContent = join(l:lines, l:joiner)
     else
 	throw 'ASSERT: Unknown a:how: ' . string(a:how)
     endif

@@ -14,6 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.10.026	10-Aug-2016	Add g:UnconditionalPaste_GrepPattern and
+"				g:UnconditionalPaste_InvertedGrepPattern, and
+"				the corresponding new grp / gr!p / gRp / gR!p
+"				mappings.
 "   4.00.025	28-Jan-2016	"pasteType" means something different in the
 "				autoload implementation; rename to "how" for
 "				consistency.
@@ -22,6 +26,8 @@
 "				Factor out mapping configuration into
 "				g:UnconditionalPaste_Mappings, to be read by the
 "				combinatorial type.
+"				Add ghp / ghP combinatorial type that queries
+"				and then sequentially applies multiple algorithms.
 "   4.00.033	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
 "   3.20.032	22-Jan-2016	CHG: Split off gSp "paste as paragraph" from gsp
 "				"paste with spacing" and turn the latter into
@@ -146,6 +152,12 @@ endif
 if ! exists('g:UnconditionalPaste_UnjoinSeparatorPattern')
     let g:UnconditionalPaste_UnjoinSeparatorPattern = '\_s\+'
 endif
+if ! exists('g:UnconditionalPaste_GrepPattern')
+    let g:UnconditionalPaste_GrepPattern = '\S'
+endif
+if ! exists('g:UnconditionalPaste_InvertedGrepPattern')
+    let g:UnconditionalPaste_InvertedGrepPattern = '^\s*$'
+endif
 
 if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
@@ -163,6 +175,8 @@ let g:UnconditionalPaste_Mappings =
     \       ['Delimited', 'qb'], ['RecallDelimited', 'QB'],
     \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
     \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>'],
+    \       ['Grep', 'r'], ['RecallGrep', 'R'],
+    \       ['InvertedGrep', 'r!'], ['RecallInvertedGrep', 'R!'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],

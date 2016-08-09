@@ -369,7 +369,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-4.00	RELEASEME
+4.00	09-Aug-2016
 - Establish hard dependency on ingo-library. *** You need to separately
   install ingo-library (vimscript #4433) version 1.024 (or higher)! ***
 - BUG: Escaped characters like \n are handled inconsistently in gqp: resolved

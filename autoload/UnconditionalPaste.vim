@@ -7,6 +7,7 @@
 "   - UnconditionalPaste/Shifted.vim autoload script
 "   - ingo/cmdargs.vim autoload script
 "   - ingo/cmdline/showmode.vim autoload script
+"   - ingo/collections.vim autoload script
 "   - ingo/cursor.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/msg.vim autoload script
@@ -25,6 +26,8 @@
 "   4.10.039	10-Aug-2016	Add grp / gr!p / gRp / gR!p mappings that
 "				include / exclude lines matching queried /
 "				recalled pattern.
+"				Add g=p / g==p mappings that process lines
+"				through a queried / recalled Vim expression.
 "   4.00.038	28-Jan-2016	Pass shiftCommand and shiftCount through
 "				s:ApplyAlgorithm() and implement delta
 "				calculation (not sure if actually needed).
@@ -250,10 +253,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
     let l:shiftCommand = a:shiftCommand
     let l:shiftCount = a:shiftCount
 
-    if l:count == 0 && a:how =~# '^\c\%(q\?b\|r!\?\)$' && s:IsSingleElement(a:regContent)
+    if l:count == 0 && a:how =~# '^\c\%(q\?b\|r!\?\|==\?\)$' && s:IsSingleElement(a:regContent)
 	" Query / re-use separator pattern, and split into multiple lines
 	" first.
-	if a:how !=# 'QB' && a:how[0] !=# 'R'
+	if a:how !=# 'QB' && a:how[0] !=# 'R' && a:how !=# '=='
 	    if ! s:QuerySeparatorPattern()
 		throw 'beep'
 	    endif
@@ -626,6 +629,32 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	let l:pasteType = a:regType
 	let l:lines = split(l:pasteContent, '\n', 1)
 	call filter(l:lines, 'v:val ' . (l:isInverse ? '!' : '=') . '~ l:pattern')
+
+	let l:joiner = (s:IsSingleElement(a:regContent) ?
+	\   matchstr(a:regContent, g:UnconditionalPaste_UnjoinSeparatorPattern) :
+	\   "\n"
+	\)
+	let l:pasteContent = join(l:lines, l:joiner)
+    elseif a:how =~# '^==\?$'
+	if a:how ==# '='
+	    let l:expression = input('Enter expression: ', 'v:val')
+	    if empty(l:expression)
+		throw 'beep'
+	    endif
+	    let g:UnconditionalPaste_Expression = l:expression
+	endif
+
+	let l:pasteType = a:regType
+	let l:lines = split(l:pasteContent, '\n', 1)
+
+	if l:count > 1
+	    " To map the multiplied pastes with the (potentially non-constant)
+	    " expression, we need to process the multiplication on our own.
+	    let l:lines = repeat(l:lines, l:count)
+	    let l:count = 0
+	endif
+
+	let l:lines = ingo#collections#Flatten1(map(l:lines, g:UnconditionalPaste_Expression))
 
 	let l:joiner = (s:IsSingleElement(a:regContent) ?
 	\   matchstr(a:regContent, g:UnconditionalPaste_UnjoinSeparatorPattern) :

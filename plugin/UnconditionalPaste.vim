@@ -14,6 +14,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.10.027	11-Aug-2016	Use l:pasteName instead of l:how for mapping
+"				customization. Add the new [Inverted]Grep and
+"				Expression pastes to the special case when
+"				repeating, so that the queries aren't repeated.
 "   4.10.026	10-Aug-2016	Add g:UnconditionalPaste_GrepPattern and
 "				g:UnconditionalPaste_InvertedGrepPattern, and
 "				the corresponding new grp / gr!p / gRp / gR!p
@@ -222,11 +226,11 @@ function! s:CreateMappings()
 		" instead of p for pasting.
 		let l:pasteCmd = ']' . l:pasteCmd
 	    endif
-	    if l:how ==# 'qb' || l:how ==# 'q' || l:how ==# 'uj'
+	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression'], l:pasteName) != -1
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
-	    elseif l:how ==? 'p'
+	    elseif index(['Plus', 'GPlus'], l:pasteName) != -1
 		" On repeat of the UnconditionalPastePlus /
 		" UnconditionalPasteGPlus mappings, we want to continue
 		" increasing with the last used (saved) offset, and at the same

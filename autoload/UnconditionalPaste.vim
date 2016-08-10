@@ -23,6 +23,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.10.040	11-Aug-2016	Change default of l:how for Expression pastes
+"				from = / == to e / E.
 "   4.10.039	10-Aug-2016	Add grp / gr!p / gRp / gR!p mappings that
 "				include / exclude lines matching queried /
 "				recalled pattern.
@@ -253,10 +255,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
     let l:shiftCommand = a:shiftCommand
     let l:shiftCount = a:shiftCount
 
-    if l:count == 0 && a:how =~# '^\c\%(q\?b\|r!\?\|==\?\)$' && s:IsSingleElement(a:regContent)
+    if l:count == 0 && a:how =~# '\c^\%(q\?b\|r!\?\|e\)$' && s:IsSingleElement(a:regContent)
 	" Query / re-use separator pattern, and split into multiple lines
 	" first.
-	if a:how !=# 'QB' && a:how[0] !=# 'R' && a:how !=# '=='
+	if a:how !=# 'QB' && a:how[0] !=# 'R' && a:how !=# 'E'
 	    if ! s:QuerySeparatorPattern()
 		throw 'beep'
 	    endif
@@ -635,8 +637,8 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	\   "\n"
 	\)
 	let l:pasteContent = join(l:lines, l:joiner)
-    elseif a:how =~# '^==\?$'
-	if a:how ==# '='
+    elseif a:how ==? 'e'
+	if a:how ==# 'e'
 	    let l:expression = input('Enter expression: ', 'v:val')
 	    if empty(l:expression)
 		throw 'beep'

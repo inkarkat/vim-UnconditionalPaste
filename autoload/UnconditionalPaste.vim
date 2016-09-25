@@ -9,7 +9,9 @@
 "   - ingo/cmdline/showmode.vim autoload script
 "   - ingo/collections.vim autoload script
 "   - ingo/cursor.vim autoload script
+"   - ingo/dict.vim autoload script
 "   - ingo/err.vim autoload script
+"   - ingo/format/columns.vim autoload script
 "   - ingo/msg.vim autoload script
 "   - ingo/query.vim autoload script
 "   - ingo/query/get.vim autoload script
@@ -25,6 +27,8 @@
 " REVISION	DATE		REMARKS
 "   4.10.040	11-Aug-2016	Change default of l:how for Expression pastes
 "				from = / == to e / E.
+"				ENH: In ghp query, offer help on the mnemonics
+"				by pressing ?.
 "   4.10.039	10-Aug-2016	Add grp / gr!p / gRp / gR!p mappings that
 "				include / exclude lines matching queried /
 "				recalled pattern.
@@ -244,6 +248,17 @@ function! s:QuerySeparatorPattern()
     endif
     let g:UnconditionalPaste_UnjoinSeparatorPattern = l:separatorPattern
     return 1
+endfunction
+function! s:PrintHelp( types, howList )
+    let l:typeToName = ingo#dict#FromItems(map(copy(g:UnconditionalPaste_Mappings), '[v:val[1], v:val[0]]'))
+    let l:helpItems = map(copy(a:types), 'printf("%2s: %s", v:val, l:typeToName[v:val])')
+    for l:helpRow in ingo#format#columns#Distribute(l:helpItems)
+	echo join(l:helpRow)
+    endfor
+
+    if ! empty(a:howList)
+	echo printf('Paste as %s', join(map(copy(a:howList), 'l:typeToName[v:val]'), ' and '))
+    endif
 endfunction
 
 function! UnconditionalPaste#GetCount()
@@ -568,7 +583,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	let l:localCount = ''
 	let l:howList = []
 	while 1
-	    call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort)', join(l:howList, ' + '), join(l:types, '/')))
+	    call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
 	    let l:key = ingo#query#get#Char()
 
 	    while l:key =~# '\d'
@@ -582,6 +597,9 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		return ['', '', 0, '', 0]
 	    elseif l:key ==# "\r"
 		break
+	    elseif l:key ==# '?'
+		call s:PrintHelp(l:types, l:howList)
+		continue
 	    elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
 		" Is a two-key type where the first key also is a valid type on
 		" its own; revise the previous recognized type now.

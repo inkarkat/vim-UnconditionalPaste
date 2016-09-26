@@ -2,7 +2,7 @@
 " Tests that the elements are dorrectly escaped in substitute().
 
 unlet g:UnconditionalPaste_JoinSeparator
-let g:UnconditionalPaste_JoinSeparator = ["\n&", ">\n<", "&\n"]
+let g:UnconditionalPaste_JoinSeparator = ["\n&", '', ">\n<", '', "&\n"]
 call SetRegister('r', "\t    foo \n\tbar   \n  b z \t \n", 'V')
 normal "rgQp
 call VerifyRegister()

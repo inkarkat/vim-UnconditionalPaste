@@ -149,11 +149,22 @@ USAGE						    *UnconditionalPaste-usage*
 								   *gqp* *gqP*
 ["x]gqp, ["x]gqP	Query for a separator string, then paste
 			characterwise, with each line delimited by it.
-			You can also additionally input a prefix and suffix
-			(as {prefix}^M{separator}^M{suffix}, with ^M entered
-			as <C-V><Enter>). Examples:
+			You can also additionally input a prefix (inserted
+			once before the paste) and suffix (once after the
+			paste) as {prefix}^M{separator}^M{suffix} (with ^M
+			entered as <C-V><Enter>). There's another alternative
+			form
+	   {prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix}
+			that lets you specify prefixes and suffixes for each
+			element.
+			Examples:
 			"^M, ^M"   -> "foo, bar, baz" ~
+
 			"^M", "^M" -> "foo", "bar", "baz" ~
+			can also be written as:
+			^M"^M, ^M"^M -> "foo", "bar", "baz" ~
+
+			Functions:^M^M; ^M()^M -> Functions:foo(); bar(); baz(); ~
 								   *gQp* *gQP*
 ["x]gQp, ["x]gQP	Paste characterwise, with each line delimited by the
 			previously queried (|gqp|) separator string.

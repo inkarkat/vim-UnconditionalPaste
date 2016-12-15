@@ -164,7 +164,13 @@ USAGE						    *UnconditionalPaste-usage*
 			can also be written as:
 			^M"^M, ^M"^M -> "foo", "bar", "baz" ~
 
-			Functions:^M^M; ^M()^M -> Functions:foo(); bar(); baz(); ~
+			Functions:^M^M - ^M()^M! -> Functions:foo() - bar() - baz()! ~
+
+<			<ul>\n^M  <li>^M\n^M</li>^M\n</ul> -> <ul> ~
+<							        <li>foo</li> ~
+<							        <li>bar</li> ~
+<							        <li>baz</li> ~
+<							      </ul> ~
 								   *gQp* *gQP*
 ["x]gQp, ["x]gQP	Paste characterwise, with each line delimited by the
 			previously queried (|gqp|) separator string.
@@ -446,6 +452,9 @@ HISTORY						  *UnconditionalPaste-history*
 - Add g=p / g==p mappings that process lines through a queried / recalled Vim
   expression.
 - ENH: In ghp query, offer help on the mnemonics by pressing ?.
+- ENH: Make gqp also support 5-element
+  {prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix} in
+  addition to the 3-element one.
   *** You need to update to ingo-library (vimscript #4433) version 1.026! ***
 
 4.00	09-Aug-2016

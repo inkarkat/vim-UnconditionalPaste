@@ -41,8 +41,9 @@ RELATED WORKS								     *
 ==============================================================================
 USAGE						    *UnconditionalPaste-usage*
 								   *gcp* *gcP*
-["x]gcp, ["x]gcP	Paste characterwise (newline characters and indent are
-			flattened to spaces) [count] times.
+["x]gcp, ["x]gcP	Paste characterwise (inner newline characters and
+			indent are flattened to a single space, leading and
+			trailing removed) [count] times.
 								   *glp* *glP*
 ["x]glp, ["x]glP	Paste linewise (even if yanked text is not a complete
 			line) [count] times.

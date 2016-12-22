@@ -446,7 +446,7 @@ IDEAS						    *UnconditionalPaste-ideas*
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-4.10	RELEASEME
+4.10	23-Dec-2016
 - Add grp / gr!p / gRp / gR!p mappings that include / exclude lines matching
   queried / recalled pattern, defaulting (both variants) to include only
   non-empty lines.

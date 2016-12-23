@@ -25,6 +25,9 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.10.041	27-Sep-2016	ENH: Make gqp also support 5-element
+"				{prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix}
+"				in addition to the 3-element one.
 "   4.10.040	11-Aug-2016	Change default of l:how for Expression pastes
 "				from = / == to e / E.
 "				ENH: In ghp query, offer help on the mnemonics
@@ -219,11 +222,20 @@ function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
 endfunction
 
-function! s:Flatten( text, separator )
-    " Remove newlines and whitespace at the begin and end of the text, convert
-    " all other newlines (plus leading and trailing whitespace) to the passed
-    " separator.
-    return substitute(substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g'), '\s*\%(\n\s*\)\+', escape(a:separator, '\&'), 'g')
+function! s:Flatten( text, separator, elementPrefix, elementSuffix )
+    " Remove newlines and whitespace at the begin and end of the text.
+    let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
+
+    " Split into lines on newlines (plus leading and trailing whitespace).
+    let l:lines = split(l:text, '\s*\%(\n\s*\)\+')
+
+    " Add potential prefix and suffix.
+    if ! empty(a:elementPrefix . a:elementSuffix)
+	call map(l:lines, 'a:elementPrefix . v:val . a:elementSuffix')
+    endif
+
+    " Join with passed separator.
+    return join(l:lines, a:separator)
 endfunction
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
@@ -301,7 +313,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	let l:pasteType = "\<C-v>"
     elseif a:how =~# '^[c,qQ]$\|^,[''"]$'
 	let l:pasteType = 'v'
-	let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = ['', '', '', '']
+	let [l:prefix, l:suffix, l:elementPrefix, l:elementSuffix, l:linePrefix, l:lineSuffix] = ['', '', '', '', '', '']
 
 	if a:regType[0] ==# "\<C-v>"
 	    let l:pasteContent = s:StripTrailingWhitespace(a:regContent)
@@ -315,22 +327,25 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
 	    endif
 	elseif a:how ==# 'q'
-	    let l:separator = input('Enter separator string (or prefix^Mseparator^Msuffix): ')
+	    let l:separator = input('Enter separator string (or prefix^Melement-prefix^Mseparator^Melement-suffix^Msuffix or prefix^Mseparator^Msuffix): ')
 	    if empty(l:separator)
 		throw 'beep'
 	    endif
 
 	    unlet! g:UnconditionalPaste_JoinSeparator
 	    if l:separator =~# '^\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*$'
+		let [l:prefix, l:separator, l:suffix] = map(split(l:separator, '\r', 1), 'ingo#cmdargs#GetUnescapedExpr(v:val)')
+		let g:UnconditionalPaste_JoinSeparator = [l:prefix, l:elementPrefix, l:separator, l:elementSuffix, l:suffix]
+	    elseif l:separator =~# '^\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*\r\%(\r\@!.\)*$'
 		let g:UnconditionalPaste_JoinSeparator = map(split(l:separator, '\r', 1), 'ingo#cmdargs#GetUnescapedExpr(v:val)')
-		let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
+		let [l:prefix, l:elementPrefix, l:separator, l:elementSuffix, l:suffix] = g:UnconditionalPaste_JoinSeparator
 	    else
 		let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
 		let g:UnconditionalPaste_JoinSeparator = l:separator
 	    endif
 	elseif a:how ==# 'Q'
 	    if type(g:UnconditionalPaste_JoinSeparator) == type([])
-		let [l:prefix, l:separator, l:suffix] = g:UnconditionalPaste_JoinSeparator
+		let [l:prefix, l:elementPrefix, l:separator, l:elementSuffix, l:suffix] = g:UnconditionalPaste_JoinSeparator
 	    else
 		let l:separator = g:UnconditionalPaste_JoinSeparator
 	    endif
@@ -345,7 +360,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    let l:count = 0
 	endif
 
-	let l:pasteContent = l:prefix . s:Flatten(l:pasteContent, l:linePrefix . l:separator . l:lineSuffix) . l:suffix
+	let l:pasteContent = l:prefix . s:Flatten(l:pasteContent, l:linePrefix . l:separator . l:lineSuffix, l:elementPrefix, l:elementSuffix) . l:suffix
 
 	if a:0 && a:how !=# 'c' && s:IsSingleElement(a:regContent)
 	    " DWIM: Put the separator in front (gqp) / after (gqP);
@@ -406,7 +421,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    let l:shiftCommand = '>'
 	else
 	    if a:regType ==# 'v'
-		let l:lines = [s:Flatten(l:pasteContent, ' ')]
+		let l:lines = [s:Flatten(l:pasteContent, ' ', '', '')]
 	    else
 		let l:lines = split(l:pasteContent, '\n', 1)
 	    endif
@@ -444,7 +459,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	elseif a:regType ==# 'V'
 	    let l:pasteType = 'v'
 	    let l:pasteContent = l:prefix . ingo#str#Trim(a:regContent) . l:suffix
-	    let l:pasteContent = l:prefix . s:Flatten(a:regContent, ' ') . l:suffix
+	    let l:pasteContent = l:prefix . s:Flatten(a:regContent, ' ', '', '') . l:suffix
 	else
 	    let l:pasteType = a:regType " Keep the original paste type.
 	    let l:pasteContent = join(map(split(a:regContent, '\n', 1), 'l:prefix . v:val . l:suffix'), "\n")

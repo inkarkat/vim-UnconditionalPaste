@@ -18,6 +18,11 @@
 "				customization. Add the new [Inverted]Grep and
 "				Expression pastes to the special case when
 "				repeating, so that the queries aren't repeated.
+"				Change default of l:how for Expression pastes
+"				from = / == to e / E for a more fitting (if
+"				now inconsistent) mnemonic for ghp, and just
+"				tweak the default mapping to g=p / g==p to avoid
+"				affecting the built-in ge / gE motions.
 "   4.10.026	10-Aug-2016	Add g:UnconditionalPaste_GrepPattern and
 "				g:UnconditionalPaste_InvertedGrepPattern, and
 "				the corresponding new grp / gr!p / gRp / gR!p
@@ -186,7 +191,7 @@ let g:UnconditionalPaste_Mappings =
     \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>'],
     \       ['Grep', 'r'], ['RecallGrep', 'R'],
     \       ['InvertedGrep', 'r!'], ['RecallInvertedGrep', 'R!'],
-    \       ['Expression', '='], ['RecallExpression', '=='],
+    \       ['Expression', 'e'], ['RecallExpression', 'E'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],
@@ -225,7 +230,15 @@ function! s:CreateMappings()
 		" This is a variant of forced linewise paste (glp) that uses ]p
 		" instead of p for pasting.
 		let l:pasteCmd = ']' . l:pasteCmd
+	    elseif l:pasteName ==# 'Expression'
+		" ge / gE are built-in motions; we don't want to introduce a
+		" delay there by creating mappings starting with the same
+		" key sequence.
+		let l:pasteMappingDefaultKeys = '=' . l:pasteCmd
+	    elseif l:pasteName ==# 'RecallExpression'
+		let l:pasteMappingDefaultKeys = '==' . l:pasteCmd
 	    endif
+
 	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression'], l:pasteName) != -1
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.

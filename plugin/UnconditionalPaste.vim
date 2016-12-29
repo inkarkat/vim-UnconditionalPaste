@@ -14,6 +14,8 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.20.029	30-Dec-2016	Add CommaAnd (g,ap), CommaOr (g,op), and
+"				CommaNor (g,np) variants of g,p.
 "   4.20.028	24-Dec-2016	Add JustJoined (gcgp) and QueriedJoined (gqgp,
 "				<C-q><C-g>) variants of gcp and gqp that keep
 "				indent and surrounding whitespace as-is.
@@ -184,11 +186,16 @@ endif
 if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
 endif
+if ! exists('g:UnconditionalPaste_IsSerialComma')
+    let g:UnconditionalPaste_IsSerialComma = 1
+endif
 
 let g:UnconditionalPaste_Mappings =
     \   [
     \       ['Char', 'c', '<C-c>'], ['JustJoined', 'cg'], ['Line', 'l'], ['Block', 'b'],
-    \       ['Comma', ',', ','], ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
+    \       ['Comma', ',', ','],
+    \       ['CommaAnd', ',a'], ['CommaOr', ',o'], ['CommaNor', ',n'],
+    \       ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
     \       ['Indented', 'i'],
     \       ['MoreIndent', 'm'], ['LessIndent', 'n'],
     \       ['Shifted', '>'],

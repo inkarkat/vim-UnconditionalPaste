@@ -44,6 +44,9 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]gcp, ["x]gcP	Paste characterwise (inner newline characters and
 			indent are flattened to a single space, leading and
 			trailing removed) [count] times.
+								 *gcgp* *gcgP*
+["x]gcgp, ["x]gcgP	Paste joined (like |gJ|); indent and surrounding
+			whitespace is kept as-is, [count] times.
 								   *glp* *glP*
 ["x]glp, ["x]glP	Paste linewise (even if yanked text is not a complete
 			line) [count] times.
@@ -177,6 +180,10 @@ USAGE						    *UnconditionalPaste-usage*
 			previously queried (|gqp|) separator string.
 			Defaults to <Tab> separator
 			|g:UnconditionalPaste_JoinSeparator|.
+						   *gqgp* *gqgp* *gQgp* *gQgP*
+["x]gqgp, ["x]gqgP	Like |gqp| / |gQp|, but keep indent and surrounding
+["x]gQgp, ["x]gQgP	whitespace as-is; just join the lines with the
+			separator (and prefix / suffix).
 
 								 *gujp* *gujP*
 ["x]gujp, ["x]gujP	Query for a separator pattern, un-join the register
@@ -283,6 +290,14 @@ CTRL-R CTRL-Q CTRL-Q {0-9a-z"%#*+/:.-}
 			Insert the contents of a register characterwise, with
 			each line delimited by the previously queried (|gqp|,
 			|i_CTRL-R_CTRL-Q|) separator string.
+			     *i_CTRL-R_CTRL-Q_CTRL-G* *c_CTRL-R_CTRL-Q_CTRL-G*
+ *i_CTRL-R_CTRL-Q_CTRL-Q_CTRL-G_CTRL-G* *c_CTRL-R_CTRL-Q_CTRL-Q_CTRL-G_CTRL-G*
+CTRL-R CTRL-Q CTRL-G {0-9a-z"%#*+/:.-}
+CTRL-R CTRL-Q CTRL-Q CTRL-G CTRL-G {0-9a-z"%#*+/:.-}
+			Like CTRL-R CTRL-Q / CTRL-R CTRL-Q CTRL-Q, but keep
+			indent and surrounding whitespace as-is; just join the
+			lines with the separator (and prefix / suffix).
+
 CTRL-R CTRL-U {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-U* *c_CTRL-R_CTRL-U*
 			Query for a separator pattern, un-join the contents of
 			a register, then insert it linewise.
@@ -360,6 +375,8 @@ keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your |vimrc|): >
     nmap <Leader>Pc <Plug>UnconditionalPasteCharBefore
     nmap <Leader>pc <Plug>UnconditionalPasteCharAfter
+    nmap <Leader>Pj <Plug>UnconditionalPasteJustJoinedBefore
+    nmap <Leader>pj <Plug>UnconditionalPasteJustJoinedAfter
     nmap <Leader>Pl <Plug>UnconditionalPasteLineBefore
     nmap <Leader>pl <Plug>UnconditionalPasteLineAfter
     nmap <Leader>Pb <Plug>UnconditionalPasteBlockBefore
@@ -392,6 +409,10 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pq <Plug>UnconditionalPasteQueriedAfter
     nmap <Leader>PQ <Plug>UnconditionalPasteRecallQueriedBefore
     nmap <Leader>pQ <Plug>UnconditionalPasteRecallQueriedAfter
+    nmap <Leader>Pgq <Plug>UnconditionalPasteQueriedJoinedBefore
+    nmap <Leader>pgq <Plug>UnconditionalPasteQueriedJoinedAfter
+    nmap <Leader>PgQ <Plug>UnconditionalPasteRecallJoinedQueriedBefore
+    nmap <Leader>pgQ <Plug>UnconditionalPasteRecallJoinedQueriedAfter
     nmap <Leader>Puj <Plug>UnconditionalPasteUnjoinBefore
     nmap <Leader>puj <Plug>UnconditionalPasteUnjoinAfter
     nmap <Leader>PUJ <Plug>UnconditionalPasteRecallUnjoinBefore
@@ -419,20 +440,24 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>Ph <Plug>UnconditionalPasteCombinatorialBefore
     nmap <Leader>ph <Plug>UnconditionalPasteCombinatorialAfter
 
-    imap <C-G>c <Plug>UnconditionalPasteChar
-    imap <C-G>, <Plug>UnconditionalPasteComma
-    imap <C-G>q <Plug>UnconditionalPasteQueried
-    imap <C-G>Q <Plug>UnconditionalPasteRecallQueried
-    imap <C-G>u <Plug>UnconditionalPasteUnjoin
-    imap <C-G>U <Plug>UnconditionalPasteRecallUnjoin
-    imap <C-G>~ <Plug>UnconditionalPasteToggleCase
+    imap <C-G>c <Plug>UnconditionalPasteCharI
+    imap <C-G>, <Plug>UnconditionalPasteCommaI
+    imap <C-G>q <Plug>UnconditionalPasteQueriedI
+    imap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
+    imap <C-G>j <Plug>UnconditionalPasteQueriedJoinedI
+    imap <C-G>J <Plug>UnconditionalPasteRecallQueriedJoinedI
+    imap <C-G>u <Plug>UnconditionalPasteUnjoinI
+    imap <C-G>U <Plug>UnconditionalPasteRecallUnjoinI
+    imap <C-G>~ <Plug>UnconditionalPasteToggleCaseI
 
-    cmap <C-G>c <Plug>UnconditionalPasteChar
-    cmap <C-G>, <Plug>UnconditionalPasteComma
-    cmap <C-G>q <Plug>UnconditionalPasteQueried
-    cmap <C-G>Q <Plug>UnconditionalPasteRecallQueried
-    cmap <C-G>u <Plug>UnconditionalPasteUnjoin
-    cmap <C-G>U <Plug>UnconditionalPasteRecallUnjoin
+    cmap <C-G>c <Plug>UnconditionalPasteCharI
+    cmap <C-G>, <Plug>UnconditionalPasteCommaI
+    cmap <C-G>q <Plug>UnconditionalPasteQueriedI
+    cmap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
+    cmap <C-G>j <Plug>UnconditionalPasteQueriedJoinedI
+    cmap <C-G>J <Plug>UnconditionalPasteRecallQueriedJoinedI
+    cmap <C-G>u <Plug>UnconditionalPasteUnjoinI
+    cmap <C-G>U <Plug>UnconditionalPasteRecallUnjoinI
 <
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*
@@ -445,6 +470,14 @@ IDEAS						    *UnconditionalPaste-ideas*
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+4.20	RELEASEME
+- Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
+  and gqp that keep indent and surrounding whitespace as-is.
+- CHG: Insert and command-line mode <Plug> mappings now have a trailing I, to
+  resolve the ambiguity between <Plug>UnconditionalPasteQueried and
+  <Plug>UnconditionalPasteQueriedJoined. **** Please update any insert- and
+  command-line mode mapping customization. ****
 
 4.10	23-Dec-2016
 - Add grp / gr!p / gRp / gR!p mappings that include / exclude lines matching

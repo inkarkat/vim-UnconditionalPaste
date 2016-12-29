@@ -14,6 +14,14 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.20.028	24-Dec-2016	Add JustJoined (gcgp) and QueriedJoined (gqgp,
+"				<C-q><C-g>) variants of gcp and gqp that keep
+"				indent and surrounding whitespace as-is.
+"				CHG: Insert and command-line mode <Plug>
+"				mappings now have a trailing I, to resolve the
+"				ambiguity between
+"				<Plug>UnconditionalPasteQueried and
+"				<Plug>UnconditionalPasteQueriedJoined.
 "   4.10.027	11-Aug-2016	Use l:pasteName instead of l:how for mapping
 "				customization. Add the new [Inverted]Grep and
 "				Expression pastes to the special case when
@@ -179,7 +187,8 @@ endif
 
 let g:UnconditionalPaste_Mappings =
     \   [
-    \       ['Char', 'c', '<C-c>'], ['Line', 'l'], ['Block', 'b'], ['Comma', ',', ','], ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
+    \       ['Char', 'c', '<C-c>'], ['JustJoined', 'cg'], ['Line', 'l'], ['Block', 'b'],
+    \       ['Comma', ',', ','], ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
     \       ['Indented', 'i'],
     \       ['MoreIndent', 'm'], ['LessIndent', 'n'],
     \       ['Shifted', '>'],
@@ -188,6 +197,7 @@ let g:UnconditionalPaste_Mappings =
     \       ['Jagged', 'B'],
     \       ['Delimited', 'qb'], ['RecallDelimited', 'QB'],
     \       ['Queried', 'q', '<C-q>'], ['RecallQueried', 'Q', '<C-q><C-q>'],
+    \       ['QueriedJoined', 'qg', '<C-q><C-g>'], ['RecallQueriedJoined', 'Qg', '<C-q><C-q><C-g><C-g>'],
     \       ['Unjoin', 'uj', '<C-u>'], ['RecallUnjoin', 'UJ', '<C-u><C-u>'],
     \       ['Grep', 'r'], ['RecallGrep', 'R'],
     \       ['InvertedGrep', 'r!'], ['RecallInvertedGrep', 'R!'],
@@ -279,7 +289,7 @@ function! s:CreateMappings()
     endfor
 
     for [l:pasteName, l:how, l:pasteKey] in filter(copy(g:UnconditionalPaste_Mappings), '! empty(get(v:val, 2, ""))')
-	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName
+	let l:plugMappingName = '<Plug>UnconditionalPaste' . l:pasteName . 'I'
 	" XXX: Can only use i_CTRL-R here (though I want literal insertion, not
 	" as typed); i_CTRL-R_CTRL-R with the expression register cannot insert
 	" newlines (^@ are inserted), and i_CTRL-R_CTRL-O inserts above the

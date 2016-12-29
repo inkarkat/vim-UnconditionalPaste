@@ -25,6 +25,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.20.042	24-Dec-2016	Add s:JustJoin() variant of s:Flatten() to
+"				implement JustJoined (gcgp) and QueriedJoined
+"				(gqgp, <C-q><C-g>) variants of gcp and gqp that
+"				keep indent and surrounding whitespace as-is.
 "   4.10.041	27-Sep-2016	ENH: Make gqp also support 5-element
 "				{prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix}
 "				in addition to the 3-element one.
@@ -237,6 +241,18 @@ function! s:Flatten( text, separator, elementPrefix, elementSuffix )
     " Join with passed separator.
     return join(l:lines, a:separator)
 endfunction
+function! s:JustJoin( text, separator, elementPrefix, elementSuffix )
+    " Split into lines strictly on newlines.
+    let l:lines = split(a:text, '\n\+')
+
+    " Add potential prefix and suffix.
+    if ! empty(a:elementPrefix . a:elementSuffix)
+	call map(l:lines, 'a:elementPrefix . v:val . a:elementSuffix')
+    endif
+
+    " Join with passed separator.
+    return join(l:lines, a:separator)
+endfunction
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction
@@ -311,8 +327,9 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	endif
     elseif a:how ==# 'b'
 	let l:pasteType = "\<C-v>"
-    elseif a:how =~# '^[c,qQ]$\|^,[''"]$'
+    elseif a:how =~# '^[c,qQ]g\?$\|^,[''"]$'
 	let l:pasteType = 'v'
+	let l:Joiner = function('s:Flatten')
 	let [l:prefix, l:suffix, l:elementPrefix, l:elementSuffix, l:linePrefix, l:lineSuffix] = ['', '', '', '', '', '']
 
 	if a:regType[0] ==# "\<C-v>"
@@ -321,12 +338,18 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 
 	if a:how ==# 'c'
 	    let l:separator = ' '
+	elseif a:how ==# 'cg'
+	    let l:separator = ''
+	    let l:Joiner = function('s:JustJoin')
 	elseif a:how[0] ==# ','
 	    let l:separator = ', '
 	    if ! empty(a:how[1])
 		let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
 	    endif
-	elseif a:how ==# 'q'
+	elseif a:how =~# '^qg\?$'
+	    if a:how =~# 'g$'
+		let l:Joiner = function('s:JustJoin')
+	    endif
 	    let l:separator = input('Enter separator string (or prefix^Melement-prefix^Mseparator^Melement-suffix^Msuffix or prefix^Mseparator^Msuffix): ')
 	    if empty(l:separator)
 		throw 'beep'
@@ -343,7 +366,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		let l:separator = ingo#cmdargs#GetUnescapedExpr(l:separator)
 		let g:UnconditionalPaste_JoinSeparator = l:separator
 	    endif
-	elseif a:how ==# 'Q'
+	elseif a:how =~# '^Qg\?$'
+	    if a:how =~# 'g$'
+		let l:Joiner = function('s:JustJoin')
+	    endif
 	    if type(g:UnconditionalPaste_JoinSeparator) == type([])
 		let [l:prefix, l:elementPrefix, l:separator, l:elementSuffix, l:suffix] = g:UnconditionalPaste_JoinSeparator
 	    else
@@ -360,7 +386,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    let l:count = 0
 	endif
 
-	let l:pasteContent = l:prefix . s:Flatten(l:pasteContent, l:linePrefix . l:separator . l:lineSuffix, l:elementPrefix, l:elementSuffix) . l:suffix
+	let l:pasteContent = l:prefix . call(l:Joiner, [l:pasteContent, l:linePrefix . l:separator . l:lineSuffix, l:elementPrefix, l:elementSuffix]) . l:suffix
 
 	if a:0 && a:how !=# 'c' && s:IsSingleElement(a:regContent)
 	    " DWIM: Put the separator in front (gqp) / after (gqP);

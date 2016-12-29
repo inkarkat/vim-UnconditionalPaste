@@ -25,6 +25,10 @@
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 "
 " REVISION	DATE		REMARKS
+"   4.20.043	30-Dec-2016	Add s:FlattenLastDifferently() variant of
+"				s:Flatten() to implement CommaAnd (g,ap),
+"				CommaOr (g,op), and CommaNor (g,np) variants of
+"				g,p
 "   4.20.042	24-Dec-2016	Add s:JustJoin() variant of s:Flatten() to
 "				implement JustJoined (gcgp) and QueriedJoined
 "				(gqgp, <C-q><C-g>) variants of gcp and gqp that
@@ -241,6 +245,25 @@ function! s:Flatten( text, separator, elementPrefix, elementSuffix )
     " Join with passed separator.
     return join(l:lines, a:separator)
 endfunction
+function! s:FlattenLastDifferently( text, separator, pasteCommand, lastSeparator )
+    " Remove newlines and whitespace at the begin and end of the text.
+    let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
+
+    " Split into lines on newlines (plus leading and trailing whitespace).
+    let l:lines = split(l:text, '\s*\%(\n\s*\)\+')
+
+    " Join with passed separator, using the special a:lastSeparator for the last
+    " line.
+    let l:allExceptLastLines = l:lines[0:-2]
+    if empty(l:allExceptLastLines)
+	return (a:pasteCommand ==# 'p' ?
+	\   a:lastSeparator . l:lines[-1] :
+	\   l:lines[-1] . a:lastSeparator
+	\)
+    else
+	return join(l:allExceptLastLines, a:separator) . a:lastSeparator . l:lines[-1]
+    endif
+endfunction
 function! s:JustJoin( text, separator, elementPrefix, elementSuffix )
     " Split into lines strictly on newlines.
     let l:lines = split(a:text, '\n\+')
@@ -327,7 +350,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	endif
     elseif a:how ==# 'b'
 	let l:pasteType = "\<C-v>"
-    elseif a:how =~# '^[c,qQ]g\?$\|^,[''"]$'
+    elseif a:how =~# '^[c,qQ]g\?$\|^,[''"aon]$'
 	let l:pasteType = 'v'
 	let l:Joiner = function('s:Flatten')
 	let [l:prefix, l:suffix, l:elementPrefix, l:elementSuffix, l:linePrefix, l:lineSuffix] = ['', '', '', '', '', '']
@@ -343,7 +366,25 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    let l:Joiner = function('s:JustJoin')
 	elseif a:how[0] ==# ','
 	    let l:separator = ', '
-	    if ! empty(a:how[1])
+	    if a:how[1] =~# '^[aon]$'
+		let l:Joiner = function('s:FlattenLastDifferently')
+		if a:how[1] ==# 'a'
+		    let l:elementSuffix = ' and '
+		elseif a:how[1] ==# 'o'
+		    let l:elementSuffix = ' or '
+		elseif a:how[1] ==# 'n'
+		    if ! (a:1 ==# 'p' && l:count == 0 && s:IsSingleElement(a:regContent))
+			let l:prefix = 'neither '
+		    endif
+		    let l:elementSuffix = ' nor '
+		else
+		    throw 'ASSERT: Unknown comma modifier: ' . string(a:how[1])
+		endif
+		let l:elementPrefix = a:1
+		if g:UnconditionalPaste_IsSerialComma
+		    let l:elementSuffix = ',' . l:elementSuffix
+		endif
+	    elseif ! empty(a:how[1])
 		let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
 	    endif
 	elseif a:how =~# '^qg\?$'
@@ -388,7 +429,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 
 	let l:pasteContent = l:prefix . call(l:Joiner, [l:pasteContent, l:linePrefix . l:separator . l:lineSuffix, l:elementPrefix, l:elementSuffix]) . l:suffix
 
-	if a:0 && a:how !=# 'c' && s:IsSingleElement(a:regContent)
+	if a:0 && a:how !~# '^\%(c\|,[aon]\)$' && s:IsSingleElement(a:regContent)
 	    " DWIM: Put the separator in front (gqp) / after (gqP);
 	    " otherwise, the mapping is identical to normal p / P and
 	    " therefore worthless. Do not do this for plain gcp / gcP, as

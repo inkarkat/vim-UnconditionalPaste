@@ -146,6 +146,13 @@ USAGE						    *UnconditionalPaste-usage*
 								   *g,p* *g,P*
 ["x]g,p, ["x]g,P	Paste characterwise, with each line delimited by ", "
 			instead of the newline (and indent).
+				     *g,ap* *g,aP* *g,op* *g,oP* *g,np* *g,nP*
+["x]g,ap, ["x]g,aP	Paste characterwise, with each line delimited by ", "
+["x]g,op, ["x]g,oP	and the last line delimited by ", and" / ", or" / ",
+["x]g,np, ["x]g,nP	nor" (and "neither" appended) instead of the newline
+			(and indent).
+
+			|g:UnconditionalPaste_IsSerialComma|.
 					   *g,'p* *g,'P* *g,quotep* *g,quoteP*
 ["x]g,'p, ["x]g,'P	Paste characterwise, with each line surrounded by
 ["x]g,"p, ["x]g,"P	single / double quotes and delimited by ", " instead
@@ -180,7 +187,7 @@ USAGE						    *UnconditionalPaste-usage*
 			previously queried (|gqp|) separator string.
 			Defaults to <Tab> separator
 			|g:UnconditionalPaste_JoinSeparator|.
-						   *gqgp* *gqgp* *gQgp* *gQgP*
+						   *gqgp* *gqgP* *gQgp* *gQgP*
 ["x]gqgp, ["x]gqgP	Like |gqp| / |gQp|, but keep indent and surrounding
 ["x]gQgp, ["x]gQgP	whitespace as-is; just join the lines with the
 			separator (and prefix / suffix).
@@ -368,6 +375,12 @@ original text and the pasted line. If you want to always |:retab|! all the
 whitespace in the entire line, disable this via: >
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 1
 <
+					  *g:UnconditionalPaste_IsSerialComma*
+By default, the |g,ap|, |g,op|, and |g,np| mappings use a comma immediately
+before the coordinating conjunction (also known as "Oxford comma"); to turn
+this off: >
+    let g:UnconditionalPaste_IsSerialComma = 0
+<
 
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
@@ -478,6 +491,7 @@ HISTORY						  *UnconditionalPaste-history*
   resolve the ambiguity between <Plug>UnconditionalPasteQueried and
   <Plug>UnconditionalPasteQueriedJoined. **** Please update any insert- and
   command-line mode mapping customization. ****
+- Add CommaAnd (g,ap), CommaOr (g,op), and CommaNor (g,np) variants of g,p.
 
 4.10	23-Dec-2016
 - Add grp / gr!p / gRp / gR!p mappings that include / exclude lines matching
@@ -624,7 +638,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2016 Ingo Karkat
+Copyright: (C) 2006-2017 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

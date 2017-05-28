@@ -1,3 +1,5 @@
+call vimtest#AddDependency('vim-ingo-library')
+
 runtime plugin/UnconditionalPaste.vim
 
 call setreg('"', "[default text]\n", 'V')

@@ -21,14 +21,20 @@ function! SetRegister( register, contents, type )
 endfunction
 function! VerifyRegister()
     call vimtest#StartTap()
-    if s:reg !=# '"'
+    if ! exists('s:reg')
+	call vimtap#Plan(2)
+    elseif s:reg !=# '"'
 	call vimtap#Plan(4)
-	call vimtap#Is(getreg('"'), "[default text]\n", 'unnamed register contains original text')
-	call vimtap#Is(getregtype('"'), 'V', 'unnamed register contains original yank type')
     else
 	call vimtap#Plan(2)
     endif
 
-    call vimtap#Is(getreg(s:reg), s:regContent, 'used register contains original text')
-    call vimtap#Is(getregtype(s:reg), s:regType, 'used register contains original yank type')
+    if ! exists('s:reg') || s:reg !=# '"'
+	call vimtap#Is(getreg('"'), "[default text]\n", 'unnamed register contains original text')
+	call vimtap#Is(getregtype('"'), 'V', 'unnamed register contains original yank type')
+    endif
+    if exists('s:reg')
+	call vimtap#Is(getreg(s:reg, 1), s:regContent, 'used register contains original text')
+	call vimtap#Is(getregtype(s:reg), s:regType, 'used register contains original yank type')
+    endif
 endfunction

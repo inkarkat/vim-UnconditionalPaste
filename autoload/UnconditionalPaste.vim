@@ -1,10 +1,10 @@
-" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of
-" how it was yanked.
+" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of how it was yanked.
 "
 " DEPENDENCIES:
 "   - UnconditionalPaste/Increment.vim autoload script
 "   - UnconditionalPaste/Separators.vim autoload script
 "   - UnconditionalPaste/Shifted.vim autoload script
+"   - ingo/actions.vim autoload script
 "   - ingo/cmdargs.vim autoload script
 "   - ingo/cmdline/showmode.vim autoload script
 "   - ingo/collections.vim autoload script
@@ -12,9 +12,13 @@
 "   - ingo/dict.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/format/columns.vim autoload script
+"   - ingo/funcref.vim autoload script
 "   - ingo/msg.vim autoload script
+"   - ingo/plugin/setting.vim autoload script
 "   - ingo/query.vim autoload script
+"   - ingo/query/fromlist.vim autoload script
 "   - ingo/query/get.vim autoload script
+"   - ingo/register.vim autoload script
 "   - ingo/str.vim autoload script
 
 " Copyright: (C) 2006-2017 Ingo Karkat

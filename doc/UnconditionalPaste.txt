@@ -321,6 +321,15 @@ CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}
 			Un-join the contents of a register on the previously
 			queried (|gujp|, |i_CTRL_R_CTRL-U|) pattern, then
 			insert it linewise.
+
+CTRL-R CTRL-\ {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-\* *c_CTRL-R_CTRL-\*
+			Escape certain characters (global default /
+			overridable per buffer |g:UnconditionalPaste_Escapes|;
+			if none or multiple are configured query first) and
+                        insert. *i_CTRL-R_CTRL-\_CTRL-\* *c_CTRL-R_CTRL-\_CTRL-\*
+CTRL-R CTRL-\ CTRL-\ {0-9a-z"%#*+/:.-}
+			Escape the same characters as the last time and
+			insert.
 						     *i_CTRL-R_~* *c_CTRL-R_~*
 CTRL-R ~ {0-9a-z"%#*+/:.-}
 			Insert the contents of a register, toggling the case

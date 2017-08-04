@@ -1,5 +1,4 @@
-" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of
-" how it was yanked.
+" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of how it was yanked.
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
@@ -216,7 +215,7 @@ let g:UnconditionalPaste_Mappings =
     \       ['Grep', 'r'], ['RecallGrep', 'R'],
     \       ['InvertedGrep', 'r!'], ['RecallInvertedGrep', 'R!'],
     \       ['Expression', 'e'], ['RecallExpression', 'E'],
-    \       ['Escape', '\'], ['RecallEscape', '\\'],
+    \       ['Escape', '\', '<C-\>'], ['RecallEscape', '\\', '<C-\><C-\>'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],

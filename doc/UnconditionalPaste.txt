@@ -412,8 +412,19 @@ can change that (e.g. to also escape double quotes), or add more variants: >
     \   'pattern': '[\"]',
     \   'replacement': '\\&'
     \}, ...]
+Each configuration object attributes is optional; alternatively, you can also
+specify an expression (using v:val), or a Funcref that takes and returns a
+String: >
+    let g:UnconditionalPaste_Escapes = [
+    \   {'Replacer': 'tr(v:val, "o", "X")'},
+    \   {'Replacer': function('MyReplacer')},
+    \...]
 The buffer-local |b:UnconditionalPaste_Escapes| overrides that for particular
 buffers (filetypes if placed in a ftplugin).
+						 *g:UnconditionalPaste_Escape*
+This stores the last replacement used for |g\\p| and |i_CTRL_R_CTRL-\|.
+It is initialized with the first escape from the above configuration / entered
+/ selected escape.
 
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
@@ -475,6 +486,10 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pe <Plug>UnconditionalPasteExpressionAfter
     nmap <Leader>PE <Plug>UnconditionalPasteRecallExpressionBefore
     nmap <Leader>pE <Plug>UnconditionalPasteRecallExpressionAfter
+    nmap <Leader>Px <Plug>UnconditionalPasteEscapeBefore
+    nmap <Leader>px <Plug>UnconditionalPasteEscapeAfter
+    nmap <Leader>PX <Plug>UnconditionalPasteRecallEscapeBefore
+    nmap <Leader>pX <Plug>UnconditionalPasteRecallEscapeAfter
     nmap <Leader>Pp <Plug>UnconditionalPastePlusBefore
     nmap <Leader>pp <Plug>UnconditionalPastePlusAfter
     nmap <Leader>PP <Plug>UnconditionalPasteGPlusBefore
@@ -494,7 +509,9 @@ script (e.g. in your |vimrc|): >
     imap <C-G>J <Plug>UnconditionalPasteRecallQueriedJoinedI
     imap <C-G>u <Plug>UnconditionalPasteUnjoinI
     imap <C-G>U <Plug>UnconditionalPasteRecallUnjoinI
-    imap <C-G>~ <Plug>UnconditionalPasteToggleCaseI
+    imap <C-G>x <Plug>UnconditionalPasteEscapeI
+    imap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
+    imap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
@@ -504,6 +521,9 @@ script (e.g. in your |vimrc|): >
     cmap <C-G>J <Plug>UnconditionalPasteRecallQueriedJoinedI
     cmap <C-G>u <Plug>UnconditionalPasteUnjoinI
     cmap <C-G>U <Plug>UnconditionalPasteRecallUnjoinI
+    cmap <C-G>x <Plug>UnconditionalPasteEscapeI
+    cmap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
+    cmap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
 <
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*
@@ -531,6 +551,9 @@ HISTORY						  *UnconditionalPaste-history*
   <Plug>UnconditionalPasteQueriedJoined. **** Please update any insert- and
   command-line mode mapping customization. ****
 - Add CommaAnd (g,ap), CommaOr (g,op), and CommaNor (g,np) variants of g,p.
+- Add Escape (g\p, i_CTRL-R_CTRL-\) and RecallEscape (g\\p,
+  i_CTRL-R_CTRL-\_CTRL-\) mappings to perform escaping of certain characters
+  before pasting / inserting.
 
 4.10	23-Dec-2016
 - Add grp / gr!p / gRp / gR!p mappings that include / exclude lines matching

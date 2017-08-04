@@ -151,8 +151,9 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]g,op, ["x]g,oP	and the last line delimited by ", and" / ", or" / ",
 ["x]g,np, ["x]g,nP	nor" (and "neither" appended) instead of the newline
 			(and indent).
+			Cp. |g:UnconditionalPaste_IsSerialComma| for comma
+			placement in front of the conjunction.
 
-			|g:UnconditionalPaste_IsSerialComma|.
 					   *g,'p* *g,'P* *g,quotep* *g,quoteP*
 ["x]g,'p, ["x]g,'P	Paste characterwise, with each line surrounded by
 ["x]g,"p, ["x]g,"P	single / double quotes and delimited by ", " instead

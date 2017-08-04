@@ -1,4 +1,5 @@
 *.msgout
+*.msgresult
 *.out
 *.tap
 doc/*.description

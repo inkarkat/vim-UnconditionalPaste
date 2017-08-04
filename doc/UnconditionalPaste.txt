@@ -237,6 +237,13 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]g==p, ["x]g==P	Apply the previously queried expression to each line
 			(replacing v:val with the current line), and paste the
 			resulting lines.
+								   *g\p* *g\P*
+["x]g\p, ["x]g\P	Escape certain characters (global default /
+			overridable per buffer |g:UnconditionalPaste_Escapes|;
+			if none or multiple are configured query first, or
+			take [count] to choose among multiples) and paste.
+								 *g\\p* *g\\P*
+["x]g\\p, ["x]g\\P	Escape the same characters as the last time and paste.
 
 								   *gpp* *gpP*
 ["x]gpp, ["x]gpP	Paste with the first decimal number found on or after
@@ -388,6 +395,16 @@ before the coordinating conjunction (also known as "Oxford comma"); to turn
 this off: >
     let g:UnconditionalPaste_IsSerialComma = 0
 <
+		 *g:UnconditionalPaste_Escapes* *b:UnconditionalPaste_Escapes*
+By default, the |g\p| and |i_CTRL-R_CTRL-\| mappings escape backslashes. You
+can change that (e.g. to also escape double quotes), or add more variants: >
+    let g:UnconditionalPaste_Escapes = [{
+    \   'name': 'dquote',
+    \   'pattern': '[\"]',
+    \   'replacement': '\\&'
+    \}, ...]
+The buffer-local |b:UnconditionalPaste_Escapes| overrides that for particular
+buffers (filetypes if placed in a ftplugin).
 
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your

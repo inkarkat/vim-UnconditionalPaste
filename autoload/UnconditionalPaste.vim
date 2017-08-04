@@ -17,7 +17,7 @@
 "   - ingo/query/get.vim autoload script
 "   - ingo/str.vim autoload script
 
-" Copyright: (C) 2006-2016 Ingo Karkat
+" Copyright: (C) 2006-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -298,6 +298,57 @@ function! s:QuerySeparatorPattern()
 	return 0
     endif
     let g:UnconditionalPaste_UnjoinSeparatorPattern = l:separatorPattern
+    return 1
+endfunction
+function! s:CompleteEscape( escape )
+    if has_key(a:escape, 'Replacer')
+	return a:escape
+    endif
+    if ! has_key(a:escape, 'pattern')
+	let a:escape.pattern = '\\'
+    endif
+    if ! has_key(a:escape, 'replacement')
+	let a:escape.replacement = '\\&'
+    endif
+    return a:escape
+endfunction
+function! s:SummarizeEscape( escape )
+    if has_key(a:escape, 'name')
+	return a:escape.name
+    elseif has_key(a:escape, 'Replacer')
+	return ingo#funcref#ToString(a:escape.Replacer)
+    else
+	return a:escape.pattern . ' -> ' . a:escape.replacement
+    endif
+endfunction
+function! s:QueryEscape( count )
+    let l:escapes = map(copy(ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_Escapes')), 's:CompleteEscape(v:val)')
+    if empty(l:escapes)
+	let l:escape = s:CompleteEscape({})
+	let l:pattern = input('Enter pattern of text to be escaped: ', l:escape.pattern)
+	if empty(l:pattern) | return 0 | endif
+
+	let l:replacement = input('Enter replacement of text to be escaped: ', l:escape.replacement)
+	if empty(l:replacement) | return 0 | endif
+
+	let l:escape.pattern = l:pattern
+	let l:escape.replacement = l:replacement
+	let g:UnconditionalPaste_Escape = l:escape
+    elseif len(l:escapes) == 1
+	let g:UnconditionalPaste_Escape = l:escapes[0]
+    elseif a:count > 0
+	if a:count > len(l:escapes)
+	    return 0
+	endif
+	let g:UnconditionalPaste_Escape = l:escapes[a:count - 1]
+    else
+	let l:index = ingo#query#fromlist#Query('escapes', map(copy(l:escapes), 's:SummarizeEscape(v:val)'))
+	if l:index == -1
+	    return 0
+	endif
+	let g:UnconditionalPaste_Escape = l:escapes[l:index]
+    endif
+
     return 1
 endfunction
 function! s:PrintHelp( types, howList )
@@ -763,6 +814,27 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	\   "\n"
 	\)
 	let l:pasteContent = join(l:lines, l:joiner)
+    elseif a:how ==# '\' || a:how ==# '\\'
+	if a:how ==# '\\'
+	    if ! exists('g:UnconditionalPaste_Escape')
+		let g:UnconditionalPaste_Escape = get(ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_Escapes'), 0, s:CompleteEscape({}))
+	    endif
+	elseif a:how ==# '\'
+	    if ! s:QueryEscape(l:count)
+		throw 'beep'
+	    endif
+	    let l:count = 0
+	else
+	    throw 'ASSERT: Unhandled a:how: ' . string(a:how)
+	endif
+
+	let l:pasteType = a:regType
+	if has_key(g:UnconditionalPaste_Escape, 'pattern')
+	    let l:pasteContent = substitute(l:pasteContent, g:UnconditionalPaste_Escape.pattern, g:UnconditionalPaste_Escape.replacement, 'g')
+	endif
+	if has_key(g:UnconditionalPaste_Escape, 'Replacer')
+	    let l:pasteContent = ingo#actions#EvaluateWithValOrFunc(g:UnconditionalPaste_Escape.Replacer, l:pasteContent)
+	endif
     else
 	throw 'ASSERT: Unknown a:how: ' . string(a:how)
     endif

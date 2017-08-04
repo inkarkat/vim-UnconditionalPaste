@@ -6,7 +6,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2016 Ingo Karkat
+" Copyright: (C) 2006-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -182,6 +182,13 @@ endif
 if ! exists('g:UnconditionalPaste_Expression')
     let g:UnconditionalPaste_Expression = 'substitute(v:val, "(.*)", "()", "g")'
 endif
+if ! exists('g:UnconditionalPaste_Escapes')
+    let g:UnconditionalPaste_Escapes = [{
+    \   'name': 'backslash',
+    \   'pattern': '\\',
+    \   'replacement': '\\&'
+    \}]
+endif
 
 if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
@@ -209,6 +216,7 @@ let g:UnconditionalPaste_Mappings =
     \       ['Grep', 'r'], ['RecallGrep', 'R'],
     \       ['InvertedGrep', 'r!'], ['RecallInvertedGrep', 'R!'],
     \       ['Expression', 'e'], ['RecallExpression', 'E'],
+    \       ['Escape', '\'], ['RecallEscape', '\\'],
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],

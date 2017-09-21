@@ -34,12 +34,15 @@ function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
 endfunction
 
-function! s:Flatten( text, separator, elementPrefix, elementSuffix )
+function! s:TrimAndSplit( text )
     " Remove newlines and whitespace at the begin and end of the text.
     let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
 
     " Split into lines on newlines (plus leading and trailing whitespace).
-    let l:lines = split(l:text, '\s*\%(\n\s*\)\+')
+    return split(l:text, '\s*\%(\n\s*\)\+')
+endfunction
+function! s:Flatten( text, separator, elementPrefix, elementSuffix )
+    let l:lines = s:TrimAndSplit(a:text)
 
     " Add potential prefix and suffix.
     if ! empty(a:elementPrefix . a:elementSuffix)
@@ -50,11 +53,7 @@ function! s:Flatten( text, separator, elementPrefix, elementSuffix )
     return join(l:lines, a:separator)
 endfunction
 function! s:FlattenLastDifferently( text, separator, pasteCommand, lastSeparator )
-    " Remove newlines and whitespace at the begin and end of the text.
-    let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
-
-    " Split into lines on newlines (plus leading and trailing whitespace).
-    let l:lines = split(l:text, '\s*\%(\n\s*\)\+')
+    let l:lines = s:TrimAndSplit(a:text)
 
     " Join with passed separator, using the special a:lastSeparator for the last
     " line.

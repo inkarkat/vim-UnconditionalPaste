@@ -400,8 +400,8 @@ whitespace in the entire line, disable this via: >
 <
 					  *g:UnconditionalPaste_IsSerialComma*
 By default, the |g,ap|, |g,op|, and |g,np| mappings use a comma immediately
-before the coordinating conjunction (also known as "Oxford comma"); to turn
-this off: >
+before the coordinating conjunction (also known as "Oxford comma"; unless
+exactly two lines are pasted); to turn this off: >
     let g:UnconditionalPaste_IsSerialComma = 0
 <
 		 *g:UnconditionalPaste_Escapes* *b:UnconditionalPaste_Escapes*

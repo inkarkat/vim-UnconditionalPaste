@@ -236,7 +236,11 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		endif
 		let l:elementPrefix = a:1
 		if g:UnconditionalPaste_IsSerialComma
-		    let l:elementSuffix = ',' . l:elementSuffix
+		    let l:lineNum = len(s:TrimAndSplit(l:pasteContent))
+		    let l:isExactlyTwoElements = (max([l:count, 1]) * l:lineNum == 2)
+		    if ! l:isExactlyTwoElements
+			let l:elementSuffix = ',' . l:elementSuffix
+		    endif
 		endif
 	    elseif ! empty(a:how[1])
 		let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)

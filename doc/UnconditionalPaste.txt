@@ -258,11 +258,13 @@ USAGE						    *UnconditionalPaste-usage*
 			decremented by 1.
 			Do this [count] times, with each paste further
 			incremented / decremented.
-						       *gup* *guP* *gUp* *gUP*
+					   *gup* *guP* *gUp* *gUP* *g~p* *g~P*
 ["x]gup, ["x]guP	Paste with the first alphabetical character of the
 			first / [count] word(s) made lowercase.
 ["x]gUp, ["x]gUP	Paste with the first alphabetical character of the
 			first / [count] word(s) made uppercase.
+["x]g~p, ["x]g~P	Paste with the first alphabetical character of the
+			first / [count] word(s) toggled in case.
 								   *ghp* *ghP*
 ["x]ghp, ["x]ghP	Paste with a queried combination of above mappings.
 			The algorithm is the 1 or 2-character string between
@@ -333,8 +335,8 @@ CTRL-R CTRL-\ CTRL-\ {0-9a-z"%#*+/:.-}
 						     *i_CTRL-R_~* *c_CTRL-R_~*
 CTRL-R ~ {0-9a-z"%#*+/:.-}
 			Insert the contents of a register, toggling the case
-			of the first alphabetical character of the first word
-			(similar to |gup| / |gUp|).
+			of the first alphabetical character of the first word.
+			Like |g~p| / |g~p|, but in insert mode.
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*

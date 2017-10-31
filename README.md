@@ -20,8 +20,7 @@ especially helpful when you need to repeat the paste multiple times.
 
 ### SOURCE
 
-Based on vimtip #1199 by cory,
-    http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
+- [Based on vimtip #1199 by cory,](http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste)
 
 ### RELATED WORKS
 
@@ -49,8 +48,8 @@ USAGE
                             un-join the register contents.
 
     ["x]g]p, ["x]g[P  or    Paste linewise (even if yanked text is not a complete
-            ["x]g]P  or    line) [count] times like glp, but adjust the indent
-            ["x]g[p        to the current line (like ]p).
+             ["x]g]P  or    line) [count] times like glp, but adjust the indent
+             ["x]g[p        to the current line (like ]p).
 
     ["x]g]]p, ["x]g]]P      Paste linewise below / above, with [count] more indent
                             than the current line.
@@ -153,7 +152,7 @@ USAGE
                             paste) as {prefix}^M{separator}^M{suffix} (with ^M
                             entered as <C-V><Enter>). There's another alternative
                             form
-            {prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix}
+               {prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix}
                             that lets you specify prefixes and suffixes for each
                             element.
                             Examples:
@@ -165,11 +164,11 @@ USAGE
 
                             Functions:^M^M - ^M()^M! -> Functions:foo() - bar() - baz()!
 
-                            <ul>\n^M  <li>^M\n^M</li>^M\n</ul> -> <ul>
-                                                                    <li>foo</li>
-                                                                    <li>bar</li>
-                                                                    <li>baz</li>
-                                                                </ul>
+                           <ul>\n^M  <li>^M\n^M</li>^M\n</ul> -> <ul>
+                                                                   <li>foo</li>
+                                                                   <li>bar</li>
+                                                                   <li>baz</li>
+                                                                 </ul>
 
     ["x]gQp, ["x]gQP        Paste characterwise, with each line delimited by the
                             previously queried (gqp) separator string.
@@ -247,6 +246,8 @@ USAGE
                             first / [count] word(s) made lowercase.
     ["x]gUp, ["x]gUP        Paste with the first alphabetical character of the
                             first / [count] word(s) made uppercase.
+    ["x]g~p, ["x]g~P        Paste with the first alphabetical character of the
+                            first / [count] word(s) toggled in case.
 
     ["x]ghp, ["x]ghP        Paste with a queried combination of above mappings.
                             The algorithm is the 1 or 2-character string between
@@ -274,7 +275,7 @@ USAGE
                             Note: If the command-line mapping aborts
                             the command line, try defining
                                 :cnoremap <C-c> <C-c>
-                            or redefine the mapping.
+                           or redefine the mapping.
     CTRL-R , {0-9a-z"%#*+/:.-}
                             Insert the contents of a register characterwise, with
                             each line delimited by ", " instead of the newline
@@ -315,8 +316,8 @@ USAGE
 
     CTRL-R ~ {0-9a-z"%#*+/:.-}
                             Insert the contents of a register, toggling the case
-                            of the first alphabetical character of the first word
-                            (similar to gup / gUp).
+                            of the first alphabetical character of the first word.
+                            Like g~p / g~p, but in insert mode.
 
 INSTALLATION
 ------------------------------------------------------------------------------
@@ -384,8 +385,8 @@ whitespace in the entire line, disable this via:
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 1
 
 By default, the g,ap, g,op, and g,np mappings use a comma immediately
-before the coordinating conjunction (also known as "Oxford comma"); to turn
-this off:
+before the coordinating conjunction (also known as "Oxford comma"; unless
+exactly two lines are pasted); to turn this off:
 
     let g:UnconditionalPaste_IsSerialComma = 0
 
@@ -415,7 +416,7 @@ It is initialized with the first escape from the above configuration / entered
 / selected escape.
 
 If you want to use different mappings (e.g. starting with <Leader>), map your
-keys to the <Plug>UnconditionalPaste... mapping targets \_before\_ sourcing this
+keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your vimrc):
 
     nmap <Leader>Pc <Plug>UnconditionalPasteCharBefore

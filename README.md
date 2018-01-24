@@ -164,11 +164,11 @@ USAGE
 
                             Functions:^M^M - ^M()^M! -> Functions:foo() - bar() - baz()!
 
-                           <ul>\n^M  <li>^M\n^M</li>^M\n</ul> -> <ul>
-                                                                   <li>foo</li>
-                                                                   <li>bar</li>
-                                                                   <li>baz</li>
-                                                                 </ul>
+                            <ul>\n^M  <li>^M\n^M</li>^M\n</ul> -> <ul>
+                                                                    <li>foo</li>
+                                                                    <li>bar</li>
+                                                                    <li>baz</li>
+                                                                  </ul>
 
     ["x]gQp, ["x]gQP        Paste characterwise, with each line delimited by the
                             previously queried (gqp) separator string.
@@ -275,7 +275,7 @@ USAGE
                             Note: If the command-line mapping aborts
                             the command line, try defining
                                 :cnoremap <C-c> <C-c>
-                           or redefine the mapping.
+                            or redefine the mapping.
     CTRL-R , {0-9a-z"%#*+/:.-}
                             Insert the contents of a register characterwise, with
                             each line delimited by ", " instead of the newline
@@ -524,7 +524,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 4.20    RELEASEME
+##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
   and gqp that keep indent and surrounding whitespace as-is.
 - CHG: Insert and command-line mode <Plug> mappings now have a trailing I, to
@@ -681,7 +681,7 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 - Started development, based on vimtip #1199 by cory.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2006-2017 Ingo Karkat -
+Copyright: (C) 2006-2018 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat <ingo@karkat.de>

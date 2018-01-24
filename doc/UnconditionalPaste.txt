@@ -545,7 +545,7 @@ below).
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-4.20	RELEASEME
+4.20	24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
   and gqp that keep indent and surrounding whitespace as-is.
 - CHG: Insert and command-line mode <Plug> mappings now have a trailing I, to
@@ -702,7 +702,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2017 Ingo Karkat
+Copyright: (C) 2006-2018 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

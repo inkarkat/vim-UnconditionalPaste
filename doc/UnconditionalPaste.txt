@@ -151,8 +151,9 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]g,op, ["x]g,oP	and the last line delimited by ", and" / ", or" / ",
 ["x]g,np, ["x]g,nP	nor" (and "neither" appended) instead of the newline
 			(and indent).
+			Cp. |g:UnconditionalPaste_IsSerialComma| for comma
+			placement in front of the conjunction.
 
-			|g:UnconditionalPaste_IsSerialComma|.
 					   *g,'p* *g,'P* *g,quotep* *g,quoteP*
 ["x]g,'p, ["x]g,'P	Paste characterwise, with each line surrounded by
 ["x]g,"p, ["x]g,"P	single / double quotes and delimited by ", " instead
@@ -236,6 +237,13 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]g==p, ["x]g==P	Apply the previously queried expression to each line
 			(replacing v:val with the current line), and paste the
 			resulting lines.
+								   *g\p* *g\P*
+["x]g\p, ["x]g\P	Escape certain characters (global default /
+			overridable per buffer |g:UnconditionalPaste_Escapes|;
+			if none or multiple are configured query first, or
+			take [count] to choose among multiples) and paste.
+								 *g\\p* *g\\P*
+["x]g\\p, ["x]g\\P	Escape the same characters as the last time and paste.
 
 								   *gpp* *gpP*
 ["x]gpp, ["x]gpP	Paste with the first decimal number found on or after
@@ -250,11 +258,13 @@ USAGE						    *UnconditionalPaste-usage*
 			decremented by 1.
 			Do this [count] times, with each paste further
 			incremented / decremented.
-						       *gup* *guP* *gUp* *gUP*
+					   *gup* *guP* *gUp* *gUP* *g~p* *g~P*
 ["x]gup, ["x]guP	Paste with the first alphabetical character of the
 			first / [count] word(s) made lowercase.
 ["x]gUp, ["x]gUP	Paste with the first alphabetical character of the
 			first / [count] word(s) made uppercase.
+["x]g~p, ["x]g~P	Paste with the first alphabetical character of the
+			first / [count] word(s) toggled in case.
 								   *ghp* *ghP*
 ["x]ghp, ["x]ghP	Paste with a queried combination of above mappings.
 			The algorithm is the 1 or 2-character string between
@@ -313,19 +323,34 @@ CTRL-R CTRL-U CTRL-U {0-9a-z"%#*+/:.-}
 			Un-join the contents of a register on the previously
 			queried (|gujp|, |i_CTRL_R_CTRL-U|) pattern, then
 			insert it linewise.
+
+CTRL-R CTRL-\ {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-\* *c_CTRL-R_CTRL-\*
+			Escape certain characters (global default /
+			overridable per buffer |g:UnconditionalPaste_Escapes|;
+			if none or multiple are configured query first) and
+                        insert. *i_CTRL-R_CTRL-\_CTRL-\* *c_CTRL-R_CTRL-\_CTRL-\*
+CTRL-R CTRL-\ CTRL-\ {0-9a-z"%#*+/:.-}
+			Escape the same characters as the last time and
+			insert.
 						     *i_CTRL-R_~* *c_CTRL-R_~*
 CTRL-R ~ {0-9a-z"%#*+/:.-}
 			Insert the contents of a register, toggling the case
-			of the first alphabetical character of the first word
-			(similar to |gup| / |gUp|).
+			of the first alphabetical character of the first word.
+			Like |g~p| / |g~p|, but in insert mode.
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*
 
-This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
-the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
-vimball or via the |:UseVimball| command. >
+The code is hosted in a Git repo at
+    https://github.com/inkarkat/vim-UnconditionalPaste
+You can use your favorite plugin manager, or "git clone" into a directory used
+for Vim |packages|. Releases are on the "stable" branch, the latest unstable
+development snapshot on "master".
+
+This script is also packaged as a |vimball|. If you have the "gunzip"
+decompressor in your PATH, simply edit the *.vmb.gz package in Vim; otherwise,
+decompress the archive first, e.g. using WinZip. Inside Vim, install by
+sourcing the vimball or via the |:UseVimball| command. >
     vim UnconditionalPaste*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
@@ -377,10 +402,31 @@ whitespace in the entire line, disable this via: >
 <
 					  *g:UnconditionalPaste_IsSerialComma*
 By default, the |g,ap|, |g,op|, and |g,np| mappings use a comma immediately
-before the coordinating conjunction (also known as "Oxford comma"); to turn
-this off: >
+before the coordinating conjunction (also known as "Oxford comma"; unless
+exactly two lines are pasted); to turn this off: >
     let g:UnconditionalPaste_IsSerialComma = 0
 <
+		 *g:UnconditionalPaste_Escapes* *b:UnconditionalPaste_Escapes*
+By default, the |g\p| and |i_CTRL-R_CTRL-\| mappings escape backslashes. You
+can change that (e.g. to also escape double quotes), or add more variants: >
+    let g:UnconditionalPaste_Escapes = [{
+    \   'name': 'dquote',
+    \   'pattern': '[\"]',
+    \   'replacement': '\\&'
+    \}, ...]
+Each configuration object attributes is optional; alternatively, you can also
+specify an expression (using v:val), or a Funcref that takes and returns a
+String: >
+    let g:UnconditionalPaste_Escapes = [
+    \   {'Replacer': 'tr(v:val, "o", "X")'},
+    \   {'Replacer': function('MyReplacer')},
+    \...]
+The buffer-local |b:UnconditionalPaste_Escapes| overrides that for particular
+buffers (filetypes if placed in a ftplugin).
+						 *g:UnconditionalPaste_Escape*
+This stores the last replacement used for |g\\p| and |i_CTRL_R_CTRL-\|.
+It is initialized with the first escape from the above configuration / entered
+/ selected escape.
 
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
@@ -442,6 +488,10 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pe <Plug>UnconditionalPasteExpressionAfter
     nmap <Leader>PE <Plug>UnconditionalPasteRecallExpressionBefore
     nmap <Leader>pE <Plug>UnconditionalPasteRecallExpressionAfter
+    nmap <Leader>Px <Plug>UnconditionalPasteEscapeBefore
+    nmap <Leader>px <Plug>UnconditionalPasteEscapeAfter
+    nmap <Leader>PX <Plug>UnconditionalPasteRecallEscapeBefore
+    nmap <Leader>pX <Plug>UnconditionalPasteRecallEscapeAfter
     nmap <Leader>Pp <Plug>UnconditionalPastePlusBefore
     nmap <Leader>pp <Plug>UnconditionalPastePlusAfter
     nmap <Leader>PP <Plug>UnconditionalPasteGPlusBefore
@@ -461,7 +511,9 @@ script (e.g. in your |vimrc|): >
     imap <C-G>J <Plug>UnconditionalPasteRecallQueriedJoinedI
     imap <C-G>u <Plug>UnconditionalPasteUnjoinI
     imap <C-G>U <Plug>UnconditionalPasteRecallUnjoinI
-    imap <C-G>~ <Plug>UnconditionalPasteToggleCaseI
+    imap <C-G>x <Plug>UnconditionalPasteEscapeI
+    imap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
+    imap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
@@ -471,6 +523,9 @@ script (e.g. in your |vimrc|): >
     cmap <C-G>J <Plug>UnconditionalPasteRecallQueriedJoinedI
     cmap <C-G>u <Plug>UnconditionalPasteUnjoinI
     cmap <C-G>U <Plug>UnconditionalPasteRecallUnjoinI
+    cmap <C-G>x <Plug>UnconditionalPasteEscapeI
+    cmap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
+    cmap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
 <
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*
@@ -481,10 +536,16 @@ TODO						     *UnconditionalPaste-todo*
 
 IDEAS						    *UnconditionalPaste-ideas*
 
+CONTRIBUTING				       *UnconditionalPaste-contribute*
+
+Report any bugs, send patches, or suggest features via the issue tracker at
+https://github.com/inkarkat/vim-UnconditionalPaste/issues or email (address
+below).
+
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-4.20	RELEASEME
+4.20	24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
   and gqp that keep indent and surrounding whitespace as-is.
 - CHG: Insert and command-line mode <Plug> mappings now have a trailing I, to
@@ -492,6 +553,9 @@ HISTORY						  *UnconditionalPaste-history*
   <Plug>UnconditionalPasteQueriedJoined. **** Please update any insert- and
   command-line mode mapping customization. ****
 - Add CommaAnd (g,ap), CommaOr (g,op), and CommaNor (g,np) variants of g,p.
+- Add Escape (g\p, i_CTRL-R_CTRL-\) and RecallEscape (g\\p,
+  i_CTRL-R_CTRL-\_CTRL-\) mappings to perform escaping of certain characters
+  before pasting / inserting.
 
 4.10	23-Dec-2016
 - Add grp / gr!p / gRp / gR!p mappings that include / exclude lines matching
@@ -638,7 +702,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2017 Ingo Karkat
+Copyright: (C) 2006-2018 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

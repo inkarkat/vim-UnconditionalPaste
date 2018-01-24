@@ -1,10 +1,10 @@
-" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of
-" how it was yanked.
+" UnconditionalPaste.vim: Force character-/line-/block-wise paste, regardless of how it was yanked.
 "
 " DEPENDENCIES:
 "   - UnconditionalPaste/Increment.vim autoload script
 "   - UnconditionalPaste/Separators.vim autoload script
 "   - UnconditionalPaste/Shifted.vim autoload script
+"   - ingo/actions.vim autoload script
 "   - ingo/cmdargs.vim autoload script
 "   - ingo/cmdline/showmode.vim autoload script
 "   - ingo/collections.vim autoload script
@@ -12,217 +12,21 @@
 "   - ingo/dict.vim autoload script
 "   - ingo/err.vim autoload script
 "   - ingo/format/columns.vim autoload script
+"   - ingo/funcref.vim autoload script
 "   - ingo/msg.vim autoload script
+"   - ingo/plugin/setting.vim autoload script
 "   - ingo/query.vim autoload script
+"   - ingo/query/fromlist.vim autoload script
 "   - ingo/query/get.vim autoload script
+"   - ingo/register.vim autoload script
 "   - ingo/str.vim autoload script
 
-" Copyright: (C) 2006-2016 Ingo Karkat
+" Copyright: (C) 2006-2017 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 " Source: Based on vimtip #1199 by cory,
 "	  http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
-"
-" REVISION	DATE		REMARKS
-"   4.20.043	30-Dec-2016	Add s:FlattenLastDifferently() variant of
-"				s:Flatten() to implement CommaAnd (g,ap),
-"				CommaOr (g,op), and CommaNor (g,np) variants of
-"				g,p
-"   4.20.042	24-Dec-2016	Add s:JustJoin() variant of s:Flatten() to
-"				implement JustJoined (gcgp) and QueriedJoined
-"				(gqgp, <C-q><C-g>) variants of gcp and gqp that
-"				keep indent and surrounding whitespace as-is.
-"   4.10.041	27-Sep-2016	ENH: Make gqp also support 5-element
-"				{prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix}
-"				in addition to the 3-element one.
-"   4.10.040	11-Aug-2016	Change default of l:how for Expression pastes
-"				from = / == to e / E.
-"				ENH: In ghp query, offer help on the mnemonics
-"				by pressing ?.
-"   4.10.039	10-Aug-2016	Add grp / gr!p / gRp / gR!p mappings that
-"				include / exclude lines matching queried /
-"				recalled pattern.
-"				Add g=p / g==p mappings that process lines
-"				through a queried / recalled Vim expression.
-"   4.00.038	28-Jan-2016	Pass shiftCommand and shiftCount through
-"				s:ApplyAlgorithm() and implement delta
-"				calculation (not sure if actually needed).
-"				Implement local [count] for individual how
-"				combinatorials.
-"   4.00.037	27-Jan-2016	Refactoring: Handle all known a:how in
-"				s:ApplyAlgorithm(), and assert on invalid one.
-"				Don't preset l:pasteType, and use v/V/C-v which
-"				are consistent with a:regType, not c/l/b.
-"   4.00.036	26-Jan-2016	Need to use temporary default register also for
-"				the built-in read-only registers {:%.}.
-"				Use ingo-library functions for echoing of
-"				potential Vim error (e.g. when unjoining on
-"				invalid pattern like ,\().
-"				FIX: Vim error on CTRL-R ... mappings
-"				incorrectly inserted "0". Need to return '' from
-"				:catch.
-"				Refactoring: Factor out s:ApplyAlgorithm() from
-"				the actual pasting (except for the special case
-"				of
-"				UnconditionalPaste#Separators#SpecialPasteLines()),
-"				as a first step towards allowing multiple
-"				transformations.
-"   4.00.035	25-Jan-2016	CHG: Reassign gup / gUp mappings to gujp / gUJp.
-"   3.20.034	22-Jan-2016	CHG: Split off gSp from gsp; the latter now
-"				flattens line(s) like gcp, whereas the new gSp
-"				forces linewise surrounding with empty lines.
-"				Use ingo#str#Trim(), now that we have a
-"				mandatory dependency on ingo-library.
-"   3.20.033	15-Jun-2015	Factor out s:QuerySeparatorPattern().
-"				ENH: If there's only a single line to paste and
-"				no [count] with the blockwise commands (gbp,
-"				gBp, gqbq, gQBp), first query about a separator
-"				pattern and un-join the register contents.
-"   3.20.032	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
-"				establish hard dependency on ingo-library.
-"				BUG: Escaped characters like \n are handled
-"				inconsistently in gqp: resolved as {separator},
-"				taken literally in {prefix} and {suffix}. Use
-"				ingo#cmdargs#GetUnescapedExpr() to resolve them
-"				(also for gqbp, which only supports
-"				{separator}). Change s:Flatten() to prevent
-"				interpretation of the separator.
-"   3.10.031	03-Dec-2014	Add g,'p and g,"p variants of g,p.
-"				ENH: Allow to specify prefix and suffix when
-"				querying for the separator string in gqp and
-"				i_CTRL-R_CTRL-Q.
-"   3.02.030	17-Jun-2014	CHG: Change default mappings of gdp and gDp to
-"				gqbp and gQBp, respectively.
-"   3.01.029	05-May-2014	For gsp, remove surrounding whitespace
-"				(characterwise) / empty lines (linewise) before
-"				adding the spaces / empty lines. This ensures a
-"				more dependable and deterministic DWIM behavior.
-"   3.00.028	21-Mar-2014	Add gBp mapping that is a separator-less version
-"				of gDp.
-"				When pasting additional lines with gBp / gDp,
-"				space-indent them to the cursor position, like
-"				the default blockwise paste does (but not for
-"				the special prepend / append cases).
-"				Add g>p mapping to paste shifted register
-"				contents.
-"				Factor out functions required only by certain
-"				paste types into separate autoload scripts.
-"				Add g]]p and g[[p mappings to paste like with
-"				g]p, but with more / less indent.
-"   3.00.027	20-Mar-2014	Avoid gsp inserting spaces / empty lines on a
-"				side where there's already whitespace / empty
-"				lines (but not when on both sides). This doesn't
-"				consider [count], as it would be too difficult
-"				to implement.
-"				Extract s:CheckSeparators() for reuse by the
-"				following mapping.
-"				Add gdp / gDp mappings to paste as a minimal
-"				fitting block with (queried / recalled)
-"				separator string, with special cases at the end
-"				of leading indent and at the end of the line.
-"   3.00.026	19-Mar-2014	Add g#p mapping to apply 'commentstring' to each
-"				indented linewise paste.
-"				Add gsp mapping to paste with [count] spaces /
-"				empty lines around the register contents.
-"   3.00.025	18-Mar-2014	When doing gqp / q,p of a characterwise or
-"				single line, put the separator in front (gqp) /
-"				after (gqP); otherwise, the mapping is identical
-"				to normal p / P and therefore worthless.
-"   2.30.024	14-Mar-2014	Make beep in UnconditionalPaste#Insert()
-"				configurable; in command-line mode, no beep
-"				occurs when an invalid register is specified.
-"   2.22.023	14-Jun-2013	Minor: Make substitute() robust against
-"				'ignorecase'.
-"   2.21.022	11-Apr-2013	FIX: In gpp and gPp, keep leading zeros when
-"				incrementing the number.
-"				FIX: In gpp and gPp, do not interpret leading
-"				zeros as octal numbers when incrementing.
-"   2.20.021	18-Mar-2013	ENH: Add gPp / gPP mappings to paste with all
-"				numbers incremented / decremented.
-"   2.20.020	15-Mar-2013	ENH: gpp also handles multi-line pastes. A
-"				number (after the corresponding column) is
-"				incremented in every line. If there are no
-"				increments this way, fall back to replacement of
-"				the first occurrence.
-"   2.10.019	21-Dec-2012	FIX: For characterwise pastes with a [count],
-"				the multiplied pastes must be joined with the
-"				desired separator, not just plainly
-"				concatenated.
-"				ENH: Add mappings to paste with one number
-"				(which depending on the current cursor position)
-"				incremented / decremented.
-"				Handle repeat of gpp with the last used offset
-"				and the same number position by introducing a
-"				special ".p" paste type.
-"				FIX: Don't lose the original [count] given when
-"				repeating the mapping. As
-"				UnconditionalPaste#Paste() executes a normal
-"				mode command, we need to store v:count and make
-"				it available to the <Plug>-mapping via the new
-"				UnconditionalPaste#GetCount() getter.
-"   2.00.018	07-Dec-2012	FIX: Differentiate between pasteType and a:how
-"				argument, as setregtype() only understands the
-"				former.
-"   2.00.017	06-Dec-2012	CHG: Flatten all whitespace and newlines before,
-"				after, and around lines when pasting
-"				characterwise or joined.
-"   2.00.016	05-Dec-2012	ENH: Add mappings to insert register contents
-"				characterwise (flattened) from insert mode.
-"				ENH: Add mappings to paste lines flattened with
-"				comma, queried, or recalled last used delimiter.
-"				ENH: Add mappings to paste unjoined register
-"				with queried or recalled last used delimiter
-"				pattern.
-"   1.22.015	04-Dec-2012	Split off functions into autoload script.
-"   1.22.014	28-Nov-2012	BUG: When repeat.vim is not installed, the
-"				mappings do nothing. Need to :execute the
-"				:silent! call of repeat.vim to avoid that the
-"				remainder of the command line is aborted
-"				together with the call.
-"   1.21.013	02-Dec-2011	ENH: When pasting a blockwise register as lines,
-"				strip all trailing whitespace. This is useful
-"				when cutting a block of text from a column-like
-"				text and pasting as new lines.
-"				ENH: When pasting a blockwise register as
-"				characters, flatten and shrink all trailing
-"				whitespace to a single space.
-"   1.20.012	29-Sep-2011	BUG: Repeat always used the unnamed register.
-"				Add register registration to enhanced repeat.vim
-"				plugin, which also handles repetition when used
-"				together with the expression register "=.
-"				BUG: Move <silent> maparg to <Plug> mapping to
-"				silence command repeat.
-"   1.11.010	06-Jun-2011	ENH: Support repetition of mappings through
-"				repeat.vim.
-"   1.10.009	12-Jan-2011	Incorporated suggestions by Peter Rincker
-"				(thanks for the patch!):
-"				Made mappings configurable via the customary
-"				<Plug> mappings.
-"				Added mappings gbp, gbP for blockwise pasting.
-"				Now requires Vim version 7.0 or higher.
-"   1.00.008	10-Dec-2010	Prepared for publishing; find out lowest
-"				supported Vim version.
-"	007	15-May-2009	Now catching and reporting any errors caused by
-"				the paste.
-"				Now supporting [count], like the built-in paste
-"				command.
-"	006	08-Oct-2008	Now removing newline characters at the end of
-"				the text.
-"				Now, the register type is not modified by an
-"				unconditional paste command.
-"				Now, multiple sequential newlines are converted
-"				to a single space.
-"				Refactored s:FlattenRegister() to s:Flatten().
-"	005	16-Jun-2008	Using :normal with <bang>.
-"	004	30-May-2007	Added <silent> to the mapping to avoid echoing
-"				of the function invocation.
-"	0.03	13-May-2006	Changed mappings from <leader>.. to g.., as
-"				this is easier to type (and 'g' often introduces
-"				alternative actions (like 'j' and 'gj')).
-"	0.02	10-Apr-2006	Added flattening (replacing newlines with
-"				spaces) for characterwise paste.
-"	0.01	10-Apr-2006	file creation from vimtip #1199
 let s:save_cpo = &cpo
 set cpo&vim
 
@@ -230,12 +34,15 @@ function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
 endfunction
 
-function! s:Flatten( text, separator, elementPrefix, elementSuffix )
+function! s:TrimAndSplit( text )
     " Remove newlines and whitespace at the begin and end of the text.
     let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
 
     " Split into lines on newlines (plus leading and trailing whitespace).
-    let l:lines = split(l:text, '\s*\%(\n\s*\)\+')
+    return split(l:text, '\s*\%(\n\s*\)\+')
+endfunction
+function! s:Flatten( text, separator, elementPrefix, elementSuffix )
+    let l:lines = s:TrimAndSplit(a:text)
 
     " Add potential prefix and suffix.
     if ! empty(a:elementPrefix . a:elementSuffix)
@@ -246,11 +53,7 @@ function! s:Flatten( text, separator, elementPrefix, elementSuffix )
     return join(l:lines, a:separator)
 endfunction
 function! s:FlattenLastDifferently( text, separator, pasteCommand, lastSeparator )
-    " Remove newlines and whitespace at the begin and end of the text.
-    let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
-
-    " Split into lines on newlines (plus leading and trailing whitespace).
-    let l:lines = split(l:text, '\s*\%(\n\s*\)\+')
+    let l:lines = s:TrimAndSplit(a:text)
 
     " Join with passed separator, using the special a:lastSeparator for the last
     " line.
@@ -298,6 +101,57 @@ function! s:QuerySeparatorPattern()
 	return 0
     endif
     let g:UnconditionalPaste_UnjoinSeparatorPattern = l:separatorPattern
+    return 1
+endfunction
+function! s:CompleteEscape( escape )
+    if has_key(a:escape, 'Replacer')
+	return a:escape
+    endif
+    if ! has_key(a:escape, 'pattern')
+	let a:escape.pattern = '\\'
+    endif
+    if ! has_key(a:escape, 'replacement')
+	let a:escape.replacement = '\\&'
+    endif
+    return a:escape
+endfunction
+function! s:SummarizeEscape( escape )
+    if has_key(a:escape, 'name')
+	return a:escape.name
+    elseif has_key(a:escape, 'Replacer')
+	return ingo#funcref#ToString(a:escape.Replacer)
+    else
+	return a:escape.pattern . ' -> ' . a:escape.replacement
+    endif
+endfunction
+function! s:QueryEscape( count )
+    let l:escapes = map(copy(ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_Escapes')), 's:CompleteEscape(v:val)')
+    if empty(l:escapes)
+	let l:escape = s:CompleteEscape({})
+	let l:pattern = input('Enter pattern of text to be escaped: ', l:escape.pattern)
+	if empty(l:pattern) | return 0 | endif
+
+	let l:replacement = input('Enter replacement of text to be escaped: ', l:escape.replacement)
+	if empty(l:replacement) | return 0 | endif
+
+	let l:escape.pattern = l:pattern
+	let l:escape.replacement = l:replacement
+	let g:UnconditionalPaste_Escape = l:escape
+    elseif len(l:escapes) == 1
+	let g:UnconditionalPaste_Escape = l:escapes[0]
+    elseif a:count > 0
+	if a:count > len(l:escapes)
+	    return 0
+	endif
+	let g:UnconditionalPaste_Escape = l:escapes[a:count - 1]
+    else
+	let l:index = ingo#query#fromlist#Query('escapes', map(copy(l:escapes), 's:SummarizeEscape(v:val)'))
+	if l:index == -1
+	    return 0
+	endif
+	let g:UnconditionalPaste_Escape = l:escapes[l:index]
+    endif
+
     return 1
 endfunction
 function! s:PrintHelp( types, howList )
@@ -382,7 +236,11 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		endif
 		let l:elementPrefix = a:1
 		if g:UnconditionalPaste_IsSerialComma
-		    let l:elementSuffix = ',' . l:elementSuffix
+		    let l:lineNum = len(s:TrimAndSplit(l:pasteContent))
+		    let l:isExactlyTwoElements = (max([l:count, 1]) * l:lineNum == 2)
+		    if ! l:isExactlyTwoElements
+			let l:elementSuffix = ',' . l:elementSuffix
+		    endif
 		endif
 	    elseif ! empty(a:how[1])
 		let [l:prefix, l:suffix, l:linePrefix, l:lineSuffix] = repeat([a:how[1:]], 4)
@@ -763,6 +621,27 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	\   "\n"
 	\)
 	let l:pasteContent = join(l:lines, l:joiner)
+    elseif a:how ==# '\' || a:how ==# '\\'
+	if a:how ==# '\\'
+	    if ! exists('g:UnconditionalPaste_Escape')
+		let g:UnconditionalPaste_Escape = get(ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_Escapes'), 0, s:CompleteEscape({}))
+	    endif
+	elseif a:how ==# '\'
+	    if ! s:QueryEscape(l:count)
+		throw 'beep'
+	    endif
+	    let l:count = 0
+	else
+	    throw 'ASSERT: Unhandled a:how: ' . string(a:how)
+	endif
+
+	let l:pasteType = a:regType
+	if has_key(g:UnconditionalPaste_Escape, 'pattern')
+	    let l:pasteContent = substitute(l:pasteContent, g:UnconditionalPaste_Escape.pattern, g:UnconditionalPaste_Escape.replacement, 'g')
+	endif
+	if has_key(g:UnconditionalPaste_Escape, 'Replacer')
+	    let l:pasteContent = ingo#actions#EvaluateWithValOrFunc(g:UnconditionalPaste_Escape.Replacer, l:pasteContent)
+	endif
     else
 	throw 'ASSERT: Unknown a:how: ' . string(a:how)
     endif

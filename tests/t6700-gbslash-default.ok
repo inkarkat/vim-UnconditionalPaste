@@ -1,11 +1,5 @@
 1 padding text
 2 padding text
-we (|) here
-FOO   B
-FOO   B
-R	B
-Z	 QUUX
-R	B
-Z	 QUUX
+we (|main("f/o/o", 'b\\a\\r', "rock'n'roll")) here
 4 padding text
 5 padding text

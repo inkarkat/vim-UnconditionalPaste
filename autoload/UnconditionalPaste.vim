@@ -561,7 +561,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		    endif
 		elseif l:key ==# 'H'
 		    call extend(l:howList, g:UnconditionalPaste_Combinations)
-		elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
+		elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, s:SplitCountAndHow(l:howList[-1])[1] . l:key) != -1
 		    " Is a two-key type where the first key also is a valid type on
 		    " its own; revise the previous recognized type now.
 		    let l:howList[-1] .= l:key

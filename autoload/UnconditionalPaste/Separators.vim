@@ -4,7 +4,7 @@
 "   - ingo/cursor.vim autoload script
 "   - ingo/text.vim autoload script
 "
-" Copyright: (C) 2014-2015 Ingo Karkat
+" Copyright: (C) 2014-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -21,7 +21,7 @@
 "				direction of the paste.
 "   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
 
-function! UnconditionalPaste#Separators#Check( regType, pasteCommand, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
+function! UnconditionalPaste#Separators#Check( regType, isPasteAfter, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
     if a:regType ==# 'V'
 	let l:isAtStart = (line('.') == 1)
 	let l:isAtEnd = (line('.') == line('$'))
@@ -30,8 +30,8 @@ function! UnconditionalPaste#Separators#Check( regType, pasteCommand, separatorP
 	let l:isCurrent = empty(getline('.'))
 	let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
 
-	let l:isBefore = (a:pasteCommand ==# 'P' ? l:isPrevious : l:isCurrent)
-	let l:isAfter = (a:pasteCommand ==# 'P' ? l:isCurrent : l:isNext)
+	let l:isBefore = (a:isPasteAfter ? l:isCurrent : l:isPrevious)
+	let l:isAfter = (a:isPasteAfter ? l:isNext : l:isCurrent)
     else
 	let l:isAtStart = (col('.') == 1)
 	let l:isAtEnd = ingo#cursor#IsAtEndOfLine()
@@ -41,14 +41,14 @@ function! UnconditionalPaste#Separators#Check( regType, pasteCommand, separatorP
 	    " suffix. But when the current line contains a single character (so
 	    " we're also both at start and end simultaneously), only add the
 	    " separator on the side we're pasting to.
-	    execute 'let l:isAt' . (a:pasteCommand ==# 'P' ? 'End' : 'Start') . ' = 0'
+	    execute 'let l:isAt' . (a:isPasteAfter ? 'Start' : 'End') . ' = 0'
 	endif
 
-	let l:isBefore = search((a:pasteCommand ==# 'P' ? a:separatorPattern . '\%#' : '\%#' . a:separatorPattern), 'bcnW', line('.'))
-	let l:isAfter = search((a:pasteCommand ==# 'P' ? '\%#' . a:separatorPattern : '\%#.' . a:separatorPattern), 'cnW', line('.'))
+	let l:isBefore = search((a:isPasteAfter ? '\%#' . a:separatorPattern : a:separatorPattern . '\%#'), 'bcnW', line('.'))
+	let l:isAfter = search((a:isPasteAfter ? '\%#.' . a:separatorPattern : '\%#' . a:separatorPattern), 'cnW', line('.'))
     endif
-    let l:isPrefix = ! (a:pasteCommand ==# 'P' && l:isAtStart && ! l:isAtEnd || l:isBefore && (! l:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
-    let l:isSuffix = ! (a:pasteCommand ==# 'p' && l:isAtEnd && ! l:isAtStart || l:isAfter && (! l:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
+    let l:isPrefix = ! (! a:isPasteAfter && l:isAtStart && ! l:isAtEnd || l:isBefore && (! l:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
+    let l:isSuffix = ! (  a:isPasteAfter && l:isAtEnd && ! l:isAtStart || l:isAfter && (! l:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
 
     return [l:isPrefix, l:isSuffix]
 endfunction

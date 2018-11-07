@@ -380,7 +380,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    \	    "\n"
 	    \	)
     elseif a:how ==# 's'
-	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\s', 1)
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', s:IsPasteAfter(a:000), '\s', 1)
 	let l:prefix = (l:isPrefix ? repeat(' ', max([l:count, 1])) : '')
 	let l:suffix = (l:isSuffix ? repeat(' ', max([l:count, 1])) : '')
 	let l:count = 0
@@ -398,7 +398,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	endif
     elseif a:how ==# 'S'
 	let l:pasteType = 'V'
-	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', a:1, '\s', 1)
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', s:IsPasteAfter(a:000), '\s', 1)
 	let l:prefix = (l:isPrefix ? repeat("\n", max([l:count, 1])) : '')
 	let l:suffix = (l:isSuffix ? repeat("\n", max([l:count, 1])) : '')
 	let l:count = 0
@@ -434,7 +434,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    if a:how ==# 'B'
 		let [l:isPrefix, l:isSuffix] = [0, 0]
 	    else
-		let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', a:1, '\V\C' . escape(l:separator, '\'), 0)
+		let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', s:IsPasteAfter(a:000), '\V\C' . escape(l:separator, '\'), 0)
 	    endif
 	    let l:pasteType = "\<C-v>"
 	endif

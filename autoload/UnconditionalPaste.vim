@@ -165,6 +165,15 @@ function! s:PrintHelp( types, howList )
 	echo printf('Paste as %s', join(map(copy(a:howList), 'l:typeToName[v:val]'), ' and '))
     endif
 endfunction
+function! s:IsPasteAfter( optionalArguments )
+    if len(a:optionalArguments) == 0 || a:optionalArguments[0][-1:] ==# 'p'
+	return 1
+    elseif a:optionalArguments[0][-1:] ==# 'P'
+	return 0
+    else
+	throw 'ASSERT: Unknown paste command: ' . string(a:optionalArguments[0])
+    endif
+endfunction
 
 function! UnconditionalPaste#GetCount()
     return s:count
@@ -227,14 +236,14 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		elseif a:how[1] ==# 'o'
 		    let l:elementSuffix = ' or '
 		elseif a:how[1] ==# 'n'
-		    if ! (a:1 ==# 'p' && l:count == 0 && s:IsSingleElement(a:regContent))
+		    if ! (s:IsPasteAfter(a:000) && l:count == 0 && s:IsSingleElement(a:regContent))
 			let l:prefix = 'neither '
 		    endif
 		    let l:elementSuffix = ' nor '
 		else
 		    throw 'ASSERT: Unknown comma modifier: ' . string(a:how[1])
 		endif
-		let l:elementPrefix = a:1
+		let l:elementPrefix = get(a:000, 0, 'p')   " Yes, passing paste command as prefix argument to s:FlattenLastDifferently().
 		if g:UnconditionalPaste_IsSerialComma
 		    let l:lineNum = len(s:TrimAndSplit(l:pasteContent))
 		    let l:isExactlyTwoElements = (max([l:count, 1]) * l:lineNum == 2)
@@ -294,12 +303,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    " I often use that mapping to avoid the special handling of
 	    " smartput.vim, and this embellishment would counter that.
 	    " For that case, better use gsp.
-	    if a:1 ==# 'p'
+	    if s:IsPasteAfter(a:000)
 		let l:pasteContent = l:separator . l:pasteContent
-	    elseif a:1 ==# 'P'
-		let l:pasteContent .= l:separator
 	    else
-		throw 'ASSERT: Unknown paste command: ' . string(a:1)
+		let l:pasteContent .= l:separator
 	    endif
 	endif
     elseif a:how ==? 'uj'
@@ -351,10 +358,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		let l:lines = split(l:pasteContent, '\n', 1)
 	    endif
 
-	    if a:1 ==# 'P'
-		call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
-	    else
+	    if s:IsPasteAfter(a:000)
 		call UnconditionalPaste#Shifted#SpecialShiftedAppend(l:lines, l:shiftCount)
+	    else
+		call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
 	    endif
 	    return ['', '', 0, '', 0]
 	endif
@@ -419,9 +426,9 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 
 
 	let l:isMultiLine = (l:pasteContent =~# '\n')
-	if l:isMultiLine && a:1 ==# 'P' && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
+	if l:isMultiLine && ! s:IsPasteAfter(a:000) && search('^\s\+\%#\S', 'bcnW', line('.')) != 0
 	    let [l:isPrefix, l:isSuffix, l:pasteType] = [0, 1, 'prepend']
-	elseif l:isMultiLine && a:1 ==# 'p' && ingo#cursor#IsAtEndOfLine() && getline('.') =~# '.'
+	elseif l:isMultiLine && s:IsPasteAfter(a:000) && ingo#cursor#IsAtEndOfLine() && getline('.') =~# '.'
 	    let [l:isPrefix, l:isSuffix, l:pasteType] = [1, 0, 'append']
 	else
 	    if a:how ==# 'B'
@@ -449,8 +456,8 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, '$', '')
 	    return ['', '', 0, '', 0]
 	elseif l:isMultiLine
-	    let l:pasteColExpr = '\%>' . (virtcol('.') - (a:1 ==# 'P' ? 1 : 0)) . 'v'
-	    let l:newLineIndent = repeat(' ', virtcol('.') - (a:1 ==# 'P' ? 1 : 0))
+	    let l:pasteColExpr = '\%>' . (virtcol('.') - (s:IsPasteAfter(a:000) ? 0 : 1)) . 'v'
+	    let l:newLineIndent = repeat(' ', virtcol('.') - (s:IsPasteAfter(a:000) ? 0 : 1))
 	    call UnconditionalPaste#Separators#SpecialPasteLines(l:lines, l:pasteColExpr, l:newLineIndent)
 	    return ['', '', 0, '', 0]
 	endif
@@ -458,7 +465,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	let l:pasteContent = join(l:lines, "\n")
     elseif a:how ==? 'p' || a:how ==? '.p'
 	let l:pasteType = a:regType " Keep the original paste type.
-	let l:offset = (a:1 ==# 'p' ? 1 : -1)
+	let l:offset = (s:IsPasteAfter(a:000) ? 1 : -1)
 	if a:how ==? 'p'
 	    let l:baseCount = 1
 	    let l:vcol = 0

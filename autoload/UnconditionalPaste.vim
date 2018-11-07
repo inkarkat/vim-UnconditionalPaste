@@ -547,7 +547,10 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		    break
 		elseif l:key ==# '?'
 		    call s:PrintHelp(l:types, l:howList)
-		    continue
+		elseif l:key ==# "\<BS>"
+		    if len(l:howList) > 0
+			call remove(l:howList, -1)
+		    endif
 		elseif l:key ==# 'H'
 		    call extend(l:howList, g:UnconditionalPaste_Combinations)
 		elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1

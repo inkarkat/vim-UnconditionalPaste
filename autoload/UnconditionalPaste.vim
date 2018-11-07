@@ -165,8 +165,11 @@ function! s:PrintHelp( types, howList )
 	echo printf('Paste as %s', join(map(copy(a:howList), 's:HowToString(l:typeToName, v:val)'), ' and '))
     endif
 endfunction
+function! s:SplitCountAndHow( how )
+    return matchlist(a:how, '^\(\d*\)\(.*\)$')[1:2]
+endfunction
 function! s:HowToString( typeToName, how )
-    let [l:count, l:type] = matchlist(a:how, '^\(\d*\)\(\S\+\)$')[1:2]
+    let [l:count, l:type] = s:SplitCountAndHow(a:how)
     return (empty(l:count) ? '' : l:count . 'x ') . a:typeToName[l:type]
 endfunction
 function! s:IsPasteAfter( optionalArguments )
@@ -584,7 +587,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 
 	let l:pasteType = a:regType
 	for l:how in l:howList
-	    let [l:localCount, l:how] = matchlist(l:how, '^\(\d*\)\(.*\)$')[1:2]
+	    let [l:localCount, l:how] = s:SplitCountAndHow(l:how)
 	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, (! empty(l:localCount) ? 0 + l:localCount : a:count), l:shiftCommand, l:shiftCount] + a:000)
 	endfor
     elseif a:how =~# '^[rR]!\?$'

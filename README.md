@@ -254,6 +254,8 @@ USAGE
                             the g..p / g..P in the mappings. A [count] before
                             ghp applies to each algorithm, you can override /
                             supply a local [count], too.
+    ["x]gHp, ["x]gHP        Paste with the previously queried combination of above
+                            mappings again.
 
                             EXAMPLES                                             *
                             - Uppercase a word and paste linewise:
@@ -318,6 +320,16 @@ USAGE
                             Insert the contents of a register, toggling the case
                             of the first alphabetical character of the first word.
                             Like g~p / g~p, but in insert mode.
+
+    CTRL-R CTRL-H {0-9a-z"%#*+/:.-}
+                            Query for a combination of UnconditionalPaste
+                            mappings, apply those to the contents of the register,
+                            and insert the result.
+
+    CTRL-R CTRL-H CTRL-H {0-9a-z"%#*+/:.-}
+                            Apply the last queried combination of
+                            UnconditionalPaste mappings to the contents of the
+                            register again, and insert the result.
 
 INSTALLATION
 ------------------------------------------------------------------------------
@@ -415,6 +427,13 @@ This stores the last replacement used for g\\p and i\_CTRL\_R\_CTRL-\.
 It is initialized with the first escape from the above configuration / entered
 / selected escape.
 
+The default combination used for the gHp and i\_CTRL-R\_CTRL-H\_CTRL-H
+mappings. Must be a List of 1 or 2-character strings between the g..p / g..P
+in the mappings; best obtained by selecting the desired algorithms via ghp
+once and then grabbing the variable value:
+
+    let g:UnconditionalPaste_Combinations = ['U', ',"', 's']
+
 If you want to use different mappings (e.g. starting with <Leader>), map your
 keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your vimrc):
@@ -489,6 +508,8 @@ script (e.g. in your vimrc):
     nmap <Leader>pU <Plug>UnconditionalPasteUppercaseAfter
     nmap <Leader>Ph <Plug>UnconditionalPasteCombinatorialBefore
     nmap <Leader>ph <Plug>UnconditionalPasteCombinatorialAfter
+    nmap <Leader>PH <Plug>UnconditionalPasteRecallCombinatorialBefore
+    nmap <Leader>pH <Plug>UnconditionalPasteRecallCombinatorialAfter
 
     imap <C-G>c <Plug>UnconditionalPasteCharI
     imap <C-G>, <Plug>UnconditionalPasteCommaI
@@ -501,6 +522,8 @@ script (e.g. in your vimrc):
     imap <C-G>x <Plug>UnconditionalPasteEscapeI
     imap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
     imap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
+    imap <C-G>h <Plug>UnconditionalPasteCombinatorialI
+    imap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
@@ -513,6 +536,8 @@ script (e.g. in your vimrc):
     cmap <C-G>x <Plug>UnconditionalPasteEscapeI
     cmap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
     cmap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
+    cmap <C-G>h <Plug>UnconditionalPasteCombinatorialI
+    cmap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 
 CONTRIBUTING
 ------------------------------------------------------------------------------
@@ -523,6 +548,14 @@ below).
 
 HISTORY
 ------------------------------------------------------------------------------
+
+##### 4.30    RELEASEME
+- ENH: Add gHp mapping for repeating the same previously queried combination
+  and a configurable preset g:UnconditionalPaste\_Combinations.
+- ENH: Add i\_CTRL-R\_CTRL-H / c\_CTRL-R\_CTRL-H mappings for ghp and
+  i\_CTRL-R\_CTRL-H\_CTRL-H / c\_CTRL-R\_CTRL-H\_CTRL-H for gHp. As only some paste
+  variants are offered in insert and command-line modes, these allow to use
+  any (working) variant there, too, and any combinations of them.
 
 ##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp

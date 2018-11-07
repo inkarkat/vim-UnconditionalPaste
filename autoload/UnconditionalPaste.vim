@@ -21,7 +21,7 @@
 "   - ingo/register.vim autoload script
 "   - ingo/str.vim autoload script
 
-" Copyright: (C) 2006-2017 Ingo Karkat
+" Copyright: (C) 2006-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -514,52 +514,59 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    " what the user intended.
 	    throw 'beep'
 	endif
-    elseif a:how ==# 'h'
+    elseif a:how ==? 'h'
 	let l:types = filter(
 	\   map(copy(g:UnconditionalPaste_Mappings), 'v:val[1]'),
 	\   'v:val[0] !~# "^[.h]$"'
 	\)
 
-	let l:localCount = ''
-	let l:howList = []
-	while 1
-	    call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
-	    let l:key = ingo#query#get#Char()
-
-	    while l:key =~# '\d'
-		" Keep reading local count until a real how happens.
-		let l:localCount .= l:key
+	if a:how ==# 'h'
+	    let l:localCount = ''
+	    let l:howList = []
+	    while 1
+		call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
 		let l:key = ingo#query#get#Char()
-	    endwhile
 
-	    if empty(l:key)
-		redraw
-		return ['', '', 0, '', 0]
-	    elseif l:key ==# "\r"
-		break
-	    elseif l:key ==# '?'
-		call s:PrintHelp(l:types, l:howList)
-		continue
-	    elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
-		" Is a two-key type where the first key also is a valid type on
-		" its own; revise the previous recognized type now.
-		let l:howList[-1] .= l:key
-	    elseif index(l:types, l:key) != -1
-		call add(l:howList, l:localCount . l:key)
-		let l:localCount = ''
-	    elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
-		" Might be a two-key type (where the first key isn't a valid
-		" type on its own); get another key.
-		let l:key2 = ingo#query#get#Char()
-		if empty(l:key2)
+		while l:key =~# '\d'
+		    " Keep reading local count until a real how happens.
+		    let l:localCount .= l:key
+		    let l:key = ingo#query#get#Char()
+		endwhile
+
+		if empty(l:key)
 		    redraw
 		    return ['', '', 0, '', 0]
-		elseif index(l:types, l:key . l:key2) != -1
-		    call add(l:howList, l:localCount . l:key . l:keys)
+		elseif l:key ==# "\r"
+		    break
+		elseif l:key ==# '?'
+		    call s:PrintHelp(l:types, l:howList)
+		    continue
+		elseif l:key ==# 'H'
+		    call extend(l:howList, g:UnconditionalPaste_Combinations)
+		elseif empty(l:localCount) && ! empty(l:howList) && index(l:types, l:howList[-1] . l:key) != -1
+		    " Is a two-key type where the first key also is a valid type on
+		    " its own; revise the previous recognized type now.
+		    let l:howList[-1] .= l:key
+		elseif index(l:types, l:key) != -1
+		    call add(l:howList, l:localCount . l:key)
 		    let l:localCount = ''
+		elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
+		    " Might be a two-key type (where the first key isn't a valid
+		    " type on its own); get another key.
+		    let l:key2 = ingo#query#get#Char()
+		    if empty(l:key2)
+			redraw
+			return ['', '', 0, '', 0]
+		    elseif index(l:types, l:key . l:key2) != -1
+			call add(l:howList, l:localCount . l:key . l:keys)
+			let l:localCount = ''
+		    endif
 		endif
-	    endif
-	endwhile
+	    endwhile
+	    let g:UnconditionalPaste_Combinations = l:howList
+	else
+	    let l:howList = g:UnconditionalPaste_Combinations
+	endif
 
 	let l:pasteType = a:regType
 	for l:how in l:howList

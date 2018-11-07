@@ -5,7 +5,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2017 Ingo Karkat
+" Copyright: (C) 2006-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -48,6 +48,9 @@ if ! exists('g:UnconditionalPaste_Escapes')
     \   'replacement': '\\&'
     \}]
 endif
+if ! exists('g:UnconditionalPaste_Combinations')
+    let g:UnconditionalPaste_Combinations = []
+endif
 
 if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
@@ -79,7 +82,7 @@ let g:UnconditionalPaste_Mappings =
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],
-    \       ['Combinatorial', 'h']
+    \       ['Combinatorial', 'h', '<C-h>'], ['RecallCombinatorial', 'H', '<C-h><C-h>']
     \   ]
 
 "- mappings --------------------------------------------------------------------
@@ -123,7 +126,7 @@ function! s:CreateMappings()
 		let l:pasteMappingDefaultKeys = '==' . l:pasteCmd
 	    endif
 
-	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression'], l:pasteName) != -1
+	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression', 'Combinatorial'], l:pasteName) != -1
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction

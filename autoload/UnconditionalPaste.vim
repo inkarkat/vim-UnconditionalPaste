@@ -536,9 +536,9 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	\)
 
 	if a:how ==# 'h'
-	    let l:localCount = ''
 	    let l:howList = []
 	    while 1
+		let l:localCount = ''
 		call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
 		let l:key = ingo#query#get#Char()
 
@@ -567,7 +567,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 		    let l:howList[-1] .= l:key
 		elseif index(l:types, l:key) != -1
 		    call add(l:howList, l:localCount . l:key)
-		    let l:localCount = ''
 		elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
 		    " Might be a two-key type (where the first key isn't a valid
 		    " type on its own); get another key.
@@ -577,7 +576,6 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 			return ['', '', 0, '', 0]
 		    elseif index(l:types, l:key . l:key2) != -1
 			call add(l:howList, l:localCount . l:key . l:keys)
-			let l:localCount = ''
 		    endif
 		endif
 	    endwhile

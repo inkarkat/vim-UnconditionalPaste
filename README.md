@@ -254,9 +254,6 @@ USAGE
                             the g..p / g..P in the mappings. A [count] before
                             ghp applies to each algorithm, you can override /
                             supply a local [count], too.
-    ["x]gHp, ["x]gHP        Paste with the previously queried combination of above
-                            mappings again.
-
                             EXAMPLES                                             *
                             - Uppercase a word and paste linewise:
                                 ghpUc<Enter>
@@ -266,6 +263,10 @@ USAGE
                                 ghp>3l<Enter>
                             Note: Not all combinations make sense or work
                             correctly.
+    ["x]gHp, ["x]gHP        Paste with the previously queried combination of above
+                            mappings again. Defaults to linewise indented paste
+                            with empty lines around (gSp + g>p)
+                            g:UnconditionalPaste_Combinations.
 
     CTRL-R CTRL-C {0-9a-z"%#*+/:.-}
                             Insert the contents of a register characterwise

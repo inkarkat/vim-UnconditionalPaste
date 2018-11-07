@@ -49,7 +49,7 @@ if ! exists('g:UnconditionalPaste_Escapes')
     \}]
 endif
 if ! exists('g:UnconditionalPaste_Combinations')
-    let g:UnconditionalPaste_Combinations = []
+    let g:UnconditionalPaste_Combinations = ['S', '>']
 endif
 
 if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')

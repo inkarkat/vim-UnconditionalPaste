@@ -166,7 +166,8 @@ function! s:PrintHelp( types, howList )
     endif
 endfunction
 function! s:SplitCountAndHow( how )
-    return matchlist(a:how, '^\(\d*\)\(.*\)$')[1:2]
+    let [l:count, l:how] = matchlist(a:how, '^\(\d*\)\(.*\)$')[1:2]
+    return [str2nr(l:count), l:how]
 endfunction
 function! s:HowToString( typeToName, how )
     let [l:count, l:type] = s:SplitCountAndHow(a:how)
@@ -588,7 +589,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	let l:pasteType = a:regType
 	for l:how in l:howList
 	    let [l:localCount, l:how] = s:SplitCountAndHow(l:how)
-	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, (! empty(l:localCount) ? 0 + l:localCount : a:count), l:shiftCommand, l:shiftCount] + a:000)
+	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, (empty(l:localCount) ? a:count : l:localCount), l:shiftCommand, l:shiftCount] + a:000)
 	endfor
     elseif a:how =~# '^[rR]!\?$'
 	let l:isInverse = (a:how[1] ==# '!')

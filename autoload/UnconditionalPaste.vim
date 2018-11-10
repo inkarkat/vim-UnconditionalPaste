@@ -324,7 +324,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    endif
 	endif
 
-	let l:pasteType = 'V'
+	let l:pasteType = (a:mode ==# 'n' ? 'V' : 'v')
 	let [l:isSuccess, l:pasteContent] = s:Unjoin(l:pasteContent, g:UnconditionalPaste_UnjoinSeparatorPattern)
 	if ! l:isSuccess
 	    " No unjoining took place; this is probably not what the user
@@ -510,7 +510,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    let l:count = 0
 	endif
     elseif a:how ==? 'u' || a:how ==# '~'
-	let l:pasteType = a:regType " Keep the original paste type.
+	let l:pasteType = (a:mode ==# 'n' ? a:regType : 'v')
 	if a:how ==# 'u'
 	    let l:conversion = ['\<\u', '\l&']
 	elseif a:how ==# 'U'
@@ -661,7 +661,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    throw 'ASSERT: Unhandled a:how: ' . string(a:how)
 	endif
 
-	let l:pasteType = a:regType
+	let l:pasteType = (a:mode ==# 'n' ? a:regType : 'v')
 	if has_key(g:UnconditionalPaste_Escape, 'pattern')
 	    let l:pasteContent = substitute(l:pasteContent, g:UnconditionalPaste_Escape.pattern, g:UnconditionalPaste_Escape.replacement, 'g')
 	endif

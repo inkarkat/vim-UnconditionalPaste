@@ -714,6 +714,12 @@ function! UnconditionalPaste#Paste( regName, mode, how, ... )
 	    endif
 	    return 1
 	else
+	    if ! empty(l:shiftCount)
+		let l:pasteContent = repeat({'>': "\t", '<': "\<BS>"}[l:shiftCommand], l:shiftCount) . l:pasteContent
+	    endif
+	    if l:pasteType ==# 'V'
+		let l:pasteContent = "\n" . l:pasteContent
+	    endif
 	    return l:pasteContent
 	endif
     catch /^beep$/

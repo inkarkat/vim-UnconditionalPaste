@@ -1,4 +1,4 @@
-" Test CTRL-R CTRL-H CTRL-H with custom combinations of lines in unnamed register.
+" Test insert-mode CTRL-R CTRL-H CTRL-H with custom combinations of lines in unnamed register.
 
 let g:UnconditionalPaste_Combinations = ['3U', ',"', '2s']
 call SetRegister('"', "foo\nbar\nbaz\n", 'V')

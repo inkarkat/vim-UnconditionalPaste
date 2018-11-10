@@ -1,5 +1,7 @@
 " Test g\p of words with multiple choices.
 
+set columns=80  " Need to enforce a certain width because of the assertion on the query output.
+
 source helpers/escapes.vim
 let b:UnconditionalPaste_Escapes = g:escapes
 

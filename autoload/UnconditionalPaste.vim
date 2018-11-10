@@ -372,6 +372,9 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 		call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
 	    endif
 	    return ['', '', 0, '', 0]
+
+	if a:mode !=# 'n'
+	    let l:pasteContent = "\<C-u>" . l:pasteContent
 	endif
     elseif a:how ==# '#'
 	if empty(&commentstring)
@@ -714,11 +717,12 @@ function! UnconditionalPaste#Paste( regName, mode, how, ... )
 	    endif
 	    return 1
 	else
+	    let [l:clearIndent, l:pasteContent] = matchlist(l:pasteContent, "^\\(\<C-u>\\)\\?\\(.*\\)$")[1:2]
 	    if ! empty(l:shiftCount)
 		let l:pasteContent = repeat({'>': "\t", '<': "\<BS>"}[l:shiftCommand], l:shiftCount) . l:pasteContent
 	    endif
 	    if l:pasteType ==# 'V'
-		let l:pasteContent = "\n" . l:pasteContent
+		let l:pasteContent = "\n" . l:clearIndent . l:pasteContent
 	    endif
 	    return l:pasteContent
 	endif

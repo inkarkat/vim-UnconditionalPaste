@@ -186,7 +186,7 @@ endfunction
 function! UnconditionalPaste#GetCount()
     return s:count
 endfunction
-function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shiftCount, ... )
+function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand, shiftCount, ... )
     let l:pasteContent = a:regContent
     let l:count = a:count
     let l:shiftCommand = a:shiftCommand
@@ -388,7 +388,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    \	    "\n"
 	    \	)
     elseif a:how ==# 's'
-	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', s:IsPasteAfter(a:000), '\s', 1)
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(a:mode, 'v', s:IsPasteAfter(a:000), '\s', 1)
 	let l:prefix = (l:isPrefix ? repeat(' ', max([l:count, 1])) : '')
 	let l:suffix = (l:isSuffix ? repeat(' ', max([l:count, 1])) : '')
 	let l:count = 0
@@ -406,7 +406,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	endif
     elseif a:how ==# 'S'
 	let l:pasteType = 'V'
-	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('V', s:IsPasteAfter(a:000), '\s', 1)
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(a:mode, 'V', s:IsPasteAfter(a:000), '\s', 1)
 	let l:prefix = (l:isPrefix ? repeat("\n", max([l:count, 1])) : '')
 	let l:suffix = (l:isSuffix ? repeat("\n", max([l:count, 1])) : '')
 	let l:count = 0
@@ -442,7 +442,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	    if a:how ==# 'B'
 		let [l:isPrefix, l:isSuffix] = [0, 0]
 	    else
-		let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check('v', s:IsPasteAfter(a:000), '\V\C' . escape(l:separator, '\'), 0)
+		let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(a:mode, 'v', s:IsPasteAfter(a:000), '\V\C' . escape(l:separator, '\'), 0)
 	    endif
 	    let l:pasteType = "\<C-v>"
 	endif
@@ -587,7 +587,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 	let l:pasteType = a:regType
 	for l:how in l:howList
 	    let [l:localCount, l:how] = s:SplitCountAndHow(l:how)
-	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [l:how, l:pasteContent, l:pasteType, (empty(l:localCount) ? a:count : l:localCount), l:shiftCommand, l:shiftCount] + a:000)
+	    let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [a:mode, l:how, l:pasteContent, l:pasteType, (empty(l:localCount) ? a:count : l:localCount), l:shiftCommand, l:shiftCount] + a:000)
 	endfor
     elseif a:how =~# '^[rR]!\?$'
 	let l:isInverse = (a:how[1] ==# '!')
@@ -671,7 +671,7 @@ function! s:ApplyAlgorithm( how, regContent, regType, count, shiftCommand, shift
 
     return [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount]
 endfunction
-function! UnconditionalPaste#Paste( regName, how, ... )
+function! UnconditionalPaste#Paste( regName, mode, how, ... )
     let l:count = v:count
     let s:count = v:count
     let l:regType = getregtype(a:regName)
@@ -697,7 +697,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
     endif
 
     try
-	let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [a:how, l:regContent, l:regType, l:count, '', 0] + a:000)
+	let [l:pasteContent, l:pasteType, l:count, l:shiftCommand, l:shiftCount] = call('s:ApplyAlgorithm', [a:mode, a:how, l:regContent, l:regType, l:count, '', 0] + a:000)
 
 
 	if a:0
@@ -735,7 +735,7 @@ function! UnconditionalPaste#Paste( regName, how, ... )
 	endif
     endtry
 endfunction
-function! UnconditionalPaste#Insert( regName, how, isBeep )
+function! UnconditionalPaste#Insert( regName, mode, how, isBeep )
     if a:regName !~? '[0-9a-z"%#*+:.-]'
 	" Note the lack of "="; we don't support the expression register here,
 	" because we would need to do the querying and evaluation all by
@@ -746,7 +746,7 @@ function! UnconditionalPaste#Insert( regName, how, isBeep )
 	return ''
     endif
 
-    return UnconditionalPaste#Paste(a:regName, a:how)
+    return UnconditionalPaste#Paste(a:regName, a:mode, a:how)
 endfunction
 
 let &cpo = s:save_cpo

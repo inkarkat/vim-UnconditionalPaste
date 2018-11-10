@@ -145,7 +145,7 @@ function! s:CreateMappings()
 	    \   'if v:register ==# "="<Bar>' .
 	    \   '    call UnconditionalPaste#HandleExprReg(getreg("="))<Bar>' .
 	    \   'endif<Bar>' .
-	    \   'if ! UnconditionalPaste#Paste(v:register, %s, %s)<Bar>' .
+	    \   'if ! UnconditionalPaste#Paste(v:register, "n", %s, %s)<Bar>' .
 	    \   '   echoerr ingo#err#Get()<Bar>' .
 	    \   'endif<Bar>' .
 	    \   'silent! call repeat#set("\<lt>Plug>%s", UnconditionalPaste#GetCount())<CR>',
@@ -172,9 +172,10 @@ function! s:CreateMappings()
 	" newlines (^@ are inserted), and i_CTRL-R_CTRL-O inserts above the
 	" current line when the register ends with a newline.
 	for l:mode in ['i', 'c']
-	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %d)<CR>',
+	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %s, %d)<CR>',
 	    \   l:mode,
 	    \   l:plugMappingName,
+	    \   string(l:mode),
 	    \   string(l:how),
 	    \   (l:mode ==# 'i')
 	    \)

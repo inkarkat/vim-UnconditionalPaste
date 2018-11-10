@@ -21,7 +21,32 @@
 "				direction of the paste.
 "   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
 
-function! UnconditionalPaste#Separators#Check( regType, isPasteAfter, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
+function! UnconditionalPaste#Separators#Check( mode, regType, isPasteAfter, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
+    if a:mode ==# 'c'
+	let [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter] = s:CommandLineCheck(a:regType, a:separatorPattern)
+	return s:DeterminePrefixSuffix(l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter, a:isUseSeparatorWhenAlreadySurrounded)
+    elseif a:mode ==# 'i'
+	let [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter] = s:BufferCheck(a:regType, 0, a:separatorPattern)
+	return s:DeterminePrefixSuffix(l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter, a:isUseSeparatorWhenAlreadySurrounded)
+    else
+	let [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter] = s:BufferCheck(a:regType, a:isPasteAfter, a:separatorPattern)
+	return s:DeterminePrefixSuffix(l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter, a:isUseSeparatorWhenAlreadySurrounded, a:isPasteAfter)
+    endif
+endfunction
+function! s:CommandLineCheck( regType, separatorPattern )
+    if a:regType ==# 'V'
+	return [0, 0, 0, 0]   " There are no surrounding lines in command-line mode; assume we want the prefix / suffix.
+    else
+	let [l:beforeText, l:afterText] = [strpart(getcmdline(), 0, getcmdpos() - 1), strpart(getcmdline(), getcmdpos() - 1)]
+	let [l:isAtStart, l:isAtEnd] = [empty(l:beforeText), empty(l:afterText)]
+
+	let l:isBefore = (l:beforeText =~# a:separatorPattern . '$')
+	let l:isAfter  = (l:afterText  =~# '^' . a:separatorPattern)
+
+	return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
+    endif
+endfunction
+function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'
 	let l:isAtStart = (line('.') == 1)
 	let l:isAtEnd = (line('.') == line('$'))
@@ -47,8 +72,14 @@ function! UnconditionalPaste#Separators#Check( regType, isPasteAfter, separatorP
 	let l:isBefore = search((a:isPasteAfter ? '\%#' . a:separatorPattern : a:separatorPattern . '\%#'), 'bcnW', line('.'))
 	let l:isAfter = search((a:isPasteAfter ? '\%#.' . a:separatorPattern : '\%#' . a:separatorPattern), 'cnW', line('.'))
     endif
-    let l:isPrefix = ! (! a:isPasteAfter && l:isAtStart && ! l:isAtEnd || l:isBefore && (! l:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
-    let l:isSuffix = ! (  a:isPasteAfter && l:isAtEnd && ! l:isAtStart || l:isAfter && (! l:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
+
+    return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
+endfunction
+function! s:DeterminePrefixSuffix( isAtStart, isAtEnd, isBefore, isAfter, isUseSeparatorWhenAlreadySurrounded, ...)
+    let l:isPasteBefore = (a:0 ? ! a:1 : 1)
+    let l:isPasteAfter = (a:0 ? a:1 : 1)
+    let l:isPrefix = ! (l:isPasteBefore && a:isAtStart && ! a:isAtEnd || a:isBefore && (! a:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
+    let l:isSuffix = ! (l:isPasteAfter  && a:isAtEnd && ! a:isAtStart || a:isAfter && (! a:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
 
     return [l:isPrefix, l:isSuffix]
 endfunction

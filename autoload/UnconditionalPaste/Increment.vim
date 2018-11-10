@@ -4,16 +4,10 @@
 "   - ingo/cursor.vim autoload script
 "   - ingo/number.vim autoload script
 "
-" Copyright: (C) 2014-2015 Ingo Karkat
+" Copyright: (C) 2014-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.20.002	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
-"				s:DecimalNumberStringIncrement(), and establish
-"				hard dependency on ingo-library.
-"   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
 
 function! s:IncrementLine( line, vcol, replacement )
     if a:vcol == -1 || a:vcol == 0 && ingo#cursor#IsAtEndOfLine()

@@ -4,15 +4,10 @@
 "   - ingo/compat/strdisplaywidth.vim autoload script
 "   - AlignFromCursor.vim autoload script (optional)
 "
-" Copyright: (C) 2014-2015 Ingo Karkat
+" Copyright: (C) 2014-2018 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.20.002	22-Apr-2015	Retire s:strdisplaywidth() and establish hard
-"				dependency on ingo-library.
-"   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
 
 silent! call AlignFromCursor#DoesNotExist()	" Execute a function to force autoload.
 if ! g:UnconditionalPaste_IsFullLineRetabOnShift && exists('*AlignFromCursor#GetRetabbedFromCol')

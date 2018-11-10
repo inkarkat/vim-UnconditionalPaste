@@ -8,18 +8,6 @@
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.20.003	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
-"				establish hard dependency on ingo-library.
-"   3.03.002	24-Nov-2014	BUG: gsp / gsP border check adds spaces on both
-"				sides when there's a single character in line
-"				(like when there's a completely empty line,
-"				where this would be correct). Differentiate
-"				between empty and single-char line and then
-"				clear the isAtStart / isAtEnd flag not in the
-"				direction of the paste.
-"   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
 
 function! UnconditionalPaste#Separators#Check( mode, regType, isPasteAfter, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
     if a:mode ==# 'c'

@@ -2,6 +2,7 @@
 "
 " DEPENDENCIES:
 "   - ingo/cursor.vim autoload script
+"   - ingo/range.vim autoload script
 "   - ingo/text.vim autoload script
 "
 " Copyright: (C) 2014-2018 Ingo Karkat
@@ -36,15 +37,15 @@ function! s:CommandLineCheck( regType, separatorPattern )
 endfunction
 function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'
-	let l:isAtStart = (line('.') == 1)
-	let l:isAtEnd = (line('.') == line('$'))
+	let [l:startLnum, l:endLnum] = [ingo#range#NetStart(), ingo#range#NetEnd()]
+	let l:isAtStart = (l:startLnum == 1)
+	let l:isAtEnd = (l:endLnum == line('$'))
 
-	let l:isPrevious = (line('.') > 1 && empty(getline(line('.') - 1)))
-	let l:isCurrent = empty(getline('.'))
-	let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
+	let l:isPrevious = (! l:isAtStart && empty(getline(l:startLnum - 1)))
+	let l:isNext = (! l:isAtEnd && empty(getline(l:endLnum + 1)))
 
-	let l:isBefore = (a:isPasteAfter ? l:isCurrent : l:isPrevious)
-	let l:isAfter = (a:isPasteAfter ? l:isNext : l:isCurrent)
+	let l:isBefore = (a:isPasteAfter ? empty(getline(l:endLnum)) : l:isPrevious)
+	let l:isAfter = (a:isPasteAfter ? l:isNext : empty(getline(l:startLnum)))
     else
 	let l:isAtStart = (col('.') == 1)
 	let l:isAtEnd = ingo#cursor#IsAtEndOfLine()

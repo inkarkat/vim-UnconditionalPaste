@@ -557,6 +557,9 @@ HISTORY
   i\_CTRL-R\_CTRL-H\_CTRL-H / c\_CTRL-R\_CTRL-H\_CTRL-H for gHp. As only some paste
   variants are offered in insert and command-line modes, these allow to use
   any (working) variant there, too, and any combinations of them.
+- BUG: Empty line check in gSp does not account for a closed fold under cursor
+  and wrongly considers the current line within the fold instead of the first
+  / last folded line.
 
 ##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp

@@ -366,12 +366,17 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 		let l:lines = split(l:pasteContent, '\n', 1)
 	    endif
 
-	    if s:IsPasteAfter(a:000)
-		call UnconditionalPaste#Shifted#SpecialShiftedAppend(l:lines, l:shiftCount)
+	    if a:mode ==# 'n'
+		if s:IsPasteAfter(a:000)
+		    call UnconditionalPaste#Shifted#SpecialShiftedAppend(l:lines, l:shiftCount)
+		else
+		    call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
+		endif
+		return ['', '', 0, '', 0]
 	    else
-		call UnconditionalPaste#Shifted#SpecialShiftedPrepend(l:lines, l:shiftCount)
+		let l:shiftCommand = '>'
 	    endif
-	    return ['', '', 0, '', 0]
+	endif
 
 	if a:mode !=# 'n'
 	    let l:pasteContent = "\<C-u>" . l:pasteContent

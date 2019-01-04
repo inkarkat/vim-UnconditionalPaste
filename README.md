@@ -466,6 +466,8 @@ script (e.g. in your vimrc):
     nmap <Leader>p# <Plug>UnconditionalPasteCommentedAfter
     nmap <Leader>Ps <Plug>UnconditionalPasteSpacedBefore
     nmap <Leader>ps <Plug>UnconditionalPasteSpacedAfter
+    nmap <Leader>PS <Plug>UnconditionalPasteParagraphedBefore
+    nmap <Leader>pS <Plug>UnconditionalPasteParagraphedAfter
     nmap <Leader>PB <Plug>UnconditionalPasteJaggedBefore
     nmap <Leader>pB <Plug>UnconditionalPasteJaggedAfter
     nmap <Leader>Pd <Plug>UnconditionalPasteDelimitedBefore
@@ -478,14 +480,20 @@ script (e.g. in your vimrc):
     nmap <Leader>p' <Plug>UnconditionalPasteCommaSingleQuoteAfter
     nmap <Leader>P" <Plug>UnconditionalPasteCommaDoubleQuoteBefore
     nmap <Leader>p" <Plug>UnconditionalPasteCommaDoubleQuoteAfter
+    nmap <Leader>P,n <<Plug>UnconditionalPasteCommaNorBefore
+    nmap <Leader>p,n <Plug>UnconditionalPasteCommaNorAfter
+    nmap <Leader>P,o <Plug>UnconditionalPasteCommaOrBefore
+    nmap <Leader>p,o <Plug>UnconditionalPasteCommaOrAfter
+    nmap <Leader>P,a <Plug>UnconditionalPasteCommaAndBefore
+    nmap <Leader>p,a <Plug>UnconditionalPasteCommaAndAfter
     nmap <Leader>Pq <Plug>UnconditionalPasteQueriedBefore
     nmap <Leader>pq <Plug>UnconditionalPasteQueriedAfter
     nmap <Leader>PQ <Plug>UnconditionalPasteRecallQueriedBefore
     nmap <Leader>pQ <Plug>UnconditionalPasteRecallQueriedAfter
     nmap <Leader>Pgq <Plug>UnconditionalPasteQueriedJoinedBefore
     nmap <Leader>pgq <Plug>UnconditionalPasteQueriedJoinedAfter
-    nmap <Leader>PgQ <Plug>UnconditionalPasteRecallJoinedQueriedBefore
-    nmap <Leader>pgQ <Plug>UnconditionalPasteRecallJoinedQueriedAfter
+    nmap <Leader>PgQ <Plug>UnconditionalPasteRecallQueriedJoinedBefore
+    nmap <Leader>pgQ <Plug>UnconditionalPasteRecallQueriedJoinedAfter
     nmap <Leader>Puj <Plug>UnconditionalPasteUnjoinBefore
     nmap <Leader>puj <Plug>UnconditionalPasteUnjoinAfter
     nmap <Leader>PUJ <Plug>UnconditionalPasteRecallUnjoinBefore
@@ -514,6 +522,8 @@ script (e.g. in your vimrc):
     nmap <Leader>pu <Plug>UnconditionalPasteLowercaseAfter
     nmap <Leader>PU <Plug>UnconditionalPasteUppercaseBefore
     nmap <Leader>pU <Plug>UnconditionalPasteUppercaseAfter
+    nmap <Leader>pt <Plug>UnconditionalPasteTogglecaseBefore
+    nmap <Leader>Pt <Plug>UnconditionalPasteTogglecaseAfter
     nmap <Leader>Ph <Plug>UnconditionalPasteCombinatorialBefore
     nmap <Leader>ph <Plug>UnconditionalPasteCombinatorialAfter
     nmap <Leader>PH <Plug>UnconditionalPasteRecallCombinatorialBefore

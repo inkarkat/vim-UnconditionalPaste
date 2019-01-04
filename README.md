@@ -1,4 +1,4 @@
-UNCONDITIONAL PASTE   
+UNCONDITIONAL PASTE
 ===============================================================================
 _by Ingo Karkat_
 
@@ -435,6 +435,13 @@ once and then grabbing the variable value:
 
     let g:UnconditionalPaste_Combinations = ['U', ',"', 's']
 
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining:
+
+    :let g:UnconditionalPaste_no_mappings = 1
+
+This saves you from mapping dummy keys to all unwanted mapping targets.
+
 If you want to use different mappings (e.g. starting with <Leader>), map your
 keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your vimrc):
@@ -560,6 +567,8 @@ HISTORY
 - BUG: Empty line check in gSp does not account for a closed fold under cursor
   and wrongly considers the current line within the fold instead of the first
   / last folded line.
+- ENH: Allow to disable all default mappings via a single
+  g:UnconditionalPaste\_no\_mappings configuration flag.
 
 ##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
@@ -583,10 +592,13 @@ HISTORY
 - ENH: Make gqp also support 5-element
   {prefix}^M{element-prefix}^M{separator}^M{element-suffix}^M{suffix} in
   addition to the 3-element one.
-  __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.026!__
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.026!__
 
 ##### 4.00    09-Aug-2016
-- Establish hard dependency on ingo-library. __You need to separately
+- Establish hard dependency on ingo-library.
+
+__You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.024 (or higher)!__
 - BUG: Escaped characters like \n are handled inconsistently in gqp: resolved
   as {separator}, taken literally in {prefix} and {suffix}. Use
@@ -718,7 +730,7 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 - Started development, based on vimtip #1199 by cory.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2006-2018 Ingo Karkat -
+Copyright: (C) 2006-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat <ingo@karkat.de>

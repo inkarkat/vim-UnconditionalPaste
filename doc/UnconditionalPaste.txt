@@ -451,6 +451,11 @@ once and then grabbing the variable value: >
     let g:UnconditionalPaste_Combinations = ['U', ',"', 's']
 <
 
+					    *g:UnconditionalPaste_no_mappings*
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining: >
+    :let g:UnconditionalPaste_no_mappings = 1
+This saves you from mapping dummy keys to all unwanted mapping targets.
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
 keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
@@ -584,6 +589,8 @@ HISTORY						  *UnconditionalPaste-history*
 - BUG: Empty line check in gSp does not account for a closed fold under cursor
   and wrongly considers the current line within the fold instead of the first
   / last folded line.
+- ENH: Allow to disable all default mappings via a single
+  g:UnconditionalPaste_no_mappings configuration flag.
 
 4.20	24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
@@ -742,7 +749,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2018 Ingo Karkat
+Copyright: (C) 2006-2019 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

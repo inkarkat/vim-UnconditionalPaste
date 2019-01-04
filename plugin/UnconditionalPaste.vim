@@ -5,7 +5,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2018 Ingo Karkat
+" Copyright: (C) 2006-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -156,7 +156,7 @@ function! s:CreateMappings()
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
-	    if ! hasmapto(l:plugMappingName, 'n') && ! empty(l:pasteMappingDefaultKeys)
+	    if ! exists('g:UnconditionalPaste_no_mappings') && ! hasmapto(l:plugMappingName, 'n') && ! empty(l:pasteMappingDefaultKeys)
 		execute printf('nmap g%s %s',
 		\   l:pasteMappingDefaultKeys,
 		\   l:plugMappingName
@@ -179,7 +179,7 @@ function! s:CreateMappings()
 	    \   string(l:how),
 	    \   (l:mode ==# 'i')
 	    \)
-	    if ! hasmapto(l:plugMappingName, l:mode)
+	    if ! exists('g:UnconditionalPaste_no_mappings') && ! hasmapto(l:plugMappingName, l:mode)
 		execute printf('%smap <C-r>%s %s',
 		\   l:mode,
 		\   l:pasteKey,

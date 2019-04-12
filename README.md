@@ -38,6 +38,10 @@ USAGE
     ["x]gcgp, ["x]gcgP      Paste joined (like gJ); indent and surrounding
                             whitespace is kept as-is, [count] times.
 
+    ["x]gCp, ["x]gCP        Paste characterwise; any sequence of whitespace is
+                            flattened to a single space, leading and trailing
+                            indent removed, [count] times.
+
     ["x]glp, ["x]glP        Paste linewise (even if yanked text is not a complete
                             line) [count] times.
 
@@ -279,6 +283,11 @@ USAGE
                             the command line, try defining
                                 :cnoremap <C-c> <C-c>
                             or redefine the mapping.
+
+    CTRL-R CTRL-C CTRL-C {0-9a-z"%#*+/:.-}
+                            Insert the contents of a register characterwise; any
+                            sequence of whitespace is flattened to a single space,
+                            leading and trailing indent removed.
     CTRL-R , {0-9a-z"%#*+/:.-}
                             Insert the contents of a register characterwise, with
                             each line delimited by ", " instead of the newline
@@ -365,13 +374,13 @@ CONFIGURATION
 
 For a permanent configuration, put the following commands into your vimrc:
 
-The default separator string for the gQBp mapping is a <Tab> character; to
+The default separator string for the gQBp mapping is a &lt;Tab&gt; character; to
 preset another one (it will be overridden by gqbp), use:
 
     let g:UnconditionalPaste_Separator = 'text'
 
 The default separator string for the gQp and i\_CTRL-R\_CTRL-Q\_CTRL-Q
-mappings is a <Tab> character; to preset another one (it will be overridden by
+mappings is a &lt;Tab&gt; character; to preset another one (it will be overridden by
 gqp and i\_CTRL-R\_CTRL-Q), use:
 
     let g:UnconditionalPaste_JoinSeparator = 'text'
@@ -390,7 +399,7 @@ gr!p), use:
     let g:UnconditionalPaste_GrepPattern = 'pattern'
     let g:UnconditionalPaste_InvertedGrepPattern = 'pattern'
 
-The g>p / g>P mappings uses the AlignFromCursor.vim plugin's
+The g&gt;p / g&gt;P mappings uses the AlignFromCursor.vim plugin's
 functionality (if installed) to only affect the whitespace between the
 original text and the pasted line. If you want to always :retab! all the
 whitespace in the entire line, disable this via:
@@ -403,7 +412,7 @@ exactly two lines are pasted); to turn this off:
 
     let g:UnconditionalPaste_IsSerialComma = 0
 
-By default, the g\p and i\_CTRL-R\_CTRL-\ mappings escape backslashes. You
+By default, the g\\p and i\_CTRL-R\_CTRL-\\ mappings escape backslashes. You
 can change that (e.g. to also escape double quotes), or add more variants:
 
     let g:UnconditionalPaste_Escapes = [{
@@ -424,7 +433,7 @@ String:
 The buffer-local b:UnconditionalPaste\_Escapes overrides that for particular
 buffers (filetypes if placed in a ftplugin).
 
-This stores the last replacement used for g\\p and i\_CTRL\_R\_CTRL-\.
+This stores the last replacement used for g\\\\p and i\_CTRL\_R\_CTRL-\\.
 It is initialized with the first escape from the above configuration / entered
 / selected escape.
 
@@ -442,14 +451,16 @@ turn off the creation of the default mappings by defining:
 
 This saves you from mapping dummy keys to all unwanted mapping targets.
 
-If you want to use different mappings (e.g. starting with <Leader>), map your
-keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
+If you want to use different mappings (e.g. starting with &lt;Leader&gt;), map your
+keys to the &lt;Plug&gt;UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your vimrc):
 
     nmap <Leader>Pc <Plug>UnconditionalPasteCharBefore
     nmap <Leader>pc <Plug>UnconditionalPasteCharAfter
     nmap <Leader>Pj <Plug>UnconditionalPasteJustJoinedBefore
     nmap <Leader>pj <Plug>UnconditionalPasteJustJoinedAfter
+    nmap <Leader>PC <Plug>UnconditionalPasteCharCondensedBefore
+    nmap <Leader>pC <Plug>UnconditionalPasteCharCondensedAfter
     nmap <Leader>Pl <Plug>UnconditionalPasteLineBefore
     nmap <Leader>pl <Plug>UnconditionalPasteLineAfter
     nmap <Leader>Pb <Plug>UnconditionalPasteBlockBefore
@@ -530,6 +541,7 @@ script (e.g. in your vimrc):
     nmap <Leader>pH <Plug>UnconditionalPasteRecallCombinatorialAfter
 
     imap <C-G>c <Plug>UnconditionalPasteCharI
+    imap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     imap <C-G>, <Plug>UnconditionalPasteCommaI
     imap <C-G>q <Plug>UnconditionalPasteQueriedI
     imap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
@@ -544,6 +556,7 @@ script (e.g. in your vimrc):
     imap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
+    cmap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
     cmap <C-G>q <Plug>UnconditionalPasteQueriedI
     cmap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
@@ -579,17 +592,20 @@ HISTORY
   / last folded line.
 - ENH: Allow to disable all default mappings via a single
   g:UnconditionalPaste\_no\_mappings configuration flag.
+- ENH: Add gCp and i\_CTRL-R\_CTRL-C\_CTRL-C variants of gcp and i\_CTRL-R\_CTRL-C
+  that flatten any sequence of whitespace to a single space; so not just
+  indent, but also inner runs of whitespace.
 
 ##### 4.20    24-Jan-2018
-- Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
+- Add JustJoined (gcgp) and QueriedJoined (gqgp, &lt;C-q&gt;&lt;C-g&gt;) variants of gcp
   and gqp that keep indent and surrounding whitespace as-is.
-- CHG: Insert and command-line mode <Plug> mappings now have a trailing I, to
-  resolve the ambiguity between <Plug>UnconditionalPasteQueried and
-  <Plug>UnconditionalPasteQueriedJoined. !!!\* Please update any insert- and
+- CHG: Insert and command-line mode &lt;Plug&gt; mappings now have a trailing I, to
+  resolve the ambiguity between &lt;Plug&gt;UnconditionalPasteQueried and
+  &lt;Plug&gt;UnconditionalPasteQueriedJoined. !!!\* Please update any insert- and
   command-line mode mapping customization. !!!\*
 - Add CommaAnd (g,ap), CommaOr (g,op), and CommaNor (g,np) variants of g,p.
-- Add Escape (g\p, i\_CTRL-R\_CTRL-\) and RecallEscape (g\\p,
-  i\_CTRL-R\_CTRL-\\_CTRL-\) mappings to perform escaping of certain characters
+- Add Escape (g\\p, i\_CTRL-R\_CTRL-\\) and RecallEscape (g\\\\p,
+  i\_CTRL-R\_CTRL-\\\_CTRL-\\) mappings to perform escaping of certain characters
   before pasting / inserting.
 
 ##### 4.10    23-Dec-2016
@@ -610,7 +626,7 @@ __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scrip
 
 __You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.024 (or higher)!__
-- BUG: Escaped characters like \n are handled inconsistently in gqp: resolved
+- BUG: Escaped characters like \\n are handled inconsistently in gqp: resolved
   as {separator}, taken literally in {prefix} and {suffix}. Use
   ingo#cmdargs#GetUnescapedExpr() to resolve them (also for gqbp, which only
   supports {separator}).
@@ -667,7 +683,7 @@ __You need to separately
   and at the end of the line.
 - Add gBp mapping to paste as a minimal fitting block with jagged right edge,
   a separator-less variant of gDp.
-- Add g>p mapping to paste shifted register contents.
+- Add g&gt;p mapping to paste shifted register contents.
 - Add g]]p and g[[p mappings to paste like with g]p, but with more / less
   indent.
 
@@ -729,7 +745,7 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 
 ##### 1.10    12-Jan-2011
 - Incorporated suggestions by Peter Rincker (thanks for the patch!):
-- Made mappings configurable via the customary <Plug> mappings.
+- Made mappings configurable via the customary &lt;Plug&gt; mappings.
 - Added mappings gbp, gbP for blockwise pasting.
 - Now requires Vim version 7.0 or higher.
 
@@ -743,4 +759,4 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 Copyright: (C) 2006-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

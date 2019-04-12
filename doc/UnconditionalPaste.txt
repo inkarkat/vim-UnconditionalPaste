@@ -47,6 +47,10 @@ USAGE						    *UnconditionalPaste-usage*
 								 *gcgp* *gcgP*
 ["x]gcgp, ["x]gcgP	Paste joined (like |gJ|); indent and surrounding
 			whitespace is kept as-is, [count] times.
+								   *gCp* *gCP*
+["x]gCp, ["x]gCP	Paste characterwise; any sequence of whitespace is
+			flattened to a single space, leading and trailing
+			indent removed, [count] times.
 								   *glp* *glP*
 ["x]glp, ["x]glP	Paste linewise (even if yanked text is not a complete
 			line) [count] times.
@@ -298,6 +302,11 @@ CTRL-R CTRL-C {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-C* *c_CTRL-R_CTRL-C*
 			the command line, try defining >
 			    :cnoremap <C-c> <C-c>
 <			or redefine the mapping.
+			     *i_CTRL-R_CTRL-C_CTRL-C* *c_CTRL-R_CTRL-C_CTRL-C*
+CTRL-R CTRL-C CTRL-C {0-9a-z"%#*+/:.-}
+			Insert the contents of a register characterwise; any
+			sequence of whitespace is flattened to a single space,
+			leading and trailing indent removed.
 CTRL-R , {0-9a-z"%#*+/:.-}			     *i_CTRL-R_,* *c_CTRL-R_,*
 			Insert the contents of a register characterwise, with
 			each line delimited by ", " instead of the newline
@@ -464,6 +473,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pc <Plug>UnconditionalPasteCharAfter
     nmap <Leader>Pj <Plug>UnconditionalPasteJustJoinedBefore
     nmap <Leader>pj <Plug>UnconditionalPasteJustJoinedAfter
+    nmap <Leader>PC <Plug>UnconditionalPasteCharCondensedBefore
+    nmap <Leader>pC <Plug>UnconditionalPasteCharCondensedAfter
     nmap <Leader>Pl <Plug>UnconditionalPasteLineBefore
     nmap <Leader>pl <Plug>UnconditionalPasteLineAfter
     nmap <Leader>Pb <Plug>UnconditionalPasteBlockBefore
@@ -544,6 +555,7 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pH <Plug>UnconditionalPasteRecallCombinatorialAfter
 
     imap <C-G>c <Plug>UnconditionalPasteCharI
+    imap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     imap <C-G>, <Plug>UnconditionalPasteCommaI
     imap <C-G>q <Plug>UnconditionalPasteQueriedI
     imap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
@@ -558,6 +570,7 @@ script (e.g. in your |vimrc|): >
     imap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
+    cmap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
     cmap <C-G>q <Plug>UnconditionalPasteQueriedI
     cmap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
@@ -601,6 +614,9 @@ HISTORY						  *UnconditionalPaste-history*
   / last folded line.
 - ENH: Allow to disable all default mappings via a single
   g:UnconditionalPaste_no_mappings configuration flag.
+- ENH: Add gCp and i_CTRL-R_CTRL-C_CTRL-C variants of gcp and i_CTRL-R_CTRL-C
+  that flatten any sequence of whitespace to a single space; so not just
+  indent, but also inner runs of whitespace.
 
 4.20	24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp

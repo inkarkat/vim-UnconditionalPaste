@@ -81,6 +81,13 @@ function! s:JustJoin( ... )
     return s:JoinerGenerator(function('s:SplitOnNewlines'), a:000)
 endfunction
 
+function! s:SplitOnWhitespace( text ) abort
+    return split(a:text, '\_s\+')
+endfunction
+function! s:JoinCondense( ... ) abort
+    return s:JoinerGenerator(function('s:SplitOnWhitespace'), a:000)
+endfunction
+
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction
@@ -223,7 +230,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	endif
     elseif a:how ==# 'b'
 	let l:pasteType = "\<C-v>"
-    elseif a:how =~# '^[c,qQ]g\?$\|^,[''"aon]$'
+    elseif a:how =~# '^[cC,qQ]g\?$\|^,[''"aon]$'
 	let l:pasteType = 'v'
 	let l:Joiner = function('s:Flatten')
 	let [l:prefix, l:suffix, l:elementPrefix, l:elementSuffix, l:linePrefix, l:lineSuffix] = ['', '', '', '', '', '']
@@ -237,6 +244,9 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	elseif a:how ==# 'cg'
 	    let l:separator = ''
 	    let l:Joiner = function('s:JustJoin')
+	elseif a:how ==# 'C'
+	    let l:separator = ' '
+	    let l:Joiner = function('s:JoinCondense')
 	elseif a:how[0] ==# ','
 	    let l:separator = ', '
 	    if a:how[1] =~# '^[aon]$'
@@ -306,7 +316,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 
 	let l:pasteContent = l:prefix . call(l:Joiner, [l:pasteContent, l:linePrefix . l:separator . l:lineSuffix, l:elementPrefix, l:elementSuffix]) . l:suffix
 
-	if a:0 && a:how !~# '^\%(c\|,[aon]\)$' && s:IsSingleElement(a:regContent)
+	if a:0 && a:how !~# '^\%([cC]\|,[aon]\)$' && s:IsSingleElement(a:regContent)
 	    " DWIM: Put the separator in front (gqp) / after (gqP);
 	    " otherwise, the mapping is identical to normal p / P and
 	    " therefore worthless. Do not do this for plain gcp / gcP, as

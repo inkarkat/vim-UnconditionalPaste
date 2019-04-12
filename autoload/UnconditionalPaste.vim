@@ -21,7 +21,7 @@
 "   - ingo/register.vim autoload script
 "   - ingo/str.vim autoload script
 
-" Copyright: (C) 2006-2018 Ingo Karkat
+" Copyright: (C) 2006-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -34,6 +34,19 @@ function! UnconditionalPaste#HandleExprReg( exprResult )
     let s:exprResult = a:exprResult
 endfunction
 
+function! s:JoinerGenerator( Splitter, args )
+    let [l:text, l:separator, l:elementPrefix, l:elementSuffix] = a:args
+    let l:lines = call(a:Splitter, [l:text])
+
+    " Add potential prefix and suffix.
+    if ! empty(l:elementPrefix . l:elementSuffix)
+	call map(l:lines, 'l:elementPrefix . v:val . l:elementSuffix')
+    endif
+
+    " Join with passed separator.
+    return join(l:lines, l:separator)
+endfunction
+
 function! s:TrimAndSplit( text )
     " Remove newlines and whitespace at the begin and end of the text.
     let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
@@ -41,16 +54,8 @@ function! s:TrimAndSplit( text )
     " Split into lines on newlines (plus leading and trailing whitespace).
     return split(l:text, '\s*\%(\n\s*\)\+')
 endfunction
-function! s:Flatten( text, separator, elementPrefix, elementSuffix )
-    let l:lines = s:TrimAndSplit(a:text)
-
-    " Add potential prefix and suffix.
-    if ! empty(a:elementPrefix . a:elementSuffix)
-	call map(l:lines, 'a:elementPrefix . v:val . a:elementSuffix')
-    endif
-
-    " Join with passed separator.
-    return join(l:lines, a:separator)
+function! s:Flatten( ... )
+    return s:JoinerGenerator(function('s:TrimAndSplit'), a:000)
 endfunction
 function! s:FlattenLastDifferently( text, separator, pasteCommand, lastSeparator )
     let l:lines = s:TrimAndSplit(a:text)
@@ -67,18 +72,15 @@ function! s:FlattenLastDifferently( text, separator, pasteCommand, lastSeparator
 	return join(l:allExceptLastLines, a:separator) . a:lastSeparator . l:lines[-1]
     endif
 endfunction
-function! s:JustJoin( text, separator, elementPrefix, elementSuffix )
-    " Split into lines strictly on newlines.
-    let l:lines = split(a:text, '\n\+')
 
-    " Add potential prefix and suffix.
-    if ! empty(a:elementPrefix . a:elementSuffix)
-	call map(l:lines, 'a:elementPrefix . v:val . a:elementSuffix')
-    endif
-
-    " Join with passed separator.
-    return join(l:lines, a:separator)
+function! s:SplitOnNewlines( text ) abort
+    return split(a:text, '\n\+')
 endfunction
+function! s:JustJoin( ... )
+    " Split into lines strictly on newlines.
+    return s:JoinerGenerator(function('s:SplitOnNewlines'), a:000)
+endfunction
+
 function! s:StripTrailingWhitespace( text )
     return substitute(a:text, '\s\+\ze\(\n\|$\)', '', 'g')
 endfunction

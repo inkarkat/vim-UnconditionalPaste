@@ -2,8 +2,8 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - UnconditionalPaste.vim autoload script
-"   - repeat.vim (vimscript #2136) autoload script (optional)
+"   - ingo-library.vim plugin
+"   - repeat.vim (vimscript #2136) plugin (optional)
 
 " Copyright: (C) 2006-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.

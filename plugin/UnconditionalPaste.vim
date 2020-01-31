@@ -61,7 +61,7 @@ endif
 
 let g:UnconditionalPaste_Mappings =
     \   [
-    \       ['Char', 'c', '<C-c>'], ['Inlined', 'ci'], ['JustJoined', 'cg'], ['CharCondensed', 'C', '<C-c><C-c>'],
+    \       ['Char', 'c', '<C-c>'], ['Inlined', 'ci', '<C-i>'], ['JustJoined', 'cg'], ['CharCondensed', 'C', '<C-c><C-c>'],
     \       ['Line', 'l'], ['Block', 'b'],
     \       ['Comma', ',', ','],
     \       ['CommaAnd', ',a'], ['CommaOr', ',o'], ['CommaNor', ',n'],

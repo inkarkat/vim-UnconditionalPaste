@@ -287,6 +287,10 @@ USAGE
                             the command line, try defining
                                 :cnoremap <C-c> <C-c>
                             or redefine the mapping.
+    CTRL-R CTRL-I {0-9a-z"%#*+/:.-}
+                            Insert the contents of a register inline (inner
+                            newline characters and indent are kept, only leading
+                            and trailing removed).
 
     CTRL-R CTRL-C CTRL-C {0-9a-z"%#*+/:.-}
                             Insert the contents of a register characterwise; any
@@ -547,6 +551,7 @@ script (e.g. in your vimrc):
     nmap <Leader>pH <Plug>UnconditionalPasteRecallCombinatorialAfter
 
     imap <C-G>c <Plug>UnconditionalPasteCharI
+    imap <C-G>n <Plug>UnconditionalPasteInlinedI
     imap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     imap <C-G>, <Plug>UnconditionalPasteCommaI
     imap <C-G>q <Plug>UnconditionalPasteQueriedI
@@ -562,6 +567,7 @@ script (e.g. in your vimrc):
     imap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
+    cmap <C-G>n <Plug>UnconditionalPasteInlinedI
     cmap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
     cmap <C-G>q <Plug>UnconditionalPasteQueriedI

@@ -607,6 +607,10 @@ HISTORY
 - ENH: Add gCp and i\_CTRL-R\_CTRL-C\_CTRL-C variants of gcp and i\_CTRL-R\_CTRL-C
   that flatten any sequence of whitespace to a single space; so not just
   indent, but also inner runs of whitespace.
+- ENH: Add gcip and i\_CTRL-R\_CTRL-I variants of gcp and i\_CTRL-R\_CTRL-C
+  that just paste inline (so linewise and blockwise register contents are not
+  put on separate lines, but start at the cursor position), but keep inner
+  newlines and their indent (so not all is flattened into a single line).
 
 ##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, &lt;C-q&gt;&lt;C-g&gt;) variants of gcp

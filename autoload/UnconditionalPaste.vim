@@ -21,7 +21,7 @@
 "   - ingo/register.vim autoload script
 "   - ingo/str.vim autoload script
 
-" Copyright: (C) 2006-2019 Ingo Karkat
+" Copyright: (C) 2006-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -47,12 +47,14 @@ function! s:JoinerGenerator( Splitter, args )
     return join(l:lines, l:separator)
 endfunction
 
+function! s:Trim( text, ... )
+    " Remove newlines and whitespace at the begin and end of the text.
+    return substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
+endfunction
 function! s:TrimAndSplit( text )
     " Remove newlines and whitespace at the begin and end of the text.
-    let l:text = substitute(a:text, '^\s*\%(\n\s*\)*\|\s*\%(\n\s*\)*$', '', 'g')
-
     " Split into lines on newlines (plus leading and trailing whitespace).
-    return split(l:text, '\s*\%(\n\s*\)\+')
+    return split(s:Trim(a:text), '\s*\%(\n\s*\)\+')
 endfunction
 function! s:Flatten( ... )
     return s:JoinerGenerator(function('s:TrimAndSplit'), a:000)

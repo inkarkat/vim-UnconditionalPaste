@@ -44,6 +44,10 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]gcp, ["x]gcP	Paste characterwise (inner newline characters and
 			indent are flattened to a single space, leading and
 			trailing removed) [count] times.
+								 *gcip* *gciP*
+["x]gcip, ["x]gciP	Paste inline (inner newline characters and indent are
+			kept, only leading and trailing removed) [count]
+			times.
 								 *gcgp* *gcgP*
 ["x]gcgp, ["x]gcgP	Paste joined (like |gJ|); indent and surrounding
 			whitespace is kept as-is, [count] times.
@@ -471,6 +475,8 @@ keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your |vimrc|): >
     nmap <Leader>Pc <Plug>UnconditionalPasteCharBefore
     nmap <Leader>pc <Plug>UnconditionalPasteCharAfter
+    nmap <Leader>Pn <Plug>UnconditionalPasteInlinedBefore
+    nmap <Leader>pn <Plug>UnconditionalPasteInlinedAfter
     nmap <Leader>Pj <Plug>UnconditionalPasteJustJoinedBefore
     nmap <Leader>pj <Plug>UnconditionalPasteJustJoinedAfter
     nmap <Leader>PC <Plug>UnconditionalPasteCharCondensedBefore
@@ -775,7 +781,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2019 Ingo Karkat
+Copyright: (C) 2006-2020 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

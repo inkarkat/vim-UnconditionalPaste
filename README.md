@@ -35,6 +35,10 @@ USAGE
                             indent are flattened to a single space, leading and
                             trailing removed) [count] times.
 
+    ["x]gcip, ["x]gciP      Paste inline (inner newline characters and indent are
+                            kept, only leading and trailing removed) [count]
+                            times.
+
     ["x]gcgp, ["x]gcgP      Paste joined (like gJ); indent and surrounding
                             whitespace is kept as-is, [count] times.
 
@@ -457,6 +461,8 @@ script (e.g. in your vimrc):
 
     nmap <Leader>Pc <Plug>UnconditionalPasteCharBefore
     nmap <Leader>pc <Plug>UnconditionalPasteCharAfter
+    nmap <Leader>Pn <Plug>UnconditionalPasteInlinedBefore
+    nmap <Leader>pn <Plug>UnconditionalPasteInlinedAfter
     nmap <Leader>Pj <Plug>UnconditionalPasteJustJoinedBefore
     nmap <Leader>pj <Plug>UnconditionalPasteJustJoinedAfter
     nmap <Leader>PC <Plug>UnconditionalPasteCharCondensedBefore
@@ -756,7 +762,7 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 - Started development, based on vimtip #1199 by cory.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2006-2019 Ingo Karkat -
+Copyright: (C) 2006-2020 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

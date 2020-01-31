@@ -5,7 +5,7 @@
 "   - UnconditionalPaste.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 
-" Copyright: (C) 2006-2019 Ingo Karkat
+" Copyright: (C) 2006-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -61,7 +61,7 @@ endif
 
 let g:UnconditionalPaste_Mappings =
     \   [
-    \       ['Char', 'c', '<C-c>'], ['JustJoined', 'cg'], ['CharCondensed', 'C', '<C-c><C-c>'],
+    \       ['Char', 'c', '<C-c>'], ['Inlined', 'ci'], ['JustJoined', 'cg'], ['CharCondensed', 'C', '<C-c><C-c>'],
     \       ['Line', 'l'], ['Block', 'b'],
     \       ['Comma', ',', ','],
     \       ['CommaAnd', ',a'], ['CommaOr', ',o'], ['CommaNor', ',n'],

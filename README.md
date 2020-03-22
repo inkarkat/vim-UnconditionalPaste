@@ -420,6 +420,13 @@ exactly two lines are pasted); to turn this off:
 
     let g:UnconditionalPaste_IsSerialComma = 0
 
+By default, the gSp mapping does not add an empty line on a side that
+already just consists of whitespace. You can make other lines (e.g. those just
+having an opening { or closing } brace) be considered empty by tweaking the
+regular expression in :
+
+    let g:UnconditionalPaste_EmptyLinePattern = '^\s*$'
+
 By default, the g\\p and i\_CTRL-R\_CTRL-\\ mappings escape backslashes. You
 can change that (e.g. to also escape double quotes), or add more variants:
 
@@ -611,6 +618,9 @@ HISTORY
   that just paste inline (so linewise and blockwise register contents are not
   put on separate lines, but start at the cursor position), but keep inner
   newlines and their indent (so not all is flattened into a single line).
+- ENH: gSp also considers whitespace-only lines as empty (not just totally
+  empty ones) by default, and lets users tweak that via
+  g:UnconditionalPaste\_EmptyLinePattern.
 
 ##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, &lt;C-q&gt;&lt;C-g&gt;) variants of gcp

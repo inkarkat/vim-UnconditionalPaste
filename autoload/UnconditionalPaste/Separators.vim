@@ -36,7 +36,7 @@ function! s:CommandLineCheck( regType, separatorPattern )
     endif
 endfunction
 function! s:IsEmpty( lnum ) abort
-    return empty(getline(a:lnum))
+    return (getline(a:lnum) =~# ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_EmptyLinePattern'))
 endfunction
 function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'

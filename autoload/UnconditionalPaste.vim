@@ -395,7 +395,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    \	    "\n"
 	    \	)
     elseif a:how ==# 's'
-	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(a:mode, 'v', s:IsPasteAfter(a:000), '\s', 1)
+	let [l:isPrefix, l:isSuffix] = UnconditionalPaste#Separators#Check(a:mode, 'v', s:IsPasteAfter(a:000), ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_EmptySeparatorPattern'), 1)
 	let l:prefix = (l:isPrefix ? repeat(' ', max([l:count, 1])) : '')
 	let l:suffix = (l:isSuffix ? repeat(' ', max([l:count, 1])) : '')
 	let l:count = 0

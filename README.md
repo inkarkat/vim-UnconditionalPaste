@@ -420,6 +420,12 @@ exactly two lines are pasted); to turn this off:
 
     let g:UnconditionalPaste_IsSerialComma = 0
 
+By default, the gsp mapping does not insert a space on a side that already
+has whitespace. You can make other separators (e.g. quotes) be considered as
+existing space by tweaking the regular expression in :
+
+    let g:UnconditionalPaste_EmptySeparatorPattern = '\s'
+
 By default, the gSp mapping does not add an empty line on a side that
 already just consists of whitespace. You can make other lines (e.g. those just
 having an opening { or closing } brace) be considered empty by tweaking the
@@ -618,6 +624,8 @@ HISTORY
   that just paste inline (so linewise and blockwise register contents are not
   put on separate lines, but start at the cursor position), but keep inner
   newlines and their indent (so not all is flattened into a single line).
+- ENH: gsp lets users tweak which sides do not get a space inserted via
+  g:UnconditionalPaste\_EmptySeparatorPattern.
 - ENH: gSp also considers whitespace-only lines as empty (not just totally
   empty ones) by default, and lets users tweak that via
   g:UnconditionalPaste\_EmptyLinePattern.

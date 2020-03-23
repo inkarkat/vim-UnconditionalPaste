@@ -41,8 +41,8 @@ endfunction
 function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'
 	let [l:startLnum, l:endLnum] = [ingo#range#NetStart(), ingo#range#NetEnd()]
-	let l:isAtStart = (l:startLnum == 1)
-	let l:isAtEnd = (l:endLnum == line('$'))
+	let l:isAtStart = (! a:isPasteAfter && l:startLnum == 1)
+	let l:isAtEnd = (a:isPasteAfter && l:endLnum == line('$'))
 
 	let l:isPrevious = (! l:isAtStart && s:IsEmpty(l:startLnum - 1))
 	let l:isNext = (! l:isAtEnd && s:IsEmpty(l:endLnum + 1))

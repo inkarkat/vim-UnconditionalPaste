@@ -58,6 +58,9 @@ endif
 if ! exists('g:UnconditionalPaste_IsSerialComma')
     let g:UnconditionalPaste_IsSerialComma = 1
 endif
+if ! exists('g:UnconditionalPaste_EmptyLinePattern')
+    let g:UnconditionalPaste_EmptyLinePattern = '^\s*$'
+endif
 
 let g:UnconditionalPaste_Mappings =
     \   [

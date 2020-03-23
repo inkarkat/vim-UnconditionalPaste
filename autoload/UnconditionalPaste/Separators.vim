@@ -5,7 +5,7 @@
 "   - ingo/range.vim autoload script
 "   - ingo/text.vim autoload script
 "
-" Copyright: (C) 2014-2018 Ingo Karkat
+" Copyright: (C) 2014-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -35,22 +35,25 @@ function! s:CommandLineCheck( regType, separatorPattern )
 	return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
     endif
 endfunction
+function! s:IsEmpty( lnum ) abort
+    return (getline(a:lnum) =~# ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_EmptyLinePattern'))
+endfunction
 function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'
 	let [l:startLnum, l:endLnum] = [ingo#range#NetStart(), ingo#range#NetEnd()]
 	let l:isAtStart = (l:startLnum == 1)
 	let l:isAtEnd = (l:endLnum == line('$'))
 
-	let l:isPrevious = (! l:isAtStart && empty(getline(l:startLnum - 1)))
-	let l:isNext = (! l:isAtEnd && empty(getline(l:endLnum + 1)))
+	let l:isPrevious = (! l:isAtStart && s:IsEmpty(l:startLnum - 1))
+	let l:isNext = (! l:isAtEnd && s:IsEmpty(l:endLnum + 1))
 
-	let l:isBefore = (a:isPasteAfter ? empty(getline(l:endLnum)) : l:isPrevious)
-	let l:isAfter = (a:isPasteAfter ? l:isNext : empty(getline(l:startLnum)))
+	let l:isBefore = (a:isPasteAfter ? s:IsEmpty(l:endLnum) : l:isPrevious)
+	let l:isAfter = (a:isPasteAfter ? l:isNext : s:IsEmpty(l:startLnum))
     else
 	let l:isAtStart = (col('.') == 1)
 	let l:isAtEnd = ingo#cursor#IsAtEndOfLine()
 
-	if l:isAtStart && l:isAtEnd && ! empty(getline('.'))
+	if l:isAtStart && l:isAtEnd && ! s:IsEmpty('.')
 	    " When the current line is completely empty, add both prefix and
 	    " suffix. But when the current line contains a single character (so
 	    " we're also both at start and end simultaneously), only add the

@@ -629,6 +629,9 @@ HISTORY
 - ENH: gSp also considers whitespace-only lines as empty (not just totally
   empty ones) by default, and lets users tweak that via
   g:UnconditionalPaste\_EmptyLinePattern.
+- BUG: gSP / gSp on completely empty buffer does not add both leading and
+  trailing empty lines.
+- BUG: gSP / gSp on single line in buffer do not consider start / end of buffer.
 
 ##### 4.20    24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, &lt;C-q&gt;&lt;C-g&gt;) variants of gcp

@@ -9,6 +9,8 @@
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
+let s:save_cpo = &cpo
+set cpo&vim
 
 function! UnconditionalPaste#Separators#Check( mode, regType, isPasteAfter, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
     if a:mode ==# 'c'
@@ -35,8 +37,23 @@ function! s:CommandLineCheck( regType, separatorPattern )
 	return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
     endif
 endfunction
-function! s:IsEmpty( lnum ) abort
-    return (getline(a:lnum) =~# ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_EmptyLinePattern'))
+function! s:IsEmpty( lnum, ...) abort
+    let l:emptyLinePattern = ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_EmptyLinePattern')
+
+    if type(l:emptyLinePattern) != type([])
+	return (getline(a:lnum) =~# l:emptyLinePattern)
+    endif
+
+    if a:0
+	return (getline(a:lnum) =~# l:emptyLinePattern[a:1])
+    else
+	" No above / below is specified; if any of the patterns matches, assume
+	" empty.
+	return (
+	\   getline(a:lnum) =~# l:emptyLinePattern[0] ||
+	\   getline(a:lnum) =~# l:emptyLinePattern[1]
+	\)
+    endif
 endfunction
 function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'
@@ -45,11 +62,11 @@ function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
 	let l:isAtStart = ((! a:isPasteAfter && l:startLnum == 1) || l:isEmptyBuffer)
 	let l:isAtEnd = ((a:isPasteAfter && l:endLnum == line('$')) || l:isEmptyBuffer)
 
-	let l:isPrevious = (! l:isAtStart && s:IsEmpty(l:startLnum - 1))
-	let l:isNext = (! l:isAtEnd && s:IsEmpty(l:endLnum + 1))
+	let l:isPrevious = (! l:isAtStart && s:IsEmpty(l:startLnum - 1, a:isPasteAfter))
+	let l:isNext = (! l:isAtEnd && s:IsEmpty(l:endLnum + 1, a:isPasteAfter))
 
-	let l:isBefore = (a:isPasteAfter ? s:IsEmpty(l:endLnum) : l:isPrevious)
-	let l:isAfter = (a:isPasteAfter ? l:isNext : s:IsEmpty(l:startLnum))
+	let l:isBefore = (a:isPasteAfter ? s:IsEmpty(l:endLnum, 0) : l:isPrevious)
+	let l:isAfter = (a:isPasteAfter ? l:isNext : s:IsEmpty(l:startLnum, 1))
     else
 	let l:isAtStart = (col('.') == 1)
 	let l:isAtEnd = ingo#cursor#IsAtEndOfLine()
@@ -100,4 +117,6 @@ function! UnconditionalPaste#Separators#SpecialPasteLines( content, pasteAfterEx
     endif
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

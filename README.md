@@ -427,11 +427,19 @@ existing space by tweaking the regular expression in :
     let g:UnconditionalPaste_EmptySeparatorPattern = '\s'
 
 By default, the gSp mapping does not add an empty line on a side that
-already just consists of whitespace. You can make other lines (e.g. those just
-having an opening { or closing } brace) be considered empty by tweaking the
-regular expression in :
+already just consists of whitespace. You can make other lines be considered
+empty by tweaking the regular expression:
 
     let g:UnconditionalPaste_EmptyLinePattern = '^\s*$'
+
+For some cases (like avoiding an empty line when pasting inside a { ... }
+block) it matters whether the line is above or below the paste. Instead of a
+single pattern, you can pass a List of two patterns there; the first one
+applies to lines above the paste (so it could match a { if you don't want an
+empty line when pasting after it, but you do want an empty line when pasting
+before it), the second applies to lines below the paste:
+
+    let g:UnconditionalPaste_EmptyLinePattern = ['^\s*{\?$', '^\s*}\?$']
 
 By default, the g\\p and i\_CTRL-R\_CTRL-\\ mappings escape backslashes. You
 can change that (e.g. to also escape double quotes), or add more variants:

@@ -31,8 +31,8 @@ function! s:CommandLineCheck( regType, separatorPattern )
 	let [l:beforeText, l:afterText] = [strpart(getcmdline(), 0, getcmdpos() - 1), strpart(getcmdline(), getcmdpos() - 1)]
 	let [l:isAtStart, l:isAtEnd] = [empty(l:beforeText), empty(l:afterText)]
 
-	let l:isBefore = (l:beforeText =~# a:separatorPattern . '$')
-	let l:isAfter  = (l:afterText  =~# '^' . a:separatorPattern)
+	let l:isBefore = (l:beforeText =~# s:GetSeparatorPattern(a:separatorPattern, 0) . '$')
+	let l:isAfter  = (l:afterText  =~# '^' . s:GetSeparatorPattern(a:separatorPattern, 1))
 
 	return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
     endif

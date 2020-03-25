@@ -1,10 +1,9 @@
 " UnconditionalPaste/Increment.vim: Functions for incrementing pasted numbers.
 "
 " DEPENDENCIES:
-"   - ingo/cursor.vim autoload script
-"   - ingo/number.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2014-2018 Ingo Karkat
+" Copyright: (C) 2014-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>

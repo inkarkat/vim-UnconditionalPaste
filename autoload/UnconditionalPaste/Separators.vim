@@ -1,9 +1,7 @@
 " UnconditionalPaste/Separators.vim: Functions for pasting with separators.
 "
 " DEPENDENCIES:
-"   - ingo/cursor.vim autoload script
-"   - ingo/range.vim autoload script
-"   - ingo/text.vim autoload script
+"   - ingo-library.vim plugin
 "
 " Copyright: (C) 2014-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.

@@ -1,10 +1,10 @@
 " UnconditionalPaste/Shifted.vim: Functions for pasting with shiftwidth.
 "
 " DEPENDENCIES:
-"   - ingo/compat/strdisplaywidth.vim autoload script
-"   - AlignFromCursor.vim autoload script (optional)
+"   - AlignFromCursor.vim plugin (optional)
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2014-2018 Ingo Karkat
+" Copyright: (C) 2014-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>

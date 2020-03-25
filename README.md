@@ -426,6 +426,15 @@ existing space by tweaking the regular expression in :
 
     let g:UnconditionalPaste_EmptySeparatorPattern = '\s'
 
+For some cases (like avoiding a space when pasting inside a {...}) it matters
+whether the separator is before or after the paste. Instead of a single
+pattern, you can pass a List of two patterns there; the first one applies to
+separators before the paste (so it could match a { if you don't want a space
+when pasting after it, but you do want a space when pasting before it), the
+second applies to separators after the paste:
+
+    let g:UnconditionalPaste_EmptySeparatorPattern = ['[[:space:]{]', '[[:space:]}]']
+
 By default, the gSp mapping does not add an empty line on a side that
 already just consists of whitespace. You can make other lines be considered
 empty by tweaking the regular expression:

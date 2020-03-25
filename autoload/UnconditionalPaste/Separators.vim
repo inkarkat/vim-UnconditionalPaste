@@ -55,6 +55,12 @@ function! s:IsEmpty( lnum, ...) abort
 	\)
     endif
 endfunction
+function! s:GetSeparatorPattern( separatorPattern, isAfter ) abort
+    return (type(a:separatorPattern) != type([]) ?
+    \   a:separatorPattern :
+    \   a:separatorPattern[a:isAfter]
+    \)
+endfunction
 function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
     if a:regType ==# 'V'
 	let [l:startLnum, l:endLnum] = [ingo#range#NetStart(), ingo#range#NetEnd()]
@@ -79,8 +85,22 @@ function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
 	    execute 'let l:isAt' . (a:isPasteAfter ? 'Start' : 'End') . ' = 0'
 	endif
 
-	let l:isBefore = search((a:isPasteAfter ? '\%#' . a:separatorPattern : a:separatorPattern . '\%#'), 'bcnW', line('.'))
-	let l:isAfter = search((a:isPasteAfter ? '\%#.' . a:separatorPattern : '\%#' . a:separatorPattern), 'cnW', line('.'))
+	let l:isBefore = search(
+	\   (a:isPasteAfter ?
+	\       '\%#' . s:GetSeparatorPattern(a:separatorPattern, 0) :
+	\       s:GetSeparatorPattern(a:separatorPattern, 0) . '\%#'
+	\   ),
+	\   'bcnW',
+	\   line('.')
+	\)
+	let l:isAfter = search(
+	\   (a:isPasteAfter ?
+	\       '\%#.' . s:GetSeparatorPattern(a:separatorPattern, 1) :
+	\       '\%#' . s:GetSeparatorPattern(a:separatorPattern, 1)
+	\   ),
+	\   'cnW',
+	\   line('.')
+	\)
     endif
 
     return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]

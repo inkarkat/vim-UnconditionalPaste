@@ -1,6 +1,6 @@
 " Test g==p of words in default register with unjoin.
 
-let g:UnconditionalPaste_Expression = 'substitute(v:val, "\\l", "\\u&", "")'
+let g:UnconditionalPaste_Expression = '^\_s\+^substitute(v:val, "\\l", "\\u&", "")'
 call SetRegister('"', "the quick brown fox jumps over the lazy dog", 'v')
 normal g==p
 call VerifyRegister()

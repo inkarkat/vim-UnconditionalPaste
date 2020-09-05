@@ -2,10 +2,10 @@
 "
 " DEPENDENCIES:
 "   - Requires Vim 7.0 or higher.
-"   - UnconditionalPaste.vim autoload script
-"   - repeat.vim (vimscript #2136) autoload script (optional)
+"   - ingo-library.vim plugin
+"   - repeat.vim (vimscript #2136) plugin (optional)
 
-" Copyright: (C) 2006-2017 Ingo Karkat
+" Copyright: (C) 2006-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -48,6 +48,9 @@ if ! exists('g:UnconditionalPaste_Escapes')
     \   'replacement': '\\&'
     \}]
 endif
+if ! exists('g:UnconditionalPaste_Combinations')
+    let g:UnconditionalPaste_Combinations = ['S', '>']
+endif
 
 if ! exists('g:UnconditionalPaste_IsFullLineRetabOnShift')
     let g:UnconditionalPaste_IsFullLineRetabOnShift = 0
@@ -55,10 +58,17 @@ endif
 if ! exists('g:UnconditionalPaste_IsSerialComma')
     let g:UnconditionalPaste_IsSerialComma = 1
 endif
+if ! exists('g:UnconditionalPaste_EmptySeparatorPattern')
+    let g:UnconditionalPaste_EmptySeparatorPattern = '\s'
+endif
+if ! exists('g:UnconditionalPaste_EmptyLinePattern')
+    let g:UnconditionalPaste_EmptyLinePattern = '^\s*$'
+endif
 
 let g:UnconditionalPaste_Mappings =
     \   [
-    \       ['Char', 'c', '<C-c>'], ['JustJoined', 'cg'], ['Line', 'l'], ['Block', 'b'],
+    \       ['Char', 'c', '<C-c>'], ['Inlined', 'ci', '<C-i>'], ['JustJoined', 'cg'], ['CharCondensed', 'C', '<C-c><C-c>'],
+    \       ['Line', 'l'], ['Block', 'b'],
     \       ['Comma', ',', ','],
     \       ['CommaAnd', ',a'], ['CommaOr', ',o'], ['CommaNor', ',n'],
     \       ['CommaSingleQuote', ",'"], ['CommaDoubleQuote', ',"'],
@@ -79,7 +89,7 @@ let g:UnconditionalPaste_Mappings =
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],
-    \       ['Combinatorial', 'h']
+    \       ['Combinatorial', 'h', '<C-h>'], ['RecallCombinatorial', 'H', '<C-h><C-h>']
     \   ]
 
 "- mappings --------------------------------------------------------------------
@@ -123,7 +133,7 @@ function! s:CreateMappings()
 		let l:pasteMappingDefaultKeys = '==' . l:pasteCmd
 	    endif
 
-	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression'], l:pasteName) != -1
+	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression', 'Combinatorial'], l:pasteName) != -1
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
@@ -142,7 +152,7 @@ function! s:CreateMappings()
 	    \   'if v:register ==# "="<Bar>' .
 	    \   '    call UnconditionalPaste#HandleExprReg(getreg("="))<Bar>' .
 	    \   'endif<Bar>' .
-	    \   'if ! UnconditionalPaste#Paste(v:register, %s, %s)<Bar>' .
+	    \   'if ! UnconditionalPaste#Paste(v:register, "n", %s, %s)<Bar>' .
 	    \   '   echoerr ingo#err#Get()<Bar>' .
 	    \   'endif<Bar>' .
 	    \   'silent! call repeat#set("\<lt>Plug>%s", UnconditionalPaste#GetCount())<CR>',
@@ -153,7 +163,7 @@ function! s:CreateMappings()
 	    \   string(l:pasteCmd),
 	    \   l:mappingName
 	    \)
-	    if ! hasmapto(l:plugMappingName, 'n') && ! empty(l:pasteMappingDefaultKeys)
+	    if ! exists('g:UnconditionalPaste_no_mappings') && ! hasmapto(l:plugMappingName, 'n') && ! empty(l:pasteMappingDefaultKeys)
 		execute printf('nmap g%s %s',
 		\   l:pasteMappingDefaultKeys,
 		\   l:plugMappingName
@@ -169,13 +179,14 @@ function! s:CreateMappings()
 	" newlines (^@ are inserted), and i_CTRL-R_CTRL-O inserts above the
 	" current line when the register ends with a newline.
 	for l:mode in ['i', 'c']
-	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %d)<CR>',
+	    execute printf('%snoremap <silent> %s <C-r>=UnconditionalPaste#Insert(nr2char(getchar()), %s, %s, %d)<CR>',
 	    \   l:mode,
 	    \   l:plugMappingName,
+	    \   string(l:mode),
 	    \   string(l:how),
 	    \   (l:mode ==# 'i')
 	    \)
-	    if ! hasmapto(l:plugMappingName, l:mode)
+	    if ! exists('g:UnconditionalPaste_no_mappings') && ! hasmapto(l:plugMappingName, l:mode)
 		execute printf('%smap <C-r>%s %s',
 		\   l:mode,
 		\   l:pasteKey,

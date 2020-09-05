@@ -1,0 +1,9 @@
+1 padding text
+2 padding text
+we (  "Foo", "Bar", "Baz"  ) here
+at end'  "Foo", "Bar", "Baz"
+"Foo", "Bar", "Baz"  'at begin
+  "Foo", "Bar", "Baz"  
+middle'     "Foo", "Bar", "Baz"     'with existing separators
+4 padding text
+5 padding text

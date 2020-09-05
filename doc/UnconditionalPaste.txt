@@ -44,9 +44,17 @@ USAGE						    *UnconditionalPaste-usage*
 ["x]gcp, ["x]gcP	Paste characterwise (inner newline characters and
 			indent are flattened to a single space, leading and
 			trailing removed) [count] times.
+								 *gcip* *gciP*
+["x]gcip, ["x]gciP	Paste inline (inner newline characters and indent are
+			kept, only leading and trailing removed) [count]
+			times.
 								 *gcgp* *gcgP*
 ["x]gcgp, ["x]gcgP	Paste joined (like |gJ|); indent and surrounding
 			whitespace is kept as-is, [count] times.
+								   *gCp* *gCP*
+["x]gCp, ["x]gCP	Paste characterwise; any sequence of whitespace is
+			flattened to a single space, leading and trailing
+			indent removed, [count] times.
 								   *glp* *glP*
 ["x]glp, ["x]glP	Paste linewise (even if yanked text is not a complete
 			line) [count] times.
@@ -271,7 +279,6 @@ USAGE						    *UnconditionalPaste-usage*
 			the g..p / g..P in the mappings. A [count] before
 			|ghp| applies to each algorithm, you can override /
 			supply a local [count], too.
-
                         EXAMPLES					     *
 			- Uppercase a word and paste linewise:
 			    ghpUc<Enter> ~
@@ -280,7 +287,12 @@ USAGE						    *UnconditionalPaste-usage*
 			- Paste line 3 times and indent:
 			    ghp>3l<Enter> ~
 			Note: Not all combinations make sense or work
-			correctly.
+			correctly.				   *gHp* *gHP*
+["x]gHp, ["x]gHP	Paste with the previously queried combination of above
+			mappings again. Defaults to linewise indented paste
+			with empty lines around (|gSp| + |g>p|)
+			|g:UnconditionalPaste_Combinations|.
+
 
 
 CTRL-R CTRL-C {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-C* *c_CTRL-R_CTRL-C*
@@ -294,6 +306,15 @@ CTRL-R CTRL-C {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-C* *c_CTRL-R_CTRL-C*
 			the command line, try defining >
 			    :cnoremap <C-c> <C-c>
 <			or redefine the mapping.
+CTRL-R CTRL-I {0-9a-z"%#*+/:.-}		   *i_CTRL-R_CTRL-I* *c_CTRL-R_CTRL-I*
+			Insert the contents of a register inline (inner
+			newline characters and indent are kept, only leading
+			and trailing removed).
+			     *i_CTRL-R_CTRL-C_CTRL-C* *c_CTRL-R_CTRL-C_CTRL-C*
+CTRL-R CTRL-C CTRL-C {0-9a-z"%#*+/:.-}
+			Insert the contents of a register characterwise; any
+			sequence of whitespace is flattened to a single space,
+			leading and trailing indent removed.
 CTRL-R , {0-9a-z"%#*+/:.-}			     *i_CTRL-R_,* *c_CTRL-R_,*
 			Insert the contents of a register characterwise, with
 			each line delimited by ", " instead of the newline
@@ -337,6 +358,17 @@ CTRL-R ~ {0-9a-z"%#*+/:.-}
 			Insert the contents of a register, toggling the case
 			of the first alphabetical character of the first word.
 			Like |g~p| / |g~p|, but in insert mode.
+
+					   *i_CTRL-R_CTRL-H* *c_CTRL-R_CTRL-H*
+CTRL-R CTRL-H {0-9a-z"%#*+/:.-}
+			Query for a combination of UnconditionalPaste
+			mappings, apply those to the contents of the register,
+			and insert the result.
+			     *i_CTRL-R_CTRL-H_CTRL-H* *c_CTRL-R_CTRL-H_CTRL-H*
+CTRL-R CTRL-H CTRL-H {0-9a-z"%#*+/:.-}
+			Apply the last queried combination of
+			UnconditionalPaste mappings to the contents of the
+			register again, and insert the result.
 
 ==============================================================================
 INSTALLATION				     *UnconditionalPaste-installation*
@@ -406,6 +438,32 @@ before the coordinating conjunction (also known as "Oxford comma"; unless
 exactly two lines are pasted); to turn this off: >
     let g:UnconditionalPaste_IsSerialComma = 0
 <
+*g:UnconditionalPaste_EmptySeparatorPattern* *b:UnconditionalPaste_EmptySeparatorPattern*
+By default, the |gsp| mapping does not insert a space on a side that already
+has whitespace. You can make other separators (e.g. quotes) be considered as
+existing space by tweaking the regular expression in : >
+    let g:UnconditionalPaste_EmptySeparatorPattern = '\s'
+For some cases (like avoiding a space when pasting inside a {...}) it matters
+whether the separator is before or after the paste. Instead of a single
+pattern, you can pass a List of two patterns there; the first one applies to
+separators before the paste (so it could match a { if you don't want a space
+when pasting after it, but you do want a space when pasting before it), the
+second applies to separators after the paste: >
+    let g:UnconditionalPaste_EmptySeparatorPattern = ['[[:space:]{]', '[[:space:]}]']
+<
+*g:UnconditionalPaste_EmptyLinePattern* *b:UnconditionalPaste_EmptyLinePattern*
+By default, the |gSp| mapping does not add an empty line on a side that
+already just consists of whitespace. You can make other lines be considered
+empty by tweaking the regular expression: >
+    let g:UnconditionalPaste_EmptyLinePattern = '^\s*$'
+For some cases (like avoiding an empty line when pasting inside a { ... }
+block) it matters whether the line is above or below the paste. Instead of a
+single pattern, you can pass a List of two patterns there; the first one
+applies to lines above the paste (so it could match a { if you don't want an
+empty line when pasting after it, but you do want an empty line when pasting
+before it), the second applies to lines below the paste: >
+    let g:UnconditionalPaste_EmptyLinePattern = ['^\s*{\?$', '^\s*}\?$']
+<
 		 *g:UnconditionalPaste_Escapes* *b:UnconditionalPaste_Escapes*
 By default, the |g\p| and |i_CTRL-R_CTRL-\| mappings escape backslashes. You
 can change that (e.g. to also escape double quotes), or add more variants: >
@@ -428,14 +486,31 @@ This stores the last replacement used for |g\\p| and |i_CTRL_R_CTRL-\|.
 It is initialized with the first escape from the above configuration / entered
 / selected escape.
 
+					   *g:UnconditionalPaste_Combinations*
+The default combination used for the |gHp| and |i_CTRL-R_CTRL-H_CTRL-H|
+mappings. Must be a List of 1 or 2-character strings between the g..p / g..P
+in the mappings; best obtained by selecting the desired algorithms via |ghp|
+once and then grabbing the variable value: >
+    let g:UnconditionalPaste_Combinations = ['U', ',"', 's']
+<
+
+					    *g:UnconditionalPaste_no_mappings*
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining: >
+    :let g:UnconditionalPaste_no_mappings = 1
+This saves you from mapping dummy keys to all unwanted mapping targets.
 						    *UnconditionalPaste-remap*
 If you want to use different mappings (e.g. starting with <Leader>), map your
 keys to the <Plug>UnconditionalPaste... mapping targets _before_ sourcing this
 script (e.g. in your |vimrc|): >
     nmap <Leader>Pc <Plug>UnconditionalPasteCharBefore
     nmap <Leader>pc <Plug>UnconditionalPasteCharAfter
+    nmap <Leader>Pn <Plug>UnconditionalPasteInlinedBefore
+    nmap <Leader>pn <Plug>UnconditionalPasteInlinedAfter
     nmap <Leader>Pj <Plug>UnconditionalPasteJustJoinedBefore
     nmap <Leader>pj <Plug>UnconditionalPasteJustJoinedAfter
+    nmap <Leader>PC <Plug>UnconditionalPasteCharCondensedBefore
+    nmap <Leader>pC <Plug>UnconditionalPasteCharCondensedAfter
     nmap <Leader>Pl <Plug>UnconditionalPasteLineBefore
     nmap <Leader>pl <Plug>UnconditionalPasteLineAfter
     nmap <Leader>Pb <Plug>UnconditionalPasteBlockBefore
@@ -452,6 +527,8 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>p# <Plug>UnconditionalPasteCommentedAfter
     nmap <Leader>Ps <Plug>UnconditionalPasteSpacedBefore
     nmap <Leader>ps <Plug>UnconditionalPasteSpacedAfter
+    nmap <Leader>PS <Plug>UnconditionalPasteParagraphedBefore
+    nmap <Leader>pS <Plug>UnconditionalPasteParagraphedAfter
     nmap <Leader>PB <Plug>UnconditionalPasteJaggedBefore
     nmap <Leader>pB <Plug>UnconditionalPasteJaggedAfter
     nmap <Leader>Pd <Plug>UnconditionalPasteDelimitedBefore
@@ -464,14 +541,20 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>p' <Plug>UnconditionalPasteCommaSingleQuoteAfter
     nmap <Leader>P" <Plug>UnconditionalPasteCommaDoubleQuoteBefore
     nmap <Leader>p" <Plug>UnconditionalPasteCommaDoubleQuoteAfter
+    nmap <Leader>P,n <<Plug>UnconditionalPasteCommaNorBefore
+    nmap <Leader>p,n <Plug>UnconditionalPasteCommaNorAfter
+    nmap <Leader>P,o <Plug>UnconditionalPasteCommaOrBefore
+    nmap <Leader>p,o <Plug>UnconditionalPasteCommaOrAfter
+    nmap <Leader>P,a <Plug>UnconditionalPasteCommaAndBefore
+    nmap <Leader>p,a <Plug>UnconditionalPasteCommaAndAfter
     nmap <Leader>Pq <Plug>UnconditionalPasteQueriedBefore
     nmap <Leader>pq <Plug>UnconditionalPasteQueriedAfter
     nmap <Leader>PQ <Plug>UnconditionalPasteRecallQueriedBefore
     nmap <Leader>pQ <Plug>UnconditionalPasteRecallQueriedAfter
     nmap <Leader>Pgq <Plug>UnconditionalPasteQueriedJoinedBefore
     nmap <Leader>pgq <Plug>UnconditionalPasteQueriedJoinedAfter
-    nmap <Leader>PgQ <Plug>UnconditionalPasteRecallJoinedQueriedBefore
-    nmap <Leader>pgQ <Plug>UnconditionalPasteRecallJoinedQueriedAfter
+    nmap <Leader>PgQ <Plug>UnconditionalPasteRecallQueriedJoinedBefore
+    nmap <Leader>pgQ <Plug>UnconditionalPasteRecallQueriedJoinedAfter
     nmap <Leader>Puj <Plug>UnconditionalPasteUnjoinBefore
     nmap <Leader>puj <Plug>UnconditionalPasteUnjoinAfter
     nmap <Leader>PUJ <Plug>UnconditionalPasteRecallUnjoinBefore
@@ -500,10 +583,16 @@ script (e.g. in your |vimrc|): >
     nmap <Leader>pu <Plug>UnconditionalPasteLowercaseAfter
     nmap <Leader>PU <Plug>UnconditionalPasteUppercaseBefore
     nmap <Leader>pU <Plug>UnconditionalPasteUppercaseAfter
+    nmap <Leader>pt <Plug>UnconditionalPasteTogglecaseBefore
+    nmap <Leader>Pt <Plug>UnconditionalPasteTogglecaseAfter
     nmap <Leader>Ph <Plug>UnconditionalPasteCombinatorialBefore
     nmap <Leader>ph <Plug>UnconditionalPasteCombinatorialAfter
+    nmap <Leader>PH <Plug>UnconditionalPasteRecallCombinatorialBefore
+    nmap <Leader>pH <Plug>UnconditionalPasteRecallCombinatorialAfter
 
     imap <C-G>c <Plug>UnconditionalPasteCharI
+    imap <C-G>n <Plug>UnconditionalPasteInlinedI
+    imap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     imap <C-G>, <Plug>UnconditionalPasteCommaI
     imap <C-G>q <Plug>UnconditionalPasteQueriedI
     imap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
@@ -514,8 +603,12 @@ script (e.g. in your |vimrc|): >
     imap <C-G>x <Plug>UnconditionalPasteEscapeI
     imap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
     imap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
+    imap <C-G>h <Plug>UnconditionalPasteCombinatorialI
+    imap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 
     cmap <C-G>c <Plug>UnconditionalPasteCharI
+    cmap <C-G>n <Plug>UnconditionalPasteInlinedI
+    cmap <C-G>C <Plug>UnconditionalPasteCharCondensedI
     cmap <C-G>, <Plug>UnconditionalPasteCommaI
     cmap <C-G>q <Plug>UnconditionalPasteQueriedI
     cmap <C-G>Q <Plug>UnconditionalPasteRecallQueriedI
@@ -526,6 +619,8 @@ script (e.g. in your |vimrc|): >
     cmap <C-G>x <Plug>UnconditionalPasteEscapeI
     cmap <C-G>X <Plug>UnconditionalPasteRecallEscapeI
     cmap <C-G>~ <Plug>UnconditionalPasteTogglecaseI
+    cmap <C-G>h <Plug>UnconditionalPasteCombinatorialI
+    cmap <C-G>H <Plug>UnconditionalPasteRecallCombinatorialI
 <
 ==============================================================================
 LIMITATIONS				      *UnconditionalPaste-limitations*
@@ -544,6 +639,34 @@ below).
 
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
+
+4.30	05-Sep-2020
+- ENH: Add gHp mapping for repeating the same previously queried combination
+  and a configurable preset g:UnconditionalPaste_Combinations.
+- ENH: Add i_CTRL-R_CTRL-H / c_CTRL-R_CTRL-H mappings for ghp and
+  i_CTRL-R_CTRL-H_CTRL-H / c_CTRL-R_CTRL-H_CTRL-H for gHp. As only some paste
+  variants are offered in insert and command-line modes, these allow to use
+  any (working) variant there, too, and any combinations of them.
+- BUG: Empty line check in gSp does not account for a closed fold under cursor
+  and wrongly considers the current line within the fold instead of the first
+  / last folded line.
+- ENH: Allow to disable all default mappings via a single
+  g:UnconditionalPaste_no_mappings configuration flag.
+- ENH: Add gCp and i_CTRL-R_CTRL-C_CTRL-C variants of gcp and i_CTRL-R_CTRL-C
+  that flatten any sequence of whitespace to a single space; so not just
+  indent, but also inner runs of whitespace.
+- ENH: Add gcip and i_CTRL-R_CTRL-I variants of gcp and i_CTRL-R_CTRL-C
+  that just paste inline (so linewise and blockwise register contents are not
+  put on separate lines, but start at the cursor position), but keep inner
+  newlines and their indent (so not all is flattened into a single line).
+- ENH: gsp lets users tweak which sides do not get a space inserted via
+  g:UnconditionalPaste_EmptySeparatorPattern.
+- ENH: gSp also considers whitespace-only lines as empty (not just totally
+  empty ones) by default, and lets users tweak that via
+  g:UnconditionalPaste_EmptyLinePattern.
+- BUG: gSP / gSp on completely empty buffer does not add both leading and
+  trailing empty lines.
+- BUG: gSP / gSp on single line in buffer do not consider start / end of buffer.
 
 4.20	24-Jan-2018
 - Add JustJoined (gcgp) and QueriedJoined (gqgp, <C-q><C-g>) variants of gcp
@@ -702,7 +825,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2018 Ingo Karkat
+Copyright: (C) 2006-2020 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

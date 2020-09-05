@@ -1,54 +1,113 @@
 " UnconditionalPaste/Separators.vim: Functions for pasting with separators.
 "
 " DEPENDENCIES:
-"   - ingo/cursor.vim autoload script
-"   - ingo/text.vim autoload script
+"   - ingo-library.vim plugin
 "
-" Copyright: (C) 2014-2015 Ingo Karkat
+" Copyright: (C) 2014-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
-"
-" REVISION	DATE		REMARKS
-"   3.20.003	22-Apr-2015	Retire UnconditionalPaste#IsAtEndOfLine() and
-"				establish hard dependency on ingo-library.
-"   3.03.002	24-Nov-2014	BUG: gsp / gsP border check adds spaces on both
-"				sides when there's a single character in line
-"				(like when there's a completely empty line,
-"				where this would be correct). Differentiate
-"				between empty and single-char line and then
-"				clear the isAtStart / isAtEnd flag not in the
-"				direction of the paste.
-"   3.00.001	21-Mar-2014	file creation from autoload/UnconditionalPaste.vim
+let s:save_cpo = &cpo
+set cpo&vim
 
-function! UnconditionalPaste#Separators#Check( regType, pasteCommand, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
+function! UnconditionalPaste#Separators#Check( mode, regType, isPasteAfter, separatorPattern, isUseSeparatorWhenAlreadySurrounded )
+    if a:mode ==# 'c'
+	let [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter] = s:CommandLineCheck(a:regType, a:separatorPattern)
+	return s:DeterminePrefixSuffix(l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter, a:isUseSeparatorWhenAlreadySurrounded)
+    elseif a:mode ==# 'i'
+	let [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter] = s:BufferCheck(a:regType, 0, a:separatorPattern)
+	return s:DeterminePrefixSuffix(l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter, a:isUseSeparatorWhenAlreadySurrounded)
+    else
+	let [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter] = s:BufferCheck(a:regType, a:isPasteAfter, a:separatorPattern)
+	return s:DeterminePrefixSuffix(l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter, a:isUseSeparatorWhenAlreadySurrounded, a:isPasteAfter)
+    endif
+endfunction
+function! s:CommandLineCheck( regType, separatorPattern )
     if a:regType ==# 'V'
-	let l:isAtStart = (line('.') == 1)
-	let l:isAtEnd = (line('.') == line('$'))
+	return [0, 0, 0, 0]   " There are no surrounding lines in command-line mode; assume we want the prefix / suffix.
+    else
+	let [l:beforeText, l:afterText] = [strpart(getcmdline(), 0, getcmdpos() - 1), strpart(getcmdline(), getcmdpos() - 1)]
+	let [l:isAtStart, l:isAtEnd] = [empty(l:beforeText), empty(l:afterText)]
 
-	let l:isPrevious = (line('.') > 1 && empty(getline(line('.') - 1)))
-	let l:isCurrent = empty(getline('.'))
-	let l:isNext = (line('.') < line('$') && empty(getline(line('.') + 1)))
+	let l:isBefore = (l:beforeText =~# s:GetSeparatorPattern(a:separatorPattern, 0) . '$')
+	let l:isAfter  = (l:afterText  =~# '^' . s:GetSeparatorPattern(a:separatorPattern, 1))
 
-	let l:isBefore = (a:pasteCommand ==# 'P' ? l:isPrevious : l:isCurrent)
-	let l:isAfter = (a:pasteCommand ==# 'P' ? l:isCurrent : l:isNext)
+	return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
+    endif
+endfunction
+function! s:IsEmpty( lnum, ...) abort
+    let l:emptyLinePattern = ingo#plugin#setting#GetBufferLocal('UnconditionalPaste_EmptyLinePattern')
+
+    if type(l:emptyLinePattern) != type([])
+	return (getline(a:lnum) =~# l:emptyLinePattern)
+    endif
+
+    if a:0
+	return (getline(a:lnum) =~# l:emptyLinePattern[a:1])
+    else
+	" No above / below is specified; if any of the patterns matches, assume
+	" empty.
+	return (
+	\   getline(a:lnum) =~# l:emptyLinePattern[0] ||
+	\   getline(a:lnum) =~# l:emptyLinePattern[1]
+	\)
+    endif
+endfunction
+function! s:GetSeparatorPattern( separatorPattern, isAfter ) abort
+    return (type(a:separatorPattern) != type([]) ?
+    \   a:separatorPattern :
+    \   a:separatorPattern[a:isAfter]
+    \)
+endfunction
+function! s:BufferCheck( regType, isPasteAfter, separatorPattern )
+    if a:regType ==# 'V'
+	let [l:startLnum, l:endLnum] = [ingo#range#NetStart(), ingo#range#NetEnd()]
+	let l:isEmptyBuffer = (line('$') == 1 && s:IsEmpty(l:startLnum))
+	let l:isAtStart = ((! a:isPasteAfter && l:startLnum == 1) || l:isEmptyBuffer)
+	let l:isAtEnd = ((a:isPasteAfter && l:endLnum == line('$')) || l:isEmptyBuffer)
+
+	let l:isPrevious = (! l:isAtStart && s:IsEmpty(l:startLnum - 1, a:isPasteAfter))
+	let l:isNext = (! l:isAtEnd && s:IsEmpty(l:endLnum + 1, a:isPasteAfter))
+
+	let l:isBefore = (a:isPasteAfter ? s:IsEmpty(l:endLnum, 0) : l:isPrevious)
+	let l:isAfter = (a:isPasteAfter ? l:isNext : s:IsEmpty(l:startLnum, 1))
     else
 	let l:isAtStart = (col('.') == 1)
 	let l:isAtEnd = ingo#cursor#IsAtEndOfLine()
 
-	if l:isAtStart && l:isAtEnd && ! empty(getline('.'))
+	if l:isAtStart && l:isAtEnd && ! s:IsEmpty('.')
 	    " When the current line is completely empty, add both prefix and
 	    " suffix. But when the current line contains a single character (so
 	    " we're also both at start and end simultaneously), only add the
 	    " separator on the side we're pasting to.
-	    execute 'let l:isAt' . (a:pasteCommand ==# 'P' ? 'End' : 'Start') . ' = 0'
+	    execute 'let l:isAt' . (a:isPasteAfter ? 'Start' : 'End') . ' = 0'
 	endif
 
-	let l:isBefore = search((a:pasteCommand ==# 'P' ? a:separatorPattern . '\%#' : '\%#' . a:separatorPattern), 'bcnW', line('.'))
-	let l:isAfter = search((a:pasteCommand ==# 'P' ? '\%#' . a:separatorPattern : '\%#.' . a:separatorPattern), 'cnW', line('.'))
+	let l:isBefore = search(
+	\   (a:isPasteAfter ?
+	\       '\%#' . s:GetSeparatorPattern(a:separatorPattern, 0) :
+	\       s:GetSeparatorPattern(a:separatorPattern, 0) . '\%#'
+	\   ),
+	\   'bcnW',
+	\   line('.')
+	\)
+	let l:isAfter = search(
+	\   (a:isPasteAfter ?
+	\       '\%#.' . s:GetSeparatorPattern(a:separatorPattern, 1) :
+	\       '\%#' . s:GetSeparatorPattern(a:separatorPattern, 1)
+	\   ),
+	\   'cnW',
+	\   line('.')
+	\)
     endif
-    let l:isPrefix = ! (a:pasteCommand ==# 'P' && l:isAtStart && ! l:isAtEnd || l:isBefore && (! l:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
-    let l:isSuffix = ! (a:pasteCommand ==# 'p' && l:isAtEnd && ! l:isAtStart || l:isAfter && (! l:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
+
+    return [l:isAtStart, l:isAtEnd, l:isBefore, l:isAfter]
+endfunction
+function! s:DeterminePrefixSuffix( isAtStart, isAtEnd, isBefore, isAfter, isUseSeparatorWhenAlreadySurrounded, ...)
+    let l:isPasteBefore = (a:0 ? ! a:1 : 1)
+    let l:isPasteAfter = (a:0 ? a:1 : 1)
+    let l:isPrefix = ! (l:isPasteBefore && a:isAtStart && ! a:isAtEnd || a:isBefore && (! a:isAfter || ! a:isUseSeparatorWhenAlreadySurrounded))
+    let l:isSuffix = ! (l:isPasteAfter  && a:isAtEnd && ! a:isAtStart || a:isAfter && (! a:isBefore || ! a:isUseSeparatorWhenAlreadySurrounded))
 
     return [l:isPrefix, l:isSuffix]
 endfunction
@@ -76,4 +135,6 @@ function! UnconditionalPaste#Separators#SpecialPasteLines( content, pasteAfterEx
     endif
 endfunction
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 " vim: set ts=8 sts=4 sw=4 noexpandtab ff=unix fdm=syntax :

@@ -1,6 +1,9 @@
 call vimtest#AddDependency('vim-ingo-library')
 
 runtime plugin/UnconditionalPaste.vim
+if g:runVimTest =~# '-\%(choice\|repeat\)[.-]'
+    call vimtest#AddDependency('vim-repeat')
+endif
 
 call setreg('"', "[default text]\n", 'V')
 

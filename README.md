@@ -622,7 +622,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 4.30    RELEASEME
+##### 4.30    05-Sep-2020
 - ENH: Add gHp mapping for repeating the same previously queried combination
   and a configurable preset g:UnconditionalPaste\_Combinations.
 - ENH: Add i\_CTRL-R\_CTRL-H / c\_CTRL-R\_CTRL-H mappings for ghp and

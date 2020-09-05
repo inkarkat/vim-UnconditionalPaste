@@ -640,7 +640,7 @@ below).
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
-4.30	RELEASEME
+4.30	05-Sep-2020
 - ENH: Add gHp mapping for repeating the same previously queried combination
   and a configurable preset g:UnconditionalPaste_Combinations.
 - ENH: Add i_CTRL-R_CTRL-H / c_CTRL-R_CTRL-H mappings for ghp and

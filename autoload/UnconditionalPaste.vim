@@ -650,6 +650,9 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	endif
 
 	let l:pasteContent = ingo#subs#apply#FlexibleExpression(l:pasteContent, a:regType, g:UnconditionalPaste_Expression)
+	if type(l:pasteContent) == type([])
+	    let l:pasteContent = join(map(l:pasteContent, 'substitute(v:val, "\\n$", "", "")'), "\n")
+	endif
     elseif a:how ==# '\' || a:how ==# '\\'
 	if a:how ==# '\\'
 	    if ! exists('g:UnconditionalPaste_Escape')

@@ -39,7 +39,7 @@ if ! exists('g:UnconditionalPaste_InvertedGrepPattern')
     let g:UnconditionalPaste_InvertedGrepPattern = '^\s*$'
 endif
 if ! exists('g:UnconditionalPaste_Expression')
-    let g:UnconditionalPaste_Expression = 'substitute(v:val, "(.*)", "()", "g")'
+    let g:UnconditionalPaste_Expression = '.substitute(v:val, "(.*)", "()", "g")'
 endif
 if ! exists('g:UnconditionalPaste_Escapes')
     let g:UnconditionalPaste_Escapes = [{

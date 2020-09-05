@@ -185,10 +185,10 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
     let l:shiftCommand = a:shiftCommand
     let l:shiftCount = a:shiftCount
 
-    if l:count == 0 && a:how =~# '\c^\%(q\?b\|r!\?\|e\)$' && s:IsSingleElement(a:regContent)
+    if l:count == 0 && a:how =~# '\c^\%(q\?b\|r!\?\)$' && s:IsSingleElement(a:regContent)
 	" Query / re-use separator pattern, and split into multiple lines
 	" first.
-	if a:how !=# 'QB' && a:how[0] !=# 'R' && a:how !=# 'E'
+	if a:how !=# 'QB' && a:how[0] !=# 'R'
 	    if ! s:QuerySeparatorPattern()
 		throw 'beep'
 	    endif
@@ -635,22 +635,24 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	endif
 
 	let l:pasteType = a:regType
-	let l:lines = split(l:pasteContent, '\n', 1)
 
 	if l:count > 1
+	    if a:regType[0] ==# "\<C-v>" || a:regType ==# 'v' && ingo#str#StartsWith(g:UnconditionalPaste_Expression, '.')
+		" Direct joining would mangle blockwise content, and if per-line
+		" application of characterwise content is asked for, we also
+		" need multiple lines to make sense.
+		let l:pasteContent .= "\n"
+	    endif
 	    " To map the multiplied pastes with the (potentially non-constant)
 	    " expression, we need to process the multiplication on our own.
-	    let l:lines = repeat(l:lines, l:count)
+	    let l:pasteContent = repeat(l:pasteContent, l:count)
 	    let l:count = 0
 	endif
 
-	let l:lines = ingo#collections#Flatten1(map(l:lines, g:UnconditionalPaste_Expression))
-
-	let l:joiner = (s:IsSingleElement(a:regContent) ?
-	\   matchstr(a:regContent, g:UnconditionalPaste_UnjoinSeparatorPattern) :
-	\   "\n"
-	\)
-	let l:pasteContent = join(l:lines, l:joiner)
+	let l:pasteContent = ingo#subs#apply#FlexibleExpression(l:pasteContent, a:regType, g:UnconditionalPaste_Expression)
+	if type(l:pasteContent) == type([])
+	    let l:pasteContent = join(map(l:pasteContent, 'substitute(v:val, "\\n$", "", "")'), "\n")
+	endif
     elseif a:how ==# '\' || a:how ==# '\\'
 	if a:how ==# '\\'
 	    if ! exists('g:UnconditionalPaste_Escape')

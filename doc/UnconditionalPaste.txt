@@ -430,7 +430,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				     *UnconditionalPaste-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.043 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.044 or
   higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - |AlignFromCursor.vim| plugin (vimscript #4155), version 2.02 or higher
@@ -691,7 +691,7 @@ HISTORY						  *UnconditionalPaste-history*
   "toupper(v:val)"), and filtering through external command or Ex command (in
   a scratch buffer). This achieves feature parity and consistency
   with.SubstituteExpression.vim's g={motion} and g== mappings.
-  *** You need to update to ingo-library (vimscript #4433) version 1.043! ***
+  *** You need to update to ingo-library (vimscript #4433) version 1.044! ***
 
 4.30	05-Sep-2020
 - ENH: Add gHp mapping for repeating the same previously queried combination
@@ -878,7 +878,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2020 Ingo Karkat
+Copyright: (C) 2006-2022 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

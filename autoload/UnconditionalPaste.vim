@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ingo-library.vim plugin
 
-" Copyright: (C) 2006-2020 Ingo Karkat
+" Copyright: (C) 2006-2022 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -178,6 +178,11 @@ endfunction
 
 function! UnconditionalPaste#GetCount()
     return s:count
+endfunction
+function! s:GetChar() abort
+    return ingo#query#get#Char({
+    \   'isAllowDigraphs': 0,
+    \})
 endfunction
 function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand, shiftCount, ... )
     let l:pasteContent = a:regContent
@@ -547,12 +552,12 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    while 1
 		let l:localCount = ''
 		call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
-		let l:key = ingo#query#get#Char()
+		let l:key = s:GetChar()
 
 		while l:key =~# '\d'
 		    " Keep reading local count until a real how happens.
 		    let l:localCount .= l:key
-		    let l:key = ingo#query#get#Char()
+		    let l:key = s:GetChar()
 		endwhile
 
 		if empty(l:key)
@@ -577,7 +582,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 		elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
 		    " Might be a two-key type (where the first key isn't a valid
 		    " type on its own); get another key.
-		    let l:key2 = ingo#query#get#Char()
+		    let l:key2 = s:GetChar()
 		    if empty(l:key2)
 			redraw
 			return ['', '', 0, '', 0]

@@ -411,7 +411,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.043 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.044 or
   higher.
 - repeat.vim ([vimscript #2136](http://www.vim.org/scripts/script.php?script_id=2136)) plugin (optional)
 - AlignFromCursor.vim plugin ([vimscript #4155](http://www.vim.org/scripts/script.php?script_id=4155)), version 2.02 or higher
@@ -674,7 +674,7 @@ HISTORY
   a scratch buffer). This achieves feature parity and consistency
   with.SubstituteExpression.vim's g={motion} and g== mappings.
 
-__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.043!__
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.044!__
 
 ##### 4.30    05-Sep-2020
 - ENH: Add gHp mapping for repeating the same previously queried combination
@@ -864,7 +864,7 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 - Started development, based on vimtip #1199 by cory.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2006-2020 Ingo Karkat -
+Copyright: (C) 2006-2022 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

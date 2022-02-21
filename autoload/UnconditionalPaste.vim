@@ -554,7 +554,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 		call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
 		let l:key = s:GetChar()
 
-		while l:key =~# '\d'
+		while l:key =~# '^\d$'
 		    " Keep reading local count until a real how happens.
 		    let l:localCount .= l:key
 		    let l:key = s:GetChar()

@@ -587,7 +587,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 			redraw
 			return ['', '', 0, '', 0]
 		    elseif index(l:types, l:key . l:key2) != -1
-			call add(l:howList, l:localCount . l:key . l:keys)
+			call add(l:howList, l:localCount . l:key . l:key2)
 		    endif
 		endif
 	    endwhile

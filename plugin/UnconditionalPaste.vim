@@ -89,7 +89,8 @@ let g:UnconditionalPaste_Mappings =
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],
-    \       ['Combinatorial', 'h', '<C-h>'], ['RecallCombinatorial', 'H', '<C-h><C-h>']
+    \       ['Combi', 'h', '<C-h>'], ['CombiRepeat', '.h'],
+    \       ['RecallCombi', 'H', '<C-h><C-h>'], ['RecallCombiRepeat', '.H'],
     \   ]
 
 "- mappings --------------------------------------------------------------------
@@ -133,7 +134,7 @@ function! s:CreateMappings()
 		let l:pasteMappingDefaultKeys = '==' . l:pasteCmd
 	    endif
 
-	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression', 'Combinatorial'], l:pasteName) != -1
+	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression'], l:pasteName) != -1
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
@@ -143,6 +144,10 @@ function! s:CreateMappings()
 		" increasing with the last used (saved) offset, and at the same
 		" number position (after the first paste, the cursor will have
 		" jumped to the beginning of the pasted text).
+		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
+	    elseif index(['Combi', 'RecallCombi'], l:pasteName) != -1
+		" The combinatorial mappings may contain a Plus / GPlus, so need special repeat
+		" handling, too.
 		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
 

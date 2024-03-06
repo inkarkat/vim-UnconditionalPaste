@@ -5,7 +5,7 @@
 "   - ingo-library.vim plugin
 "   - repeat.vim (vimscript #2136) plugin (optional)
 
-" Copyright: (C) 2006-2020 Ingo Karkat
+" Copyright: (C) 2006-2024 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -102,7 +102,7 @@ function! s:CreateMappings()
 	    let l:plugMappingName = '<Plug>' . l:mappingName
 
 	    " Do not create default mappings for the special paste repeats.
-	    let l:pasteMappingDefaultKeys = (l:how[0] == '.' ? '' : l:how . l:pasteCmd)
+	    let l:pasteMappingDefaultKeys = (l:how[0] ==# '.' ? '' : l:how . l:pasteCmd)
 
 
 	    if l:pasteName =~# 'Indent\|^Commented$'

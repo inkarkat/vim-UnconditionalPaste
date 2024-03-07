@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ingo-library.vim plugin
 
-" Copyright: (C) 2006-2022 Ingo Karkat
+" Copyright: (C) 2006-2024 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -541,7 +541,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    " what the user intended.
 	    throw 'beep'
 	endif
-    elseif a:how ==? 'h'
+    elseif a:how ==? 'h' || a:how ==? '.h'
 	let l:types = filter(
 	\   map(copy(g:UnconditionalPaste_Mappings), 'v:val[1]'),
 	\   'v:val[0] !~# "^[.h]$"'
@@ -594,6 +594,11 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    let g:UnconditionalPaste_Combinations = l:howList
 	else
 	    let l:howList = g:UnconditionalPaste_Combinations
+	    if a:how ==? '.h'
+		" On repeat, turn the Plus and GPlus mappings into their repeat variants, in
+		" order to increase with the last used (saved) offset.
+		let l:howList = map(copy(l:howList), '(v:val ==? "p" ? "." : "") . v:val')
+	    endif
 	endif
 
 	let l:pasteType = a:regType

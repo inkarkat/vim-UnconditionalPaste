@@ -691,6 +691,7 @@ HISTORY						  *UnconditionalPaste-history*
   "toupper(v:val)"), and filtering through external command or Ex command (in
   a scratch buffer). This achieves feature parity and consistency
   with.SubstituteExpression.vim's g={motion} and g== mappings.
+- BUG: ghp with p/P selected does not increment the last-used value on repeat.
   *** You need to update to ingo-library (vimscript #4433) version 1.044! ***
 
 4.30	05-Sep-2020
@@ -878,7 +879,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2022 Ingo Karkat
+Copyright: (C) 2006-2024 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

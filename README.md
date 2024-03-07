@@ -673,6 +673,7 @@ HISTORY
   "toupper(v:val)"), and filtering through external command or Ex command (in
   a scratch buffer). This achieves feature parity and consistency
   with.SubstituteExpression.vim's g={motion} and g== mappings.
+- BUG: ghp with p/P selected does not increment the last-used value on repeat.
 
 __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.044!__
 
@@ -864,7 +865,7 @@ available at https://github.com/inkarkat/vim-repeat/zipball/1.0ENH1
 - Started development, based on vimtip #1199 by cory.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2006-2022 Ingo Karkat -
+Copyright: (C) 2006-2024 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

@@ -662,7 +662,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 4.40    RELEASEME
+##### 4.40    02-Nov-2024
 - CHG: g=p and g==p apply the expression to the whole register contents, not
   to individual lines. Instead, the expression can now be applied individually
   to matches of prepended /{pattern}/, or to items separated by ^{pattern}^,

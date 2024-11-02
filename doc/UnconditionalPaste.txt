@@ -32,6 +32,12 @@ SOURCE									     *
 Based on vimtip #1199 by cory,
     http://vim.wikia.com/wiki/Unconditional_linewise_or_characterwise_paste
 
+SEE ALSO								     *
+
+- |SubstituteExpression.vim| (vimscript #5596) provides the same flexible
+  expression application of |g=p| to the moved-over / selected text / lines
+  instead of register contents.
+
 RELATED WORKS								     *
 
 - whitespaste.vim (vimscript #4351) automatically removes blank lines around
@@ -232,15 +238,49 @@ USAGE						    *UnconditionalPaste-usage*
 			Re-join all matches with the first match of the
 			separator pattern and paste characterwise.
 								   *g=p* *g=P*
-["x]g=p, ["x]g=P	Query for an expression, apply it to each line
-			(replacing v:val with the current line), and paste the
-			resulting lines. To omit a line, return an empty List
-			([]) from the expression. To expand a line into
-			several, return a List of lines.
-			If there's only a single line to paste and no [count],
-			first query about a separator pattern and un-join the
-			register contents. Re-join all matches with the first
-			match of the separator pattern and paste characterwise.
+["x]g=p, ["x]g=P	Query for an expression, and apply it to the register
+			contents. The expression can be:
+			- a Vimscript expression; |v:val| will contain the
+			  register contents.
+			- a function name (without parentheses); the function
+			  will be passed the register contents as a single
+			  String argument.
+			- If the expression begins with '!', it will be
+			  treated as an external command, and passed to the
+			  |system()| function, with the register contents as
+			  stdin. (To use an expression beginning with logical
+			  not (|expr-!|), include a space before the '!'
+			  character.)
+			- If the expression begins with ':', the register
+			  contents will be placed in a scratch buffer (of the
+			  same 'filetype'), and the Ex command(s) will be
+			  applied.
+			- If the expression begins with /{pattern}/, each
+			  match (of the last search pattern if empty) inside
+			  the register contents is individually passed through
+			  the following expression / function name / external
+			  command / Ex command, then re-joined with the
+			  separating non-matches in between.
+			  When an expression returns a List, all elements are
+			  joined with the first occurring separator in the
+			  register contents.
+			- If the expression begins with ^{pattern}^, the
+			  register contents are split on {pattern} (last
+			  search pattern if empty), and each item is
+			  individually passed through the following expression
+			  / function name / external command / Ex command,
+			  then re-joined with the separators in between.
+			  When an expression returns a List, all elements are
+			  joined with the first separator match of {pattern} in
+			  the register contents.
+			- If the expression begins with ".", each individual
+			  line (characterwise content can be multiplied into
+			  lines via [count]) is passed through the following
+			  expression / function name / external command / Ex
+			  command. separators in between.
+			  To omit a line through an expression, return an empty
+			  List ([]). To expand a line into several, return a
+			  List of lines.
 								 *g==p* *g==P*
 ["x]g==p, ["x]g==P	Apply the previously queried expression to each line
 			(replacing v:val with the current line), and paste the
@@ -390,7 +430,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES				     *UnconditionalPaste-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.026 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.044 or
   higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - |AlignFromCursor.vim| plugin (vimscript #4155), version 2.02 or higher
@@ -640,6 +680,20 @@ below).
 ==============================================================================
 HISTORY						  *UnconditionalPaste-history*
 
+4.40	02-Nov-2024
+- CHG: g=p and g==p apply the expression to the whole register contents, not
+  to individual lines. Instead, the expression can now be applied individually
+  to matches of prepended /{pattern}/, or to items separated by ^{pattern}^,
+  or via prepended "." to individual lines. So, to keep the previous behavior,
+  just put a "." before the expression. Because of that change, single lines
+  are not unjoined by a queried pattern any longer; ^{pattern}^ can be used.
+- ENH; g=p and g==p support specifying a function name ("toupper" instead of
+  "toupper(v:val)"), and filtering through external command or Ex command (in
+  a scratch buffer). This achieves feature parity and consistency
+  with.SubstituteExpression.vim's g={motion} and g== mappings.
+- BUG: ghp with p/P selected does not increment the last-used value on repeat.
+  *** You need to update to ingo-library (vimscript #4433) version 1.044! ***
+
 4.30	05-Sep-2020
 - ENH: Add gHp mapping for repeating the same previously queried combination
   and a configurable preset g:UnconditionalPaste_Combinations.
@@ -825,7 +879,7 @@ Published, prompted by a related question on reddit.
 Started development, based on vimtip #1199 by cory.
 
 ==============================================================================
-Copyright: (C) 2006-2020 Ingo Karkat
+Copyright: (C) 2006-2024 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

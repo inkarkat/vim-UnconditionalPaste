@@ -5,7 +5,7 @@
 "   - ingo-library.vim plugin
 "   - repeat.vim (vimscript #2136) plugin (optional)
 
-" Copyright: (C) 2006-2020 Ingo Karkat
+" Copyright: (C) 2006-2024 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -39,7 +39,7 @@ if ! exists('g:UnconditionalPaste_InvertedGrepPattern')
     let g:UnconditionalPaste_InvertedGrepPattern = '^\s*$'
 endif
 if ! exists('g:UnconditionalPaste_Expression')
-    let g:UnconditionalPaste_Expression = 'substitute(v:val, "(.*)", "()", "g")'
+    let g:UnconditionalPaste_Expression = '.substitute(v:val, "(.*)", "()", "g")'
 endif
 if ! exists('g:UnconditionalPaste_Escapes')
     let g:UnconditionalPaste_Escapes = [{
@@ -89,7 +89,8 @@ let g:UnconditionalPaste_Mappings =
     \       ['Plus', 'p'], ['PlusRepeat', '.p'],
     \       ['GPlus', 'P'], ['GPlusRepeat', '.P'],
     \       ['Lowercase', 'u'], ['Uppercase', 'U'], ['Togglecase', '~', '~'],
-    \       ['Combinatorial', 'h', '<C-h>'], ['RecallCombinatorial', 'H', '<C-h><C-h>']
+    \       ['Combi', 'h', '<C-h>'], ['CombiRepeat', '.h'],
+    \       ['RecallCombi', 'H', '<C-h><C-h>'], ['RecallCombiRepeat', '.H'],
     \   ]
 
 "- mappings --------------------------------------------------------------------
@@ -102,7 +103,7 @@ function! s:CreateMappings()
 	    let l:plugMappingName = '<Plug>' . l:mappingName
 
 	    " Do not create default mappings for the special paste repeats.
-	    let l:pasteMappingDefaultKeys = (l:how[0] == '.' ? '' : l:how . l:pasteCmd)
+	    let l:pasteMappingDefaultKeys = (l:how[0] ==# '.' ? '' : l:how . l:pasteCmd)
 
 
 	    if l:pasteName =~# 'Indent\|^Commented$'
@@ -133,7 +134,7 @@ function! s:CreateMappings()
 		let l:pasteMappingDefaultKeys = '==' . l:pasteCmd
 	    endif
 
-	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression', 'Combinatorial'], l:pasteName) != -1
+	    if index(['Delimited', 'Queried', 'Unjoin', 'Grep', 'InvertedGrep', 'Expression'], l:pasteName) != -1
 		" On repeat of one of the mappings that query, we want to skip
 		" the query and recall the last queried separator instead.
 		let l:mappingName = 'UnconditionalPasteRecall' . l:pasteName . l:direction
@@ -143,6 +144,10 @@ function! s:CreateMappings()
 		" increasing with the last used (saved) offset, and at the same
 		" number position (after the first paste, the cursor will have
 		" jumped to the beginning of the pasted text).
+		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
+	    elseif index(['Combi', 'RecallCombi'], l:pasteName) != -1
+		" The combinatorial mappings may contain a Plus / GPlus, so need special repeat
+		" handling, too.
 		let l:mappingName = 'UnconditionalPaste' . l:pasteName . 'Repeat' . l:direction
 	    endif
 

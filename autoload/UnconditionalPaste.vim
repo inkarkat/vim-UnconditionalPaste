@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ingo-library.vim plugin
 
-" Copyright: (C) 2006-2020 Ingo Karkat
+" Copyright: (C) 2006-2024 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -179,16 +179,21 @@ endfunction
 function! UnconditionalPaste#GetCount()
     return s:count
 endfunction
+function! s:GetChar() abort
+    return ingo#query#get#Char({
+    \   'isAllowDigraphs': 0,
+    \})
+endfunction
 function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand, shiftCount, ... )
     let l:pasteContent = a:regContent
     let l:count = a:count
     let l:shiftCommand = a:shiftCommand
     let l:shiftCount = a:shiftCount
 
-    if l:count == 0 && a:how =~# '\c^\%(q\?b\|r!\?\|e\)$' && s:IsSingleElement(a:regContent)
+    if l:count == 0 && a:how =~# '\c^\%(q\?b\|r!\?\)$' && s:IsSingleElement(a:regContent)
 	" Query / re-use separator pattern, and split into multiple lines
 	" first.
-	if a:how !=# 'QB' && a:how[0] !=# 'R' && a:how !=# 'E'
+	if a:how !=# 'QB' && a:how[0] !=# 'R'
 	    if ! s:QuerySeparatorPattern()
 		throw 'beep'
 	    endif
@@ -536,7 +541,7 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    " what the user intended.
 	    throw 'beep'
 	endif
-    elseif a:how ==? 'h'
+    elseif a:how ==? 'h' || a:how ==? '.h'
 	let l:types = filter(
 	\   map(copy(g:UnconditionalPaste_Mappings), 'v:val[1]'),
 	\   'v:val[0] !~# "^[.h]$"'
@@ -547,12 +552,12 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	    while 1
 		let l:localCount = ''
 		call ingo#query#Question(printf('Paste as %s (%s/<Enter>=go/<Esc>=abort/?=help)', join(l:howList, ' + '), join(l:types, '/')))
-		let l:key = ingo#query#get#Char()
+		let l:key = s:GetChar()
 
-		while l:key =~# '\d'
+		while l:key =~# '^\d$'
 		    " Keep reading local count until a real how happens.
 		    let l:localCount .= l:key
-		    let l:key = ingo#query#get#Char()
+		    let l:key = s:GetChar()
 		endwhile
 
 		if empty(l:key)
@@ -577,18 +582,23 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 		elseif ! empty(filter(copy(l:types), 'v:val =~# "^" . l:key'))
 		    " Might be a two-key type (where the first key isn't a valid
 		    " type on its own); get another key.
-		    let l:key2 = ingo#query#get#Char()
+		    let l:key2 = s:GetChar()
 		    if empty(l:key2)
 			redraw
 			return ['', '', 0, '', 0]
 		    elseif index(l:types, l:key . l:key2) != -1
-			call add(l:howList, l:localCount . l:key . l:keys)
+			call add(l:howList, l:localCount . l:key . l:key2)
 		    endif
 		endif
 	    endwhile
 	    let g:UnconditionalPaste_Combinations = l:howList
 	else
 	    let l:howList = g:UnconditionalPaste_Combinations
+	    if a:how ==? '.h'
+		" On repeat, turn the Plus and GPlus mappings into their repeat variants, in
+		" order to increase with the last used (saved) offset.
+		let l:howList = map(copy(l:howList), '(v:val ==? "p" ? "." : "") . v:val')
+	    endif
 	endif
 
 	let l:pasteType = a:regType
@@ -635,22 +645,24 @@ function! s:ApplyAlgorithm( mode, how, regContent, regType, count, shiftCommand,
 	endif
 
 	let l:pasteType = a:regType
-	let l:lines = split(l:pasteContent, '\n', 1)
 
 	if l:count > 1
+	    if a:regType[0] ==# "\<C-v>" || a:regType ==# 'v' && ingo#str#StartsWith(g:UnconditionalPaste_Expression, '.')
+		" Direct joining would mangle blockwise content, and if per-line
+		" application of characterwise content is asked for, we also
+		" need multiple lines to make sense.
+		let l:pasteContent .= "\n"
+	    endif
 	    " To map the multiplied pastes with the (potentially non-constant)
 	    " expression, we need to process the multiplication on our own.
-	    let l:lines = repeat(l:lines, l:count)
+	    let l:pasteContent = repeat(l:pasteContent, l:count)
 	    let l:count = 0
 	endif
 
-	let l:lines = ingo#collections#Flatten1(map(l:lines, g:UnconditionalPaste_Expression))
-
-	let l:joiner = (s:IsSingleElement(a:regContent) ?
-	\   matchstr(a:regContent, g:UnconditionalPaste_UnjoinSeparatorPattern) :
-	\   "\n"
-	\)
-	let l:pasteContent = join(l:lines, l:joiner)
+	let l:pasteContent = ingo#subs#apply#FlexibleExpression(l:pasteContent, a:regType, g:UnconditionalPaste_Expression)
+	if type(l:pasteContent) == type([])
+	    let l:pasteContent = join(map(l:pasteContent, 'substitute(v:val, "\\n$", "", "")'), "\n")
+	endif
     elseif a:how ==# '\' || a:how ==# '\\'
 	if a:how ==# '\\'
 	    if ! exists('g:UnconditionalPaste_Escape')

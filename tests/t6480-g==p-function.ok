@@ -1,0 +1,9 @@
+1 padding text
+2 padding text
+we (|) here
+INT MAIN(INT ARGC, CHAR[] ARGV)
+
+VOID FOO(CHAR C, INT N)
+VOID FINALIZE()
+4 padding text
+5 padding text
